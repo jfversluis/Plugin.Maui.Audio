@@ -2,9 +2,9 @@
 
 //public class SimpleAudioPlayer : ISimpleAudioPlayer
 //{
-//    static ISimpleAudioPlayer currentImplementation;
+//    //static ISimpleAudioPlayer currentImplementation;
 
-//    //public static ISimpleAudioPlayer Current => currentImplementation ??= new SimpleAudioPlayerImplementation();
+//    //public static ISimpleAudioPlayer Current => currentImplementation ??= new AudioManager().CreatePlayer();
 
 //    /// <inheritdoc />
 //    public double Duration => Current.Duration;

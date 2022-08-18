@@ -2,6 +2,8 @@
 
 public partial class AudioPlayer : ISimpleAudioPlayer
 {
+    public event EventHandler? PlaybackEnded;
+
     ~AudioPlayer()
     {
         Dispose(false);

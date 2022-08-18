@@ -2,7 +2,7 @@
 
 public class AudioManager : IAudioManager
 {
-    static IAudioManager currentImplementation;
+    static IAudioManager? currentImplementation;
 
     public static IAudioManager Current => currentImplementation ??= new AudioManager();
 

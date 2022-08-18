@@ -11,47 +11,38 @@ partial class AudioPlayer : ISimpleAudioPlayer
     static int index = 0;
     double _volume = 0.5;
     double _balance = 0;
-    bool _loop;
-    string path;
+    string path = string.Empty;
     bool isDisposed = false;
 
-    public event EventHandler PlaybackEnded;
+    public double Duration => player.Duration / 1000.0;
 
-    public double Duration => player == null ? 0 : player.Duration / 1000.0;
-
-    public double CurrentPosition => player == null ? 0 : (player.CurrentPosition) / 1000.0;
+    public double CurrentPosition => player.CurrentPosition / 1000.0;
 
     public double Volume
     {
         get => _volume;
-        set
-        {
-            SetVolume(_volume = value, Balance);
-        }
+        set => SetVolume(_volume = value, Balance);
     }
 
     public double Balance
     {
         get => _balance;
-        set
-        {
-            SetVolume(Volume, _balance = value);
-        }
+        set => SetVolume(Volume, _balance = value);
     }
 
-    public bool IsPlaying => player != null && player.IsPlaying;
+    public bool IsPlaying => player.IsPlaying;
 
     public bool Loop
     {
-        get => _loop;
-        set { _loop = value; if (player != null) player.Looping = _loop; }
+        get => player.Looping;
+        set => player.Looping = value;
     }
 
-    public bool CanSeek => player != null;
+    public bool CanSeek => true;
 
     public AudioPlayer(Stream audioStream)
     {
-        player = new Android.Media.MediaPlayer() { Looping = Loop };
+        player = new Android.Media.MediaPlayer();
         player.Completion += OnPlaybackEnded;
 
         DeleteFile(path);
@@ -72,7 +63,9 @@ partial class AudioPlayer : ISimpleAudioPlayer
             try
             {
                 var context = Android.App.Application.Context;
-                player?.SetDataSource(context, Uri.Parse(Uri.Encode(path)));
+                var encodedPath = Uri.Encode(path) ?? throw new Exception();
+                var uri = Uri.Parse(encodedPath) ?? throw new Exception();
+                player.SetDataSource(context, uri);
             }
             catch
             {
@@ -80,7 +73,7 @@ partial class AudioPlayer : ISimpleAudioPlayer
             }
         }
 
-        PreparePlayer();
+        player.Prepare();
     }
 
     public AudioPlayer(string fileName)
@@ -88,18 +81,11 @@ partial class AudioPlayer : ISimpleAudioPlayer
         player = new Android.Media.MediaPlayer() { Looping = Loop };
         player.Completion += OnPlaybackEnded;
 
-        AssetFileDescriptor afd = Android.App.Application.Context.Assets.OpenFd(fileName);
+        AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName) ?? throw new Exception();
 
-        player?.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+        player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
 
-        PreparePlayer();
-    }
-
-    bool PreparePlayer()
-    {
-        player?.Prepare();
-
-        return player != null;
+        player.Prepare();
     }
 
     void DeleteFile(string path)
@@ -118,9 +104,6 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     public void Play()
     {
-        if (player == null)
-            return;
-
         if (IsPlaying)
         {
             Pause();
@@ -142,13 +125,12 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     public void Pause()
     {
-        player?.Pause();
+        player.Pause();
     }
 
     public void Seek(double position)
     {
-        if (CanSeek)
-            player?.SeekTo((int)(position * 1000D));
+        player.SeekTo((int)(position * 1000D));
     }
 
     void SetVolume(double volume, double balance)
@@ -163,16 +145,16 @@ partial class AudioPlayer : ISimpleAudioPlayer
         var left = Math.Cos((Math.PI * (balance + 1)) / 4) * volume;
         var right = Math.Sin((Math.PI * (balance + 1)) / 4) * volume;
 
-        player?.SetVolume((float)left, (float)right);
+        player.SetVolume((float)left, (float)right);
     }
 
-    void OnPlaybackEnded(object sender, EventArgs e)
+    void OnPlaybackEnded(object? sender, EventArgs e)
     {
-        PlaybackEnded?.Invoke(sender, e);
+        PlaybackEnded?.Invoke(this, e);
 
         //this improves stability on older devices but has minor performance impact
         // We need to check whether the player is null or not as the user might have dipsosed it in an event handler to PlaybackEnded above.
-        if (player != null && Android.OS.Build.VERSION.SdkInt < Android.OS.BuildVersionCodes.M)
+        if (Android.OS.Build.VERSION.SdkInt < Android.OS.BuildVersionCodes.M)
         {
             player.SeekTo(0);
             player.Stop();
@@ -182,17 +164,16 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     protected virtual void Dispose(bool disposing)
     {
-        if (isDisposed || player == null)
+        if (isDisposed)
+        {
             return;
+        }
 
         if (disposing)
         {
-            if (player != null)
-            {
-                player.Completion -= OnPlaybackEnded;
-                player.Release();
-                player.Dispose();
-            }
+            player.Completion -= OnPlaybackEnded;
+            player.Release();
+            player.Dispose();
 
             DeleteFile(path);
             path = string.Empty;

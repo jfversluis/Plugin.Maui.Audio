@@ -31,7 +31,6 @@ public partial class MainPage : ContentPage
         {
             simpleAudioPlayer.Play();
         }
-
     }
 
     void btnStop_Clicked(Object sender, EventArgs e)
