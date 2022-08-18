@@ -1,4 +1,4 @@
-name: Build for CI
+name: Build Sample App for CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-plugin-ci:
+  build-sample-ci:
 
     runs-on: windows-latest
 
@@ -20,6 +20,6 @@ jobs:
     - name: Install .NET MAUI
       run: dotnet workload install maui
     - name: Restore dependencies
-      run: dotnet restore src\Plugin.Maui.SimpleAudioPlayer.sln
+      run: dotnet restore samples\AudioPlayerSample.sln
     - name: Build
-      run: dotnet build src\Plugin.Maui.SimpleAudioPlayer.sln -c Release
+      run: dotnet build samples\AudioPlayerSample.sln -c Release
