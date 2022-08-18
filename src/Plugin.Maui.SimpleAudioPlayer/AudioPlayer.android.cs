@@ -120,7 +120,9 @@ partial class AudioPlayer : ISimpleAudioPlayer
     public void Stop()
     {
         if (!IsPlaying)
+        {
             return;
+        }
 
         Pause();
         Seek(0);
@@ -139,11 +141,9 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     void SetVolume(double volume, double balance)
     {
-        volume = Math.Max(0, volume);
-        volume = Math.Min(1, volume);
+        volume = Math.Clamp(volume, 0, 1);
 
-        balance = Math.Max(-1, balance);
-        balance = Math.Min(1, balance);
+        balance = Math.Clamp(balance, -1, 1);
 
         // Using the "constant power pan rule." See: http://www.rs-met.com/documents/tutorials/PanRules.pdf
         var left = Math.Cos((Math.PI * (balance + 1)) / 4) * volume;
