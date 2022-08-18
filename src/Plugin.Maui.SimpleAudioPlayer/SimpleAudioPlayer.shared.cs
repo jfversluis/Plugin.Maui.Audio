@@ -12,11 +12,11 @@ public class SimpleAudioPlayer : ISimpleAudioPlayer
     {
     }
 
-    /// <summary>
-    /// Implementation factory provider for use in registering a transient or scoped implementation of <see cref="ISimpleAudioPlayer"/>.
-    /// </summary>
-    public static Func<IServiceProvider, ISimpleAudioPlayer> ImplementationFactory { get; } =
-        __ => simpleAudioPlayerFactory.CreatePlayer();
+    ///// <summary>
+    ///// Implementation factory provider for use in registering a transient or scoped implementation of <see cref="ISimpleAudioPlayer"/>.
+    ///// </summary>
+    //public static Func<IServiceProvider, ISimpleAudioPlayer> ImplementationFactory { get; } =
+    //    __ => simpleAudioPlayerFactory.CreatePlayer();
 
     /// <summary>
     /// Singleton instance of <see cref="ISimpleAudioPlayer"/>.

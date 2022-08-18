@@ -9,6 +9,7 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseSimpleAudioPlayer(options => options.SimpleAudioPlayerLifetime = ServiceLifetime.Transient)
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -16,10 +17,6 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddTransient<MainPage>();
-
-        builder.Services.AddTransient(SimpleAudioPlayer.ImplementationFactory);
-        //builder.Services.AddScoped(SimpleAudioPlayer.ImplementationFactory);
-        //builder.Services.AddSingleton(SimpleAudioPlayer.Current);
 
 		return builder.Build();
 	}
