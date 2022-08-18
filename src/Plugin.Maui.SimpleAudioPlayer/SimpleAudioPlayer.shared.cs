@@ -6,17 +6,22 @@
 public class SimpleAudioPlayer : ISimpleAudioPlayer
 {
     static ISimpleAudioPlayer currentImplementation;
+    readonly static SimpleAudioPlayerFactory simpleAudioPlayerFactory = new SimpleAudioPlayerFactory();
+
+    private SimpleAudioPlayer()
+    {
+    }
 
     /// <summary>
     /// Implementation factory provider for use in registering a transient or scoped implementation of <see cref="ISimpleAudioPlayer"/>.
     /// </summary>
     public static Func<IServiceProvider, ISimpleAudioPlayer> ImplementationFactory { get; } =
-        (serviceProvider) => new SimpleAudioPlayerImplementation();
+        __ => simpleAudioPlayerFactory.CreatePlayer();
 
     /// <summary>
     /// Singleton instance of <see cref="ISimpleAudioPlayer"/>.
     /// </summary>
-    public static ISimpleAudioPlayer Current => currentImplementation ??= new SimpleAudioPlayerImplementation();
+    public static ISimpleAudioPlayer Current => currentImplementation ??= simpleAudioPlayerFactory.CreatePlayer();
 
     /// <inheritdoc />
     public double Duration => Current.Duration;
