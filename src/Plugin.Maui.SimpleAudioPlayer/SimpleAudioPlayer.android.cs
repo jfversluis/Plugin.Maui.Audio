@@ -1,54 +1,225 @@
-﻿namespace Plugin.Maui.SimpleAudioPlayer;
+﻿using Android.Content.Res;
+using Android.Media;
+using Stream = System.IO.Stream;
+using Uri = Android.Net.Uri;
+
+namespace Plugin.Maui.SimpleAudioPlayer;
 
 class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 {
-    public double Duration => throw new NotImplementedException();
-
-    public double CurrentPosition => throw new NotImplementedException();
-
-    public double Volume { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    public double Balance { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-    public bool IsPlaying => throw new NotImplementedException();
-
-    public bool Loop { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-    public bool CanSeek => throw new NotImplementedException();
+    MediaPlayer player;
+    static int index = 0;
+    double _volume = 0.5;
+    double _balance = 0;
+    bool _loop;
+    string path;
+    bool isDisposed = false;
 
     public event EventHandler PlaybackEnded;
 
-    public void Dispose()
+    public double Duration => player == null ? 0 : player.Duration / 1000.0;
+
+    public double CurrentPosition => player == null ? 0 : (player.CurrentPosition) / 1000.0;
+
+    public double Volume
     {
-        throw new NotImplementedException();
+        get => _volume;
+        set
+        {
+            SetVolume(_volume = value, Balance);
+        }
+    }
+
+    public double Balance
+    {
+        get => _balance;
+        set
+        {
+            SetVolume(Volume, _balance = value);
+        }
+    }
+
+    public bool IsPlaying => player != null && player.IsPlaying;
+
+    public bool Loop
+    {
+        get => _loop;
+        set { _loop = value; if (player != null) player.Looping = _loop; }
+    }
+
+    public bool CanSeek => player != null;
+
+    public SimpleAudioPlayerImplementation()
+    {
+        player = new Android.Media.MediaPlayer() { Looping = Loop };
+        player.Completion += OnPlaybackEnded;
     }
 
     public bool Load(Stream audioStream)
     {
-        throw new NotImplementedException();
+        player.Reset();
+
+        DeleteFile(path);
+
+        //cache to the file system
+        path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), $"cache{index++}.wav");
+
+        var fileStream = File.Create(path);
+        audioStream.CopyTo(fileStream);
+        fileStream.Close();
+
+        try
+        {
+            player.SetDataSource(path);
+        }
+        catch
+        {
+            try
+            {
+                var context = Android.App.Application.Context;
+                player?.SetDataSource(context, Uri.Parse(Uri.Encode(path)));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        return PreparePlayer();
     }
 
     public bool Load(string fileName)
     {
-        throw new NotImplementedException();
+        player.Reset();
+
+        AssetFileDescriptor afd = Android.App.Application.Context.Assets.OpenFd(fileName);
+
+        player?.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+
+        return PreparePlayer();
     }
 
-    public void Pause()
+    bool PreparePlayer()
     {
-        throw new NotImplementedException();
+        player?.Prepare();
+
+        return player != null;
+    }
+
+    void DeletePlayer()
+    {
+        Stop();
+
+        if (player != null)
+        {
+            player.Completion -= OnPlaybackEnded;
+            player.Release();
+            player.Dispose();
+            player = null;
+        }
+
+        DeleteFile(path);
+        path = string.Empty;
+    }
+
+    void DeleteFile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) == false)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch
+            {
+            }
+        }
     }
 
     public void Play()
     {
-        throw new NotImplementedException();
-    }
+        if (player == null)
+            return;
 
-    public void Seek(double position)
-    {
-        throw new NotImplementedException();
+        if (IsPlaying)
+        {
+            Pause();
+            Seek(0);
+        }
+
+        player.Start();
     }
 
     public void Stop()
     {
-        throw new NotImplementedException();
+        if (!IsPlaying)
+            return;
+
+        Pause();
+        Seek(0);
+        PlaybackEnded?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Pause()
+    {
+        player?.Pause();
+    }
+
+    public void Seek(double position)
+    {
+        if (CanSeek)
+            player?.SeekTo((int)(position * 1000D));
+    }
+
+    void SetVolume(double volume, double balance)
+    {
+        volume = Math.Max(0, volume);
+        volume = Math.Min(1, volume);
+
+        balance = Math.Max(-1, balance);
+        balance = Math.Min(1, balance);
+
+        // Using the "constant power pan rule." See: http://www.rs-met.com/documents/tutorials/PanRules.pdf
+        var left = Math.Cos((Math.PI * (balance + 1)) / 4) * volume;
+        var right = Math.Sin((Math.PI * (balance + 1)) / 4) * volume;
+
+        player?.SetVolume((float)left, (float)right);
+    }
+
+    void OnPlaybackEnded(object sender, EventArgs e)
+    {
+        PlaybackEnded?.Invoke(sender, e);
+
+        //this improves stability on older devices but has minor performance impact
+        // We need to check whether the player is null or not as the user might have dipsosed it in an event handler to PlaybackEnded above.
+        if (player != null && Android.OS.Build.VERSION.SdkInt < Android.OS.BuildVersionCodes.M)
+        {
+            player.SeekTo(0);
+            player.Stop();
+            player.Prepare();
+        }
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (isDisposed || player == null)
+            return;
+
+        if (disposing)
+            DeletePlayer();
+
+        isDisposed = true;
+    }
+
+    ~SimpleAudioPlayerImplementation()
+    {
+        Dispose(false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+
+        GC.SuppressFinalize(this);
     }
 }
