@@ -2,5 +2,5 @@
 
 public class SimpleAudioPlayerFactory : ISimpleAudioPlayerFactory
 {
-	public ISimpleAudioPlayer CreatePlayer() => new SimpleAudioPlayerImplementation();
+    public ISimpleAudioPlayer CreatePlayer() => new SimpleAudioPlayerImplementation();
 }
