@@ -41,6 +41,9 @@
 		<MauiImage Include="Resources\Images\*" />
 		<MauiFont Include="Resources\Fonts\*" />
 
+		<!-- Embedded Resources (also remove the "Resources\EmbeddedResources" prefix) -->
+		<EmbeddedResource Include="Resources\EmbeddedResources\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>

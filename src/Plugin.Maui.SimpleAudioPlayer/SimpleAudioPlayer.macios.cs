@@ -83,15 +83,20 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 
     public bool Load(Stream audioStream)
     {
+        ArgumentNullException.ThrowIfNull(audioStream);
+
         DeletePlayer();
 
-        player = AVAudioPlayer.FromData(NSData.FromStream(audioStream));
+        var data = NSData.FromStream(audioStream);
+        player = AVAudioPlayer.FromData(data);
 
         return PreparePlayer();
     }
 
     public bool Load(string fileName)
     {
+        ArgumentNullException.ThrowIfNull(fileName);
+
         DeletePlayer();
 
         player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName));

@@ -40,7 +40,11 @@ public class SimpleAudioPlayer : ISimpleAudioPlayer
     public bool CanSeek => Current.CanSeek;
 
     /// <inheritdoc />
-    public event EventHandler PlaybackEnded;
+    public event EventHandler PlaybackEnded
+    {
+        add => Current.PlaybackEnded += value;
+        remove => Current.PlaybackEnded -= value;
+    }
 
     /// <inheritdoc />
     public void Dispose() => Current.Dispose();
