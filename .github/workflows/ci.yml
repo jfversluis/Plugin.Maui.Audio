@@ -20,6 +20,6 @@ jobs:
     - name: Install .NET MAUI
       run: dotnet workload install maui
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src\Plugin.Maui.SimpleAudioPlayer.sln
     - name: Build
       run: dotnet build src\Plugin.Maui.SimpleAudioPlayer.sln -c Release
