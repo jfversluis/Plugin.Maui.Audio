@@ -40,15 +40,15 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     public bool CanSeek => true;
 
-    public AudioPlayer(Stream audioStream)
+    internal AudioPlayer(Stream audioStream)
     {
         player = new Android.Media.MediaPlayer();
         player.Completion += OnPlaybackEnded;
 
-        DeleteFile(path);
-
         //cache to the file system
         path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), $"cache{index++}.wav");
+
+        DeleteFile(path);
 
         var fileStream = File.Create(path);
         audioStream.CopyTo(fileStream);
@@ -63,8 +63,11 @@ partial class AudioPlayer : ISimpleAudioPlayer
             try
             {
                 var context = Android.App.Application.Context;
-                var encodedPath = Uri.Encode(path) ?? throw new Exception();
-                var uri = Uri.Parse(encodedPath) ?? throw new Exception();
+                var encodedPath = Uri.Encode(path)
+                    ?? throw new FailedToLoadAudioException("Unable to generate encoded path.");
+                var uri = Uri.Parse(encodedPath)
+                    ?? throw new FailedToLoadAudioException("Unable to parse encoded path.");
+
                 player.SetDataSource(context, uri);
             }
             catch
@@ -76,12 +79,13 @@ partial class AudioPlayer : ISimpleAudioPlayer
         player.Prepare();
     }
 
-    public AudioPlayer(string fileName)
+    internal AudioPlayer(string fileName)
     {
         player = new Android.Media.MediaPlayer() { Looping = Loop };
         player.Completion += OnPlaybackEnded;
 
-        AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName) ?? throw new Exception();
+        AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
+            ?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
 
         player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
 

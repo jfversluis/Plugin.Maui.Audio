@@ -35,21 +35,20 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     public bool CanSeek => true;
 
-    public AudioPlayer(Stream audioStream)
+    internal AudioPlayer(Stream audioStream)
     {
-        ArgumentNullException.ThrowIfNull(audioStream);
-
-        var data = NSData.FromStream(audioStream) ?? throw new Exception();
-        player = AVAudioPlayer.FromData(data) ?? throw new Exception();
+        var data = NSData.FromStream(audioStream)
+            ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
+        player = AVAudioPlayer.FromData(data)
+            ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
         PreparePlayer();
     }
 
-    public AudioPlayer(string fileName)
+    internal AudioPlayer(string fileName)
     {
-        ArgumentNullException.ThrowIfNull(fileName);
-
-        player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName)) ?? throw new Exception();
+        player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName))
+            ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from url.");
 
         PreparePlayer();
     }
