@@ -52,4 +52,9 @@ public partial class MainPage : ContentPage
     {
         simpleAudioPlayer.Balance = e.NewValue;
     }
+
+    void Switch_Toggled(Object sender, ToggledEventArgs e)
+    {
+        simpleAudioPlayer.Loop = e.Value;
+    }
 }

@@ -43,9 +43,13 @@
                     SemanticProperties.Hint="Stop playing the sound" />
             </HorizontalStackLayout>
 
+            <HorizontalStackLayout HorizontalOptions="Center">
+                <Label Text="Loop:" />
+                <Switch Toggled="Switch_Toggled" />
+            </HorizontalStackLayout>
+
             <Label Text="Volume:" />
             <Slider
-                x:Name="sliderVolume"
                 Minimum="0"
                 Maximum="1"
                 Value="1"
@@ -53,7 +57,6 @@
 
             <Label Text="Balance:" />
             <Slider
-                x:Name="sliderBalance"
                 Minimum="-1"
                 Maximum="1"
                 ValueChanged="sliderBalance_ValueChanged" />
