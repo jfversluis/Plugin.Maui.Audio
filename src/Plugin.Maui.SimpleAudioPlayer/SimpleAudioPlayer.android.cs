@@ -46,7 +46,8 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 		get => loop;
 		set
 		{
-			loop = value; if (player != null)
+			loop = value; 
+			if (player != null)
 			{
 				player.Looping = loop;
 			}
