@@ -1,55 +1,65 @@
 ﻿namespace Plugin.Maui.SimpleAudioPlayer;
 
-public partial class SimpleAudioPlayer : ISimpleAudioPlayer
+public class SimpleAudioPlayer : ISimpleAudioPlayer
 {
-    public double Duration => throw new NotImplementedException();
+    static ISimpleAudioPlayer currentImplementation;
 
-    public double CurrentPosition => throw new NotImplementedException();
+    public static ISimpleAudioPlayer Current => currentImplementation ??= new SimpleAudioPlayerImplementation();
 
-    public double Volume { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    /// <inheritdoc />
+    public double Duration => Current.Duration;
 
-    public double Balance { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    /// <inheritdoc />
+    public double CurrentPosition => Current.CurrentPosition;
 
-    public bool IsPlaying => throw new NotImplementedException();
+    /// <inheritdoc />
+    public double Volume
+    {
+        get => Current.Volume;
+        set => Current.Volume = value;
+    }
 
-    public bool Loop { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    /// <inheritdoc />
+    public double Balance
+    {
+        get => Current.Balance;
+        set => Current.Balance = value;
+    }
 
-    public bool CanSeek => throw new NotImplementedException();
+    /// <inheritdoc />
+    public bool IsPlaying => Current.IsPlaying;
 
+    /// <inheritdoc />
+    public bool Loop
+    {
+        get => Current.Loop;
+        set => Current.Loop = value;
+    }
+
+    /// <inheritdoc />
+    public bool CanSeek => Current.CanSeek;
+
+    /// <inheritdoc />
     public event EventHandler PlaybackEnded;
 
-    public void Dispose()
-    {
-        throw new NotImplementedException();
-    }
+    /// <inheritdoc />
+    public void Dispose() => Current.Dispose();
 
-    public bool Load(Stream audioStream)
-    {
-        throw new NotImplementedException();
-    }
+    /// <inheritdoc />
+    public bool Load(Stream audioStream) => Current.Load(audioStream);
 
-    public bool Load(string fileName)
-    {
-        throw new NotImplementedException();
-    }
+    /// <inheritdoc />
+    public bool Load(string fileName) => Current.Load(fileName);
 
-    public void Pause()
-    {
-        throw new NotImplementedException();
-    }
+    /// <inheritdoc />
+    public void Pause() => Current.Pause();
 
-    public void Play()
-    {
-        throw new NotImplementedException();
-    }
+    /// <inheritdoc />
+    public void Play() => Current.Play();
 
-    public void Seek(double position)
-    {
-        throw new NotImplementedException();
-    }
+    /// <inheritdoc />
+    public void Seek(double position) => Current.Seek(position);
 
-    public void Stop()
-    {
-        throw new NotImplementedException();
-    }
+    /// <inheritdoc />
+    public void Stop() => Current.Stop();
 }

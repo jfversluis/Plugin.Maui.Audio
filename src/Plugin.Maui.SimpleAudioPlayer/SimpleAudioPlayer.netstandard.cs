@@ -1,14 +1,11 @@
-﻿using AVFoundation;
-
+﻿using System;
 namespace Plugin.Maui.SimpleAudioPlayer;
 
-public class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
+class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 {
-    AVAudioPlayer player;
+    public double Duration => throw new NotImplementedException();
 
-    public double Duration => player?.Duration ?? 0;
-
-    public double CurrentPosition => player?.CurrentTime ?? 0;
+    public double CurrentPosition => throw new NotImplementedException();
 
     public double Volume { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     public double Balance { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
