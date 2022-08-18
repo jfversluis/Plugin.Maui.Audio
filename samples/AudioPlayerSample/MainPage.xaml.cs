@@ -5,20 +5,6 @@ namespace AudioPlayerSample;
 
 public partial class MainPage : ContentPage
 {
-
-/* Unmerged change from project 'AudioPlayerSample(net6.0-ios)'
-Before:
-    private readonly ISimpleAudioPlayer simpleAudioPlayer;
-After:
-    readonly ISimpleAudioPlayer simpleAudioPlayer;
-*/
-
-/* Unmerged change from project 'AudioPlayerSample(net6.0-maccatalyst)'
-Before:
-    private readonly ISimpleAudioPlayer simpleAudioPlayer;
-After:
-    readonly ISimpleAudioPlayer simpleAudioPlayer;
-*/
 	readonly ISimpleAudioPlayer simpleAudioPlayer;
 
 	public MainPage(ISimpleAudioPlayer simpleAudioPlayer)
