@@ -9,9 +9,9 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 {
 	MediaPlayer player;
 	static int index;
-	double _volume = 0.5;
-	double _balance;
-	bool _loop;
+	double volume = 0.5;
+	double balance;
+	bool loop;
 	string path;
 	bool isDisposed;
 
@@ -23,19 +23,19 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 
 	public double Volume
 	{
-		get => _volume;
+		get => volume;
 		set
 		{
-			SetVolume(_volume = value, Balance);
+			SetVolume(volume = value, Balance);
 		}
 	}
 
 	public double Balance
 	{
-		get => _balance;
+		get => balance;
 		set
 		{
-			SetVolume(Volume, _balance = value);
+			SetVolume(Volume, balance = value);
 		}
 	}
 
@@ -43,12 +43,12 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 
 	public bool Loop
 	{
-		get => _loop;
+		get => loop;
 		set
 		{
-			_loop = value; if (player != null)
+			loop = value; if (player != null)
 			{
-				player.Looping = _loop;
+				player.Looping = loop;
 			}
 		}
 	}

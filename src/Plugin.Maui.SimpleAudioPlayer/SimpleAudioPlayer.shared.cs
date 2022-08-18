@@ -2,6 +2,7 @@
 
 public class SimpleAudioPlayer : ISimpleAudioPlayer
 {
+	bool isDisposed;
 	static ISimpleAudioPlayer currentImplementation;
 
 	public static ISimpleAudioPlayer Current => currentImplementation ??= new SimpleAudioPlayerImplementation();
@@ -47,7 +48,28 @@ public class SimpleAudioPlayer : ISimpleAudioPlayer
 	}
 
 	/// <inheritdoc />
-	public void Dispose() => Current.Dispose();
+	public void Dispose()
+	{
+		Dispose(true);
+
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (isDisposed || currentImplementation is null)
+		{
+			return;
+		}
+
+		if (disposing)
+		{
+			Current.Dispose();
+
+		}
+
+		isDisposed = true;
+	}
 
 	/// <inheritdoc />
 	public bool Load(Stream audioStream) => Current.Load(audioStream);

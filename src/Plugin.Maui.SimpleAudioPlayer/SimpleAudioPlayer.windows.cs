@@ -7,8 +7,8 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 {
     public event EventHandler PlaybackEnded;
 
-    bool isDisposed = false;
-    bool _loop;
+    bool isDisposed;
+    bool loop;
     MediaPlayer player;
 
     public double Duration => player is null ? 0 : player.PlaybackSession.NaturalDuration.TotalSeconds;
@@ -32,13 +32,13 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 
     public bool Loop
     {
-        get => _loop;
+        get => loop;
         set
         {
-            _loop = value;
+            loop = value;
             if (player is not null)
             {
-                player.IsLoopingEnabled = _loop;
+                player.IsLoopingEnabled = loop;
             }
         }
     }
@@ -92,7 +92,7 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
         }
     }
 
-    private void OnPlaybackEnded(MediaPlayer sender, object args)
+    void OnPlaybackEnded(MediaPlayer sender, object args)
     {
         PlaybackEnded?.Invoke(sender, EventArgs.Empty);
     }
@@ -156,7 +156,7 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 
     MediaPlayer GetPlayer()
     {
-        return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = _loop };
+        return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = loop };
     }
 
     protected virtual void Dispose(bool disposing)
