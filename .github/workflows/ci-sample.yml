@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-sample-ci:
 
     runs-on: windows-latest
 
