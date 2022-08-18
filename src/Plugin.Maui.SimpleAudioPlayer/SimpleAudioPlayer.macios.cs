@@ -1,177 +1,179 @@
-﻿using AVFoundation;
-using Foundation;
+﻿//using AVFoundation;
+//using Foundation;
+//using static CoreFoundation.DispatchSource;
 
-namespace Plugin.Maui.SimpleAudioPlayer;
+//namespace Plugin.Maui.SimpleAudioPlayer;
 
-class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
-{
-    AVAudioPlayer player;
-    bool isDisposed;
+//class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
+//{
+//    readonly AVAudioPlayer player;
+//    bool isDisposed;
 
-    public double Duration => player?.Duration ?? 0;
+//    public double Duration => player?.Duration ?? 0;
 
-    public double CurrentPosition => player?.CurrentTime ?? 0;
+//    public double CurrentPosition => player?.CurrentTime ?? 0;
 
-    public double Volume
-    {
-        get => player?.Volume ?? 0;
-        set
-        {
-            if (player is not null)
-            {
-                player.Volume = (float)Math.Clamp(value, 0, 1);
-            }
-        }
-    }
+//    public double Volume
+//    {
+//        get => player?.Volume ?? 0;
+//        set
+//        {
+//            if (player is not null)
+//            {
+//                player.Volume = (float)Math.Clamp(value, 0, 1);
+//            }
+//        }
+//    }
 
-    public double Balance
-    {
-        get => player?.Pan ?? 0;
-        set
-        {
-            if (player is not null)
-            {
-                player.Pan = (float)Math.Clamp(value, -1, 1);
-            }
-        }
-    }
+//    public double Balance
+//    {
+//        get => player?.Pan ?? 0;
+//        set
+//        {
+//            if (player is not null)
+//            {
+//                player.Pan = (float)Math.Clamp(value, -1, 1);
+//            }
+//        }
+//    }
 
-    public bool IsPlaying => player?.Playing ?? false;
+//    public bool IsPlaying => player?.Playing ?? false;
 
-    public bool Loop
-    {
-        get => player?.NumberOfLoops != 0;
-        set
-        {
-            if (player is not null)
-            {
-                player.NumberOfLoops = value ? -1 : 0;
-            }
-        }
-    }
+//    public bool Loop
+//    {
+//        get => player?.NumberOfLoops != 0;
+//        set
+//        {
+//            if (player is not null)
+//            {
+//                player.NumberOfLoops = value ? -1 : 0;
+//            }
+//        }
+//    }
 
-    public bool CanSeek => player is not null;
+//    public bool CanSeek => player is not null;
 
-    public event EventHandler PlaybackEnded;
+//    public SimpleAudioPlayerImplementation(Stream audioStream)
+//    {
+//        ArgumentNullException.ThrowIfNull(audioStream);
 
-    ~SimpleAudioPlayerImplementation()
-    {
-        Dispose(false);
-    }
+//        var data = NSData.FromStream(audioStream);
+//        player = AVAudioPlayer.FromData(data);
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (isDisposed)
-        {
-            return;
-        }
+//        PreparePlayer();
+//    }
 
-        if (disposing)
-        {
-            DeletePlayer();
-        }
+//    public SimpleAudioPlayerImplementation(string fileName)
+//    {
+//        ArgumentNullException.ThrowIfNull(fileName);
 
-        isDisposed = true;
-    }
+//        player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName));
 
-    public void Dispose()
-    {
-        Dispose(true);
+//        PreparePlayer();
+//    }
 
-        GC.SuppressFinalize(this);
-    }
+//    public event EventHandler PlaybackEnded;
 
-    public bool Load(Stream audioStream)
-    {
-        ArgumentNullException.ThrowIfNull(audioStream);
+//    ~SimpleAudioPlayerImplementation()
+//    {
+//        Dispose(false);
+//    }
 
-        DeletePlayer();
+//    protected virtual void Dispose(bool disposing)
+//    {
+//        if (isDisposed)
+//        {
+//            return;
+//        }
 
-        var data = NSData.FromStream(audioStream);
-        player = AVAudioPlayer.FromData(data);
+//        if (disposing)
+//        {
+//            Stop();
 
-        return PreparePlayer();
-    }
+//            if (player is not null)
+//            {
+//                player.FinishedPlaying -= OnPlayerFinishedPlaying;
+//                player.Dispose();
+//            }
+//        }
 
-    public bool Load(string fileName)
-    {
-        ArgumentNullException.ThrowIfNull(fileName);
+//        isDisposed = true;
+//    }
 
-        DeletePlayer();
+//    public void Dispose()
+//    {
+//        Dispose(true);
 
-        player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName));
+//        GC.SuppressFinalize(this);
+//    }
 
-        return PreparePlayer();
-    }
+//    public void Pause()
+//    {
+//        player?.Pause();
+//    }
 
-    public void Pause()
-    {
-        player?.Pause();
-    }
+//    public void Play()
+//    {
+//        if (player is null)
+//        {
+//            return;
+//        }
 
-    public void Play()
-    {
-        if (player is null)
-        {
-            return;
-        }
+//        if (player.Playing)
+//        {
+//            player.CurrentTime = 0;
+//        }
+//        else
+//        {
+//            player.Play();
+//        }
+//    }
 
-        if (player.Playing)
-        {
-            player.CurrentTime = 0;
-        }
-        else
-        {
-            player.Play();
-        }
-    }
+//    public void Seek(double position)
+//    {
+//        if (player is null)
+//        {
+//            return;
+//        }
 
-    public void Seek(double position)
-    {
-        if (player is null)
-        {
-            return;
-        }
+//        player.CurrentTime = position;
+//    }
 
-        player.CurrentTime = position;
-    }
+//    public void Stop()
+//    {
+//        player?.Stop();
+//        Seek(0);
+//        PlaybackEnded?.Invoke(this, EventArgs.Empty);
+//    }
 
-    public void Stop()
-    {
-        player?.Stop();
-        Seek(0);
-        PlaybackEnded?.Invoke(this, EventArgs.Empty);
-    }
+//    bool PreparePlayer()
+//    {
+//        if (player is null)
+//        {
+//            return false;
+//        }
 
-    bool PreparePlayer()
-    {
-        if (player is null)
-        {
-            return false;
-        }
+//        player.FinishedPlaying += OnPlayerFinishedPlaying;
+//        player.PrepareToPlay();
 
-        player.FinishedPlaying += OnPlayerFinishedPlaying;
-        player.PrepareToPlay();
+//        return true;
+//    }
 
-        return true;
-    }
+//    void DeletePlayer()
+//    {
+//        Stop();
 
-    void DeletePlayer()
-    {
-        Stop();
+//        if (player is null)
+//        {
+//            return;
+//        }
 
-        if (player is null)
-        {
-            return;
-        }
+//        player.FinishedPlaying -= OnPlayerFinishedPlaying;
+//        player.Dispose();
+//    }
 
-        player.FinishedPlaying -= OnPlayerFinishedPlaying;
-        player.Dispose();
-        player = null;
-    }
-
-    private void OnPlayerFinishedPlaying(object sender, AVStatusEventArgs e)
-    {
-        PlaybackEnded?.Invoke(this, e);
-    }
-}
+//    private void OnPlayerFinishedPlaying(object sender, AVStatusEventArgs e)
+//    {
+//        PlaybackEnded?.Invoke(this, e);
+//    }
+//}

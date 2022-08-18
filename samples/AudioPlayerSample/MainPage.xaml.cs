@@ -5,18 +5,19 @@ namespace AudioPlayerSample;
 
 public partial class MainPage : ContentPage
 {
-    private readonly ISimpleAudioPlayer simpleAudioPlayer;
+    private readonly IAudioManager audioManager;
+    private ISimpleAudioPlayer simpleAudioPlayer;
 
-	public MainPage(ISimpleAudioPlayer simpleAudioPlayer)
+    public MainPage(IAudioManager audioManager)
 	{
 		InitializeComponent();
-        this.simpleAudioPlayer = simpleAudioPlayer;
+        this.audioManager = audioManager;
     }
 
     async void btnPlay_Clicked(Object sender, EventArgs e)
     {
         // TODO: attribute https://download1.audiohero.com/track/40778468
-        simpleAudioPlayer.Load(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
+        simpleAudioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
         simpleAudioPlayer.Play();
     }
 

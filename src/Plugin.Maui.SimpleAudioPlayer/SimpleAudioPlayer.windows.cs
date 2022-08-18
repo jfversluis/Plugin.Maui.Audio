@@ -1,188 +1,188 @@
-﻿using Windows.Media.Core;
-using Windows.Media.Playback;
+﻿//using Windows.Media.Core;
+//using Windows.Media.Playback;
 
-namespace Plugin.Maui.SimpleAudioPlayer;
+//namespace Plugin.Maui.SimpleAudioPlayer;
 
-class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
-{
-    public event EventHandler PlaybackEnded;
+//class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
+//{
+//    public event EventHandler PlaybackEnded;
 
-    bool isDisposed = false;
-    bool _loop;
-    MediaPlayer player;
+//    bool isDisposed = false;
+//    bool _loop;
+//    MediaPlayer player;
 
-    public double Duration => player is null ? 0 : player.PlaybackSession.NaturalDuration.TotalSeconds;
+//    public double Duration => player is null ? 0 : player.PlaybackSession.NaturalDuration.TotalSeconds;
 
-    public double CurrentPosition => player is null ? 0 : player.PlaybackSession.Position.TotalSeconds;
+//    public double CurrentPosition => player is null ? 0 : player.PlaybackSession.Position.TotalSeconds;
 
-    public double Volume
-    {
-        get => player?.Volume ?? 0;
-        set => SetVolume(value, Balance);
-    }
+//    public double Volume
+//    {
+//        get => player?.Volume ?? 0;
+//        set => SetVolume(value, Balance);
+//    }
 
-    public double Balance
-    {
-        get => player?.AudioBalance ?? 0;
-        set { SetVolume(Volume, value); }
-    }
+//    public double Balance
+//    {
+//        get => player?.AudioBalance ?? 0;
+//        set { SetVolume(Volume, value); }
+//    }
 
-    public bool IsPlaying =>
-        player?.PlaybackSession?.PlaybackState == MediaPlaybackState.Playing; //might need to expand
+//    public bool IsPlaying =>
+//        player?.PlaybackSession?.PlaybackState == MediaPlaybackState.Playing; //might need to expand
 
-    public bool Loop
-    {
-        get => _loop;
-        set
-        {
-            _loop = value;
-            if (player is not null)
-            {
-                player.IsLoopingEnabled = _loop;
-            }
-        }
-    }
+//    public bool Loop
+//    {
+//        get => _loop;
+//        set
+//        {
+//            _loop = value;
+//            if (player is not null)
+//            {
+//                player.IsLoopingEnabled = _loop;
+//            }
+//        }
+//    }
 
-    public bool CanSeek => player is not null && player.PlaybackSession.CanSeek;
+//    public bool CanSeek => player is not null && player.PlaybackSession.CanSeek;
 
-    public bool Load(Stream audioStream)
-    {
-        DeletePlayer();
+//    public bool Load(Stream audioStream)
+//    {
+//        DeletePlayer();
 
-        player = GetPlayer();
+//        player = GetPlayer();
 
-        if (player is null)
-        {
-            return false;
-        }
+//        if (player is null)
+//        {
+//            return false;
+//        }
 
-        player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+//        player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
 
-        player.MediaEnded += OnPlaybackEnded;
+//        player.MediaEnded += OnPlaybackEnded;
 
-        return player.Source != null;
-    }
+//        return player.Source != null;
+//    }
 
-    public bool Load(string fileName)
-    {
-        DeletePlayer();
+//    public bool Load(string fileName)
+//    {
+//        DeletePlayer();
 
-        player = GetPlayer();
+//        player = GetPlayer();
 
-        if (player is null)
-        {
-            return false;
-        }
+//        if (player is null)
+//        {
+//            return false;
+//        }
 
-        player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
-        player.MediaEnded += OnPlaybackEnded;
+//        player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
+//        player.MediaEnded += OnPlaybackEnded;
 
-        return player.Source != null;
-    }
+//        return player.Source != null;
+//    }
 
-    void DeletePlayer()
-    {
-        Stop();
+//    void DeletePlayer()
+//    {
+//        Stop();
 
-        if (player is not null)
-        {
-            player.MediaEnded -= OnPlaybackEnded;
-            player.Dispose();
-            player = null;
-        }
-    }
+//        if (player is not null)
+//        {
+//            player.MediaEnded -= OnPlaybackEnded;
+//            player.Dispose();
+//            player = null;
+//        }
+//    }
 
-    private void OnPlaybackEnded(MediaPlayer sender, object args)
-    {
-        PlaybackEnded?.Invoke(sender, EventArgs.Empty);
-    }
+//    private void OnPlaybackEnded(MediaPlayer sender, object args)
+//    {
+//        PlaybackEnded?.Invoke(sender, EventArgs.Empty);
+//    }
 
-    public void Play()
-    {
-        if (player?.Source is null)
-        {
-            return;
-        }
+//    public void Play()
+//    {
+//        if (player?.Source is null)
+//        {
+//            return;
+//        }
 
-        if (player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-        {
-            Pause();
-            Seek(0);   
-        }
+//        if (player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+//        {
+//            Pause();
+//            Seek(0);   
+//        }
 
-        player.Play();
-    }
+//        player.Play();
+//    }
 
-    public void Pause()
-    {
-        player?.Pause();
-    }
+//    public void Pause()
+//    {
+//        player?.Pause();
+//    }
 
-    public void Stop()
-    {
-        if (player is null)
-        {
-            return;
-        }
+//    public void Stop()
+//    {
+//        if (player is null)
+//        {
+//            return;
+//        }
 
-        Pause();
-        Seek(0);
-        PlaybackEnded?.Invoke(this, EventArgs.Empty);
-    }
+//        Pause();
+//        Seek(0);
+//        PlaybackEnded?.Invoke(this, EventArgs.Empty);
+//    }
 
-    public void Seek(double position)
-    {
-        if (player?.PlaybackSession is null)
-        {
-            return;
-        }
+//    public void Seek(double position)
+//    {
+//        if (player?.PlaybackSession is null)
+//        {
+//            return;
+//        }
 
-        if (player.PlaybackSession.CanSeek)
-        {
-            player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
-        }
-    }
+//        if (player.PlaybackSession.CanSeek)
+//        {
+//            player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
+//        }
+//    }
 
-    void SetVolume(double volume, double balance)
-    {
-        if (player is null || isDisposed)
-        {
-            return;
-        }
+//    void SetVolume(double volume, double balance)
+//    {
+//        if (player is null || isDisposed)
+//        {
+//            return;
+//        }
 
-        player.Volume = Math.Clamp(volume, 0, 1);
-        player.AudioBalance = Math.Clamp(balance, -1, 1);
-    }
+//        player.Volume = Math.Clamp(volume, 0, 1);
+//        player.AudioBalance = Math.Clamp(balance, -1, 1);
+//    }
 
-    MediaPlayer GetPlayer()
-    {
-        return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = _loop };
-    }
+//    MediaPlayer GetPlayer()
+//    {
+//        return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = _loop };
+//    }
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (isDisposed || player is null)
-        {
-            return;
-        }
+//    protected virtual void Dispose(bool disposing)
+//    {
+//        if (isDisposed || player is null)
+//        {
+//            return;
+//        }
 
-        if (disposing)
-        {
-            DeletePlayer();
-        }
+//        if (disposing)
+//        {
+//            DeletePlayer();
+//        }
 
-        isDisposed = true;
-    }
+//        isDisposed = true;
+//    }
 
-    ~SimpleAudioPlayerImplementation()
-    {
-        Dispose(false);
-    }
+//    ~SimpleAudioPlayerImplementation()
+//    {
+//        Dispose(false);
+//    }
 
-    public void Dispose()
-    {
-        Dispose(true);
+//    public void Dispose()
+//    {
+//        Dispose(true);
 
-        GC.SuppressFinalize(this);
-    }
-}
+//        GC.SuppressFinalize(this);
+//    }
+//}
