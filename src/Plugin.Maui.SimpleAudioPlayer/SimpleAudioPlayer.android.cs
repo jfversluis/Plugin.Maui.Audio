@@ -1,6 +1,6 @@
 ﻿namespace Plugin.Maui.SimpleAudioPlayer;
 
-public class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
+class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
 {
     public double Duration => throw new NotImplementedException();
 
