@@ -1,9 +1,21 @@
 ﻿namespace Plugin.Maui.SimpleAudioPlayer;
 
+/// <summary>
+/// Provides simple audio playback support.
+/// </summary>
 public class SimpleAudioPlayer : ISimpleAudioPlayer
 {
     static ISimpleAudioPlayer currentImplementation;
 
+    /// <summary>
+    /// Implementation factory provider for use in registering a transient or scoped implementation of <see cref="ISimpleAudioPlayer"/>.
+    /// </summary>
+    public static Func<IServiceProvider, ISimpleAudioPlayer> ImplementationFactory { get; } =
+        (serviceProvider) => new SimpleAudioPlayerImplementation();
+
+    /// <summary>
+    /// Singleton instance of <see cref="ISimpleAudioPlayer"/>.
+    /// </summary>
     public static ISimpleAudioPlayer Current => currentImplementation ??= new SimpleAudioPlayerImplementation();
 
     /// <inheritdoc />
@@ -11,7 +23,7 @@ public class SimpleAudioPlayer : ISimpleAudioPlayer
 
     /// <inheritdoc />
     public double CurrentPosition => Current.CurrentPosition;
-
+    
     /// <inheritdoc />
     public double Volume
     {

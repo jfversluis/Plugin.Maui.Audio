@@ -1,7 +1,7 @@
 ﻿namespace Plugin.Maui.SimpleAudioPlayer;
 
 /// <summary>
-/// Interface for SimpleAudioPlayer
+/// Interface definition for an audio player.
 /// </summary>
 public interface ISimpleAudioPlayer : IDisposable
 {
@@ -36,7 +36,7 @@ public interface ISimpleAudioPlayer : IDisposable
     bool IsPlaying { get; }
 
     ///<Summary>
-    /// Gets or sets whether the player will continously repeats the currently playing sound.
+    /// Gets or sets whether the player will continously repeat the currently playing sound.
     ///</Summary>
     bool Loop { get; set; }
 
