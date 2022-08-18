@@ -11,43 +11,25 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
     bool _loop;
     MediaPlayer player;
 
-    ///<Summary>
-    /// Length of audio in seconds
-    ///</Summary>
     public double Duration => player is null ? 0 : player.PlaybackSession.NaturalDuration.TotalSeconds;
 
-    ///<Summary>
-    /// Current position of audio in seconds
-    ///</Summary>
     public double CurrentPosition => player is null ? 0 : player.PlaybackSession.Position.TotalSeconds;
 
-    ///<Summary>
-    /// Playback volume (0 to 1)
-    ///</Summary>
     public double Volume
     {
         get => player?.Volume ?? 0;
         set => SetVolume(value, Balance);
     }
 
-    ///<Summary>
-    /// Balance left/right: -1 is 100% left : 0% right, 1 is 100% right : 0% left, 0 is equal volume left/right
-    ///</Summary>
     public double Balance
     {
         get => player?.AudioBalance ?? 0;
         set { SetVolume(Volume, value); }
     }
 
-    ///<Summary>
-    /// Indicates if the currently loaded audio file is playing
-    ///</Summary>
     public bool IsPlaying =>
         player?.PlaybackSession?.PlaybackState == MediaPlaybackState.Playing; //might need to expand
 
-    ///<Summary>
-    /// Continously repeats the currently playing sound
-    ///</Summary>
     public bool Loop
     {
         get => _loop;
@@ -61,14 +43,8 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
         }
     }
 
-    ///<Summary>
-    /// Indicates if the position of the loaded audio file can be updated
-    ///</Summary>
     public bool CanSeek => player is not null && player.PlaybackSession.CanSeek;
 
-    ///<Summary>
-    /// Load wave or mp3 audio file from a stream
-    ///</Summary>
     public bool Load(Stream audioStream)
     {
         DeletePlayer();
@@ -81,14 +57,12 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
         }
 
         player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+
         player.MediaEnded += OnPlaybackEnded;
 
         return player.Source != null;
     }
 
-    ///<Summary>
-    /// Load wave or mp3 audio file from assets folder in the UWP project
-    ///</Summary>
     public bool Load(string fileName)
     {
         DeletePlayer();
@@ -123,9 +97,6 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
         PlaybackEnded?.Invoke(sender, EventArgs.Empty);
     }
 
-    ///<Summary>
-    /// Begin playback or resume if paused
-    ///</Summary>
     public void Play()
     {
         if (player?.Source is null)
@@ -142,17 +113,11 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
         player.Play();
     }
 
-    ///<Summary>
-    /// Pause playback if playing (does not resume)
-    ///</Summary>
     public void Pause()
     {
         player?.Pause();
     }
 
-    ///<Summary>
-    /// Stop playack and set the current position to the beginning
-    ///</Summary>
     public void Stop()
     {
         if (player is null)
@@ -165,9 +130,6 @@ class SimpleAudioPlayerImplementation : ISimpleAudioPlayer
         PlaybackEnded?.Invoke(this, EventArgs.Empty);
     }
 
-    ///<Summary>
-    /// Seek a position in seconds in the currently loaded sound file 
-    ///</Summary>
     public void Seek(double position)
     {
         if (player?.PlaybackSession is null)
