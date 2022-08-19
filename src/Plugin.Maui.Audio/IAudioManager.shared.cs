@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio;
 
+/// <summary>
+/// Provides the ability to create <see cref="IAudioPlayer" /> instances.
+/// </summary>
 public interface IAudioManager
 {
 	/// <summary>

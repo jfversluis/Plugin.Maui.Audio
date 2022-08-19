@@ -1,7 +1,7 @@
 ﻿namespace Plugin.Maui.Audio;
 
 /// <summary>
-/// Interface for AudioPlayer
+/// Provides the ability to play audio.
 /// </summary>
 public interface IAudioPlayer : IDisposable
 {
@@ -36,7 +36,7 @@ public interface IAudioPlayer : IDisposable
 	bool IsPlaying { get; }
 
 	///<Summary>
-	/// Gets or sets whether the player will continously repeats the currently playing sound.
+	/// Gets or sets whether the player will continuously repeat the currently playing sound.
 	///</Summary>
 	bool Loop { get; set; }
 
@@ -46,22 +46,22 @@ public interface IAudioPlayer : IDisposable
 	bool CanSeek { get; }
 
 	///<Summary>
-	/// Begin playback or resume if paused
+	/// Begin playback or resume if paused.
 	///</Summary>
 	void Play();
 
 	///<Summary>
-	/// Pause playback if playing (does not resume)
+	/// Pause playback if playing (does not resume).
 	///</Summary>
 	void Pause();
 
 	///<Summary>
-	/// Stop playack and set the current position to the beginning
+	/// Stop playback and set the current position to the beginning.
 	///</Summary>
 	void Stop();
 
 	///<Summary>
-	/// Set the current playback position (in seconds)
+	/// Set the current playback position (in seconds).
 	///</Summary>
 	void Seek(double position);
 }
