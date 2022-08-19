@@ -1,7 +1,7 @@
 ﻿namespace Plugin.Maui.Audio;
 
 /// <summary>
-/// Interface for AudioPlayer
+/// Provides the ability to play audio.
 /// </summary>
 public interface IAudioPlayer : IDisposable
 {
