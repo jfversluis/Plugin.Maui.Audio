@@ -6,48 +6,38 @@ namespace Plugin.Maui.SimpleAudioPlayer;
 partial class AudioPlayer : ISimpleAudioPlayer
 {
 	bool isDisposed = false;
-	bool loop;
-	MediaPlayer? player;
+	readonly MediaPlayer player;
 
-	public double Duration => player is null ? 0 : player.PlaybackSession.NaturalDuration.TotalSeconds;
+	public double Duration => player.PlaybackSession.NaturalDuration.TotalSeconds;
 
-	public double CurrentPosition => player is null ? 0 : player.PlaybackSession.Position.TotalSeconds;
+	public double CurrentPosition => player.PlaybackSession.Position.TotalSeconds;
 
 	public double Volume
 	{
-		get => player?.Volume ?? 0;
+		get => player.Volume;
 		set => SetVolume(value, Balance);
 	}
 
 	public double Balance
 	{
-		get => player?.AudioBalance ?? 0;
-		set { SetVolume(Volume, value); }
+		get => player.AudioBalance;
+		set => SetVolume(Volume, value);
 	}
 
 	public bool IsPlaying =>
-		player?.PlaybackSession?.PlaybackState == MediaPlaybackState.Playing; //might need to expand
+		player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing; //might need to expand
 
 	public bool Loop
 	{
-		get => loop;
-		set
-		{
-			loop = value;
-			if (player is not null)
-			{
-				player.IsLoopingEnabled = loop;
-			}
-		}
+		get => player.IsLoopingEnabled;
+		set => player.IsLoopingEnabled = value;
 	}
 
-	public bool CanSeek => player is not null && player.PlaybackSession.CanSeek;
+	public bool CanSeek => player.PlaybackSession.CanSeek;
 
 	public AudioPlayer(Stream audioStream)
 	{
-		DeletePlayer();
-
-		player = GetPlayer();
+		player = CreatePlayer();
 
 		if (player is null)
 		{
@@ -55,15 +45,12 @@ partial class AudioPlayer : ISimpleAudioPlayer
 		}
 
 		player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
-
 		player.MediaEnded += OnPlaybackEnded;
 	}
 
 	public AudioPlayer(string fileName)
 	{
-		DeletePlayer();
-
-		player = GetPlayer();
+		player = CreatePlayer();
 
 		if (player is null)
 		{
@@ -74,18 +61,6 @@ partial class AudioPlayer : ISimpleAudioPlayer
 		player.MediaEnded += OnPlaybackEnded;
 	}
 
-	void DeletePlayer()
-	{
-		Stop();
-
-		if (player is not null)
-		{
-			player.MediaEnded -= OnPlaybackEnded;
-			player.Dispose();
-			player = null;
-		}
-	}
-
 	void OnPlaybackEnded(MediaPlayer sender, object args)
 	{
 		PlaybackEnded?.Invoke(sender, EventArgs.Empty);
@@ -93,7 +68,7 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
 	public void Play()
 	{
-		if (player?.Source is null)
+		if (player.Source is null)
 		{
 			return;
 		}
@@ -109,16 +84,11 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
 	public void Pause()
 	{
-		player?.Pause();
+		player.Pause();
 	}
 
 	public void Stop()
 	{
-		if (player is null)
-		{
-			return;
-		}
-
 		Pause();
 		Seek(0);
 		PlaybackEnded?.Invoke(this, EventArgs.Empty);
@@ -126,7 +96,7 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
 	public void Seek(double position)
 	{
-		if (player?.PlaybackSession is null)
+		if (player.PlaybackSession is null)
 		{
 			return;
 		}
@@ -139,7 +109,7 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
 	void SetVolume(double volume, double balance)
 	{
-		if (player is null || isDisposed)
+		if (isDisposed)
 		{
 			return;
 		}
@@ -148,21 +118,24 @@ partial class AudioPlayer : ISimpleAudioPlayer
 		player.AudioBalance = Math.Clamp(balance, -1, 1);
 	}
 
-	MediaPlayer GetPlayer()
+	MediaPlayer CreatePlayer()
 	{
-		return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = loop };
+		return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = false };
 	}
 
 	protected virtual void Dispose(bool disposing)
 	{
-		if (isDisposed || player is null)
+		if (isDisposed)
 		{
 			return;
 		}
 
 		if (disposing)
 		{
-			DeletePlayer();
+			Stop();
+
+			player.MediaEnded -= OnPlaybackEnded;
+			player.Dispose();
 		}
 
 		isDisposed = true;
