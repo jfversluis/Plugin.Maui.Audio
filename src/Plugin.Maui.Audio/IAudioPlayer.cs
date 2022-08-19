@@ -1,9 +1,9 @@
-﻿namespace Plugin.Maui.SimpleAudioPlayer;
+﻿namespace Plugin.Maui.Audio;
 
 /// <summary>
-/// Interface for SimpleAudioPlayer
+/// Interface for AudioPlayer
 /// </summary>
-public interface ISimpleAudioPlayer : IDisposable
+public interface IAudioPlayer : IDisposable
 {
 	///<Summary>
 	/// Raised when audio playback completes successfully.
@@ -45,10 +45,10 @@ public interface ISimpleAudioPlayer : IDisposable
 	///</Summary>
 	bool CanSeek { get; }
 
-    ///<Summary>
-    /// Begin playback or resume if paused
-    ///</Summary>
-    void Play();
+	///<Summary>
+	/// Begin playback or resume if paused
+	///</Summary>
+	void Play();
 
 	///<Summary>
 	/// Pause playback if playing (does not resume)

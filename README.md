@@ -1,1 +1,1 @@
-# Plugin.Maui.SimpleAudioPlayer
+# Plugin.Maui.Audio

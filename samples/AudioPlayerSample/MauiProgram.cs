@@ -1,4 +1,4 @@
-﻿using Plugin.Maui.SimpleAudioPlayer;
+﻿using Plugin.Maui.Audio;
 
 namespace AudioPlayerSample;
 

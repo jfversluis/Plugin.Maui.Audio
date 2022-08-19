@@ -46,6 +46,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\src\Plugin.Maui.SimpleAudioPlayer\Plugin.Maui.SimpleAudioPlayer.csproj" />
+	  <ProjectReference Include="..\..\src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj" />
 	</ItemGroup>
 </Project>
