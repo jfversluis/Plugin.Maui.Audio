@@ -16,7 +16,7 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddTransient<MainPage>();
-		builder.Services.AddSingleton(SimpleAudioPlayer.Current);
+		builder.Services.AddSingleton(AudioManager.Current);
 
 		return builder.Build();
 	}

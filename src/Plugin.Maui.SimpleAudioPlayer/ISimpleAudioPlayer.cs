@@ -45,20 +45,10 @@ public interface ISimpleAudioPlayer : IDisposable
 	///</Summary>
 	bool CanSeek { get; }
 
-	///<Summary>
-	/// Load wav or mp3 audio file as a stream
-	///</Summary>
-	bool Load(Stream audioStream);
-
-	///<Summary>
-	/// Load wav or mp3 audio file from local path
-	///</Summary>
-	bool Load(string fileName);
-
-	///<Summary>
-	/// Begin playback or resume if paused
-	///</Summary>
-	void Play();
+    ///<Summary>
+    /// Begin playback or resume if paused
+    ///</Summary>
+    void Play();
 
 	///<Summary>
 	/// Pause playback if playing (does not resume)
