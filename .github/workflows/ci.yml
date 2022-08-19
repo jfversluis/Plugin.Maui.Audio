@@ -5,6 +5,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  paths-ignore:
+      - '**.md'
 
 jobs:
   build-plugin-ci:
@@ -20,6 +22,6 @@ jobs:
     - name: Install .NET MAUI
       run: dotnet workload install maui
     - name: Restore dependencies
-      run: dotnet restore src\Plugin.Maui.SimpleAudioPlayer.sln
+      run: dotnet restore src\Plugin.Maui.Audio.sln
     - name: Build
-      run: dotnet build src\Plugin.Maui.SimpleAudioPlayer.sln -c Release
+      run: dotnet build src\Plugin.Maui.Audio.sln -c Release
