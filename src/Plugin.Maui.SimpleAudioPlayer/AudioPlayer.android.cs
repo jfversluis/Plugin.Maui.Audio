@@ -42,7 +42,7 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     internal AudioPlayer(Stream audioStream)
     {
-        player = new Android.Media.MediaPlayer();
+        player = new MediaPlayer();
         player.Completion += OnPlaybackEnded;
 
         //cache to the file system
@@ -81,7 +81,7 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     internal AudioPlayer(string fileName)
     {
-        player = new Android.Media.MediaPlayer() { Looping = Loop };
+        player = new MediaPlayer() { Looping = Loop };
         player.Completion += OnPlaybackEnded;
 
         AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
