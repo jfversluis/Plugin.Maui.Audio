@@ -4,10 +4,10 @@ root = true
 
 # Default settings:
 # A newline ending every file
-# Use 4 spaces as indentation
+# Use tabs as indentation
 [*]
 insert_final_newline = false
-indent_style = space
+indent_style = tab
 indent_size = 4
 
 # Code files
