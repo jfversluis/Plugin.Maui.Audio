@@ -1,9 +1,9 @@
 ﻿using Windows.Media.Core;
 using Windows.Media.Playback;
 
-namespace Plugin.Maui.SimpleAudioPlayer;
+namespace Plugin.Maui.Audio;
 
-partial class AudioPlayer : ISimpleAudioPlayer
+partial class AudioPlayer : IAudioPlayer
 {
 	bool isDisposed = false;
 	readonly MediaPlayer player;

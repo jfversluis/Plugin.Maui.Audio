@@ -1,12 +1,11 @@
-﻿using Microsoft.Maui.Controls;
-using Plugin.Maui.SimpleAudioPlayer;
+﻿using Plugin.Maui.Audio;
 
 namespace AudioPlayerSample;
 
 public partial class MainPage : ContentPage
 {
-    private readonly IAudioManager audioManager;
-    private ISimpleAudioPlayer simpleAudioPlayer;
+    readonly IAudioManager audioManager;
+    IAudioPlayer simpleAudioPlayer;
 
     public MainPage(IAudioManager audioManager)
 	{
@@ -21,7 +20,7 @@ public partial class MainPage : ContentPage
         simpleAudioPlayer.Play();
     }
 
-    void btnPause_Clicked(Object sender, EventArgs e)
+    void btnPause_Clicked(object sender, EventArgs e)
     {
         if (simpleAudioPlayer.IsPlaying)
         {
@@ -33,7 +32,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    void btnStop_Clicked(Object sender, EventArgs e)
+    void btnStop_Clicked(object sender, EventArgs e)
     {
         if (simpleAudioPlayer.IsPlaying)
         {
@@ -41,19 +40,19 @@ public partial class MainPage : ContentPage
         }
     }
 
-    void sliderVolume_ValueChanged(Object sender,
+    void sliderVolume_ValueChanged(object sender,
         ValueChangedEventArgs e)
     {
         simpleAudioPlayer.Volume = e.NewValue;
     }
 
-    void sliderBalance_ValueChanged(Object sender,
+    void sliderBalance_ValueChanged(object sender,
         ValueChangedEventArgs e)
     {
         simpleAudioPlayer.Balance = e.NewValue;
     }
 
-    void Switch_Toggled(Object sender, ToggledEventArgs e)
+    void Switch_Toggled(object sender, ToggledEventArgs e)
     {
         simpleAudioPlayer.Loop = e.Value;
     }
