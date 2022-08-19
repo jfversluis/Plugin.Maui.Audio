@@ -8,4 +8,3 @@ namespace AudioPlayerSample;
 public class MainActivity : MauiAppCompatActivity
 {
 }
-
