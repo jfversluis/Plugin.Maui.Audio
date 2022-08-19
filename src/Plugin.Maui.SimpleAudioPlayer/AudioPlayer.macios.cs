@@ -102,7 +102,7 @@ partial class AudioPlayer : ISimpleAudioPlayer
         return true;
     }
 
-    private void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
+    void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
     {
         PlaybackEnded?.Invoke(this, e);
     }

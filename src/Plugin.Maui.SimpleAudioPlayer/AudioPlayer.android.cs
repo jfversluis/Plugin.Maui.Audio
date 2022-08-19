@@ -9,8 +9,8 @@ partial class AudioPlayer : ISimpleAudioPlayer
 {
     readonly MediaPlayer player;
     static int index = 0;
-    double _volume = 0.5;
-    double _balance = 0;
+    double volume = 0.5;
+    double balance = 0;
     string path = string.Empty;
     bool isDisposed = false;
 
@@ -20,14 +20,14 @@ partial class AudioPlayer : ISimpleAudioPlayer
 
     public double Volume
     {
-        get => _volume;
-        set => SetVolume(_volume = value, Balance);
+        get => volume;
+        set => SetVolume(volume = value, Balance);
     }
 
     public double Balance
     {
-        get => _balance;
-        set => SetVolume(Volume, _balance = value);
+        get => balance;
+        set => SetVolume(Volume, balance = value);
     }
 
     public bool IsPlaying => player.IsPlaying;
