@@ -114,3 +114,15 @@ Set the current playback position (in seconds).
 ##### `Stop()`
 
 Stop playback and set the current position to the beginning.
+
+# Acknowledgements
+
+This project could not have came to be without these projects and people, thank you! <3
+
+## SimpleAudioPlayer for Xamarin
+
+Basically this plugin, but then for Xamarin. We have been using this in our Xamarin projects with much joy and ease, so thank you so much [Adrian](https://github.com/adrianstevens) (and contributors!) for that. Find the original project [here](https://github.com/adrianstevens/Xamarin-Plugins/tree/main/SimpleAudioPlayer) where we have based our project on and evolved it from there.
+
+## The Happy Ukelele Song
+
+As a little sample song we wanted something Hawaii/Maui themed obviously, and we found The Happy Ukelele Song which seems to fit that description. Thank you [Stanislav Fomin](https://download1.audiohero.com/artist/597084) and [AudioHero](https://download1.audiohero.com/track/40778468) for making it available.
