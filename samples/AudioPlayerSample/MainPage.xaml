@@ -12,6 +12,7 @@
             <Image
                 Source="dotnet_bot.png"
                 SemanticProperties.Description="Dot net bot playing some tunes on a guitar next to a speaker"
+                x:Name="DotnetBotImage"
                 HeightRequest="200"
                 HorizontalOptions="Center" />
 

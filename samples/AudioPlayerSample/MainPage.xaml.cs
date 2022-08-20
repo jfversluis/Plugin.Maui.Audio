@@ -6,6 +6,7 @@ public partial class MainPage : ContentPage
 {
     readonly IAudioManager audioManager;
 	readonly IDispatcher dispatcher;
+    readonly Animation playingAnimation;
 	IAudioPlayer simpleAudioPlayer;
     bool isPositionChangeSystemDriven;
 
@@ -17,6 +18,12 @@ public partial class MainPage : ContentPage
 
 		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
+
+        playingAnimation = new Animation
+        {
+            { 0.0, 0.5, new Animation(v => DotnetBotImage.Scale = v, 1.00, 1.05) },
+			{ 0.5, 1.0, new Animation(v => DotnetBotImage.Scale = v, 1.05, 1.00) }
+		};
 	}
 
     async void btnPlay_Clicked(Object sender, EventArgs e)
@@ -32,6 +39,7 @@ public partial class MainPage : ContentPage
         // TODO: Possible MAUI bug as this appears to do nothing (only tested on iOS and macOS).
         sliderPosition.Maximum = simpleAudioPlayer.Duration;
 
+		UpdateAnimation();
 		UpdatePlaybackPosition();
 	}
 
@@ -47,6 +55,8 @@ public partial class MainPage : ContentPage
 
             UpdatePlaybackPosition();
         }
+
+        UpdateAnimation();
     }
 
     void btnStop_Clicked(object sender, EventArgs e)
@@ -54,7 +64,9 @@ public partial class MainPage : ContentPage
         if (simpleAudioPlayer.IsPlaying)
         {
             simpleAudioPlayer.Stop();
-        }
+
+			UpdateAnimation();
+		}
     }
 
     void sliderVolume_ValueChanged(object sender,
@@ -83,6 +95,24 @@ public partial class MainPage : ContentPage
 
         simpleAudioPlayer.Seek(e.NewValue);
 	}
+
+    void UpdateAnimation()
+    {
+        const string animationName = "MusicPlaying";
+
+        if (simpleAudioPlayer.IsPlaying)
+        {
+            playingAnimation.Commit(
+                DotnetBotImage,
+                animationName,
+                length: 1000,
+                repeat: () => simpleAudioPlayer.IsPlaying);
+        }
+        else
+        {
+            DotnetBotImage.AbortAnimation(animationName);
+        }
+    }
 
 	void UpdatePlaybackPosition()
 	{
