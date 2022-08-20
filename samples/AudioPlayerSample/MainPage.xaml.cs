@@ -70,7 +70,7 @@ public partial class MainPage : ContentPage
 
 	void sliderPosition_ValueChanged(object sender, ValueChangedEventArgs e)
 	{
-        if (isPositionChangeSystemDriven)
+        if (isPositionChangeSystemDriven || simpleAudioPlayer.CanSeek is false)
         {
             return;
         }
