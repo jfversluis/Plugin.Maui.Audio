@@ -16,9 +16,11 @@
                 HorizontalOptions="Center" />
 
             <!-- TODO: we don't have position yet --> 
-            <!--<Label Text="Postion:" />
-            <Slider x:Name="sliderPosition" />
-            <Label x:Name="lblPosition" />-->
+            <Label Text="Postion:" />
+            <Slider x:Name="sliderPosition"
+                    Minimum="0"
+                    ValueChanged="sliderPosition_ValueChanged" />
+            <Label x:Name="lblPosition" />
 
             <HorizontalStackLayout Spacing="5" HorizontalOptions="Center">
                 <Button
