@@ -14,13 +14,19 @@ public partial class MainPage : ContentPage
         IDispatcher dispatcher)
 	{
 		InitializeComponent();
-        this.audioManager = audioManager;
+
+		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
 	}
 
     async void btnPlay_Clicked(Object sender, EventArgs e)
     {
-        simpleAudioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
+        // TODO: some kind of Lazy access might be nice but it gets complicated with async/await.
+        if (simpleAudioPlayer is null)
+        {
+            simpleAudioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
+        }
+
         simpleAudioPlayer.Play();
 
         // TODO: Possible MAUI bug as this appears to do nothing (only tested on iOS and macOS).
