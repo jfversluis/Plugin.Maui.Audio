@@ -5,9 +5,6 @@ public class PlayAudioBehavior : Behavior<View>
 	IAudioPlayer? audioPlayer;
 	readonly TapGestureRecognizer tapGestureRecognizer;
 
-	/// <summary>
-	/// Backing BindableProperty for the <see cref="AnimationType"/> property.
-	/// </summary>
 	public static readonly BindableProperty AudioFileProperty =
 		BindableProperty.Create(
 			nameof(AudioFile),
@@ -15,9 +12,6 @@ public class PlayAudioBehavior : Behavior<View>
 			typeof(PlayAudioBehavior),
 			propertyChanged: OnAudioFilePropertyChanged);
 
-	/// <summary>
-	/// The type of animation to perform.
-	/// </summary>
 	public string? AudioFile // TODO: AudioSource???
 	{
 		get => (string?)GetValue(AudioFileProperty);
