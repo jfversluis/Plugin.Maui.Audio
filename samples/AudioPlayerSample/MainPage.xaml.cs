@@ -15,7 +15,6 @@ public partial class MainPage : ContentPage
 
     async void btnPlay_Clicked(Object sender, EventArgs e)
     {
-        // TODO: attribute https://download1.audiohero.com/track/40778468
         simpleAudioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
         simpleAudioPlayer.Play();
     }
