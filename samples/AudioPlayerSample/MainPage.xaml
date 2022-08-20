@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:audio="clr-namespace:Plugin.Maui.Audio;assembly=Plugin.Maui.Audio"
              x:Class="AudioPlayerSample.MainPage">
 
     <ScrollView>
@@ -13,7 +14,12 @@
                 Source="dotnet_bot.png"
                 SemanticProperties.Description="Dot net bot playing some tunes on a guitar next to a speaker"
                 HeightRequest="200"
-                HorizontalOptions="Center" />
+                HorizontalOptions="Center">
+                <Image.Behaviors>
+                    <audio:PlayAudioBehavior AudioFile="ukelele.mp3" />
+                </Image.Behaviors>
+
+            </Image>
 
             <!-- TODO: we don't have position yet --> 
             <!--<Label Text="Postion:" />
