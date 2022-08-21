@@ -2,16 +2,20 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
-             x:Class="AudioPlayerSample.MainPage">
+             xmlns:viewmodels="clr-namespace:AudioPlayerSample.ViewModels"
+             x:Class="AudioPlayerSample.Pages.MusicPlayerPage"
+             x:DataType="viewmodels:MusicPlayerPageViewModel"
+             Title="{Binding MusicItemViewModel.Title}">
 
     <ScrollView>
         <VerticalStackLayout
             Spacing="25"
             Padding="30,0"
-            VerticalOptions="Center">
+            VerticalOptions="Center"
+            IsEnabled="{Binding HasAudioSource}">
 
             <skia:SKLottieView
-                IsAnimationEnabled="{Binding IsAnimationPlaying}"
+                IsAnimationEnabled="{Binding IsPlaying}"
                 Progress="{Binding AnimationProgress}"
                 RepeatCount="-1"
                 Source="dotnetbot.json"

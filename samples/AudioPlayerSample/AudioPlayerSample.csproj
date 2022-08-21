@@ -51,4 +51,20 @@
 	<ItemGroup>
 	  <PackageReference Include="SkiaSharp.Extended.UI.Maui" Version="2.0.0-preview.59" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Pages\" />
+	  <None Remove="ViewModels\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Pages\" />
+	  <Folder Include="ViewModels\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <MauiXaml Update="Pages\MyLibraryPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\MusicPlayerPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	</ItemGroup>
 </Project>
