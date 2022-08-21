@@ -1,18 +1,25 @@
 ﻿using System.ComponentModel;
+using Microsoft.Maui.Dispatching;
 using Plugin.Maui.Audio;
 
 namespace AudioPlayerSample.ViewModels;
 
-public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable
+public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisposable
 {
 	readonly IAudioManager audioManager;
+	readonly IDispatcher dispatcher;
 	IAudioPlayer audioPlayer;
-	private TimeSpan animationProgress;
+	TimeSpan animationProgress;
 	MusicItemViewModel musicItemViewModel;
+	bool isPositionChangeSystemDriven;
+	bool isDisposed;
 
-	public MusicPlayerPageViewModel(IAudioManager audioManager)
+	public MusicPlayerPageViewModel(
+		IAudioManager audioManager,
+		IDispatcher dispatcher)
 	{
 		this.audioManager = audioManager;
+		this.dispatcher = dispatcher;
 
 		PlayCommand = new Command(Play);
 		PauseCommand = new Command(Pause);
@@ -30,8 +37,25 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable
 				await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
 
 			NotifyPropertyChanged(nameof(HasAudioSource));
+			NotifyPropertyChanged(nameof(Duration));
 		}
 	}
+
+	public double CurrentPosition
+	{
+		get => audioPlayer?.CurrentPosition ?? 0;
+		set
+		{
+			if (audioPlayer is not null &&
+				audioPlayer.CanSeek &&
+				isPositionChangeSystemDriven is false)
+			{
+				audioPlayer.Seek(value);
+			}
+		}
+	}
+
+	public double Duration => audioPlayer?.Duration ?? 1;
 
 	public MusicItemViewModel MusicItemViewModel
 	{
@@ -98,6 +122,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable
 	{
 		audioPlayer.Play();
 
+		UpdatePlaybackPosition();
 		NotifyPropertyChanged(nameof(IsPlaying));
 	}
 
@@ -112,6 +137,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable
 			audioPlayer.Play();
 		}
 
+		UpdatePlaybackPosition();
 		NotifyPropertyChanged(nameof(IsPlaying));
 	}
 
@@ -125,5 +151,61 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable
 
 			NotifyPropertyChanged(nameof(IsPlaying));
 		}
+	}
+
+	void UpdatePlaybackPosition()
+	{
+		if (audioPlayer?.IsPlaying is false)
+		{
+			return;
+		}
+
+		dispatcher.DispatchDelayed(
+			TimeSpan.FromMilliseconds(16),
+			() =>
+			{
+				Console.WriteLine($"{CurrentPosition} with duration of {Duration}");
+
+				isPositionChangeSystemDriven = true;
+
+				NotifyPropertyChanged(nameof(CurrentPosition));
+
+				isPositionChangeSystemDriven = false;
+
+				UpdatePlaybackPosition();
+			});
+	}
+
+	public void TidyUp()
+	{
+		audioPlayer?.Dispose();
+		audioPlayer = null;
+	}
+
+	~MusicPlayerPageViewModel()
+	{
+		Dispose(false);
+	}
+
+	public void Dispose()
+	{
+		Dispose(true);
+
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (isDisposed)
+		{
+			return;
+		}
+
+		if (disposing)
+		{
+			TidyUp();
+		}
+
+		isDisposed = true;
 	}
 }

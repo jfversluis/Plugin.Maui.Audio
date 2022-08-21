@@ -10,4 +10,11 @@ public partial class MusicPlayerPage : ContentPage
 
 		BindingContext = musicPlayerPageViewModel;
 	}
+
+	protected override void OnDisappearing()
+	{
+		base.OnDisappearing();
+
+		((MusicPlayerPageViewModel)BindingContext).TidyUp();
+	}
 }

@@ -3,9 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
              xmlns:viewmodels="clr-namespace:AudioPlayerSample.ViewModels"
+             xmlns:converters="clr-namespace:AudioPlayerSample.Converters"
              x:Class="AudioPlayerSample.Pages.MusicPlayerPage"
              x:DataType="viewmodels:MusicPlayerPageViewModel"
              Title="{Binding MusicItemViewModel.Title}">
+
+    <ContentPage.Resources>
+        <converters:SecondsToStringConverter x:Key="SecondsToStringConverter" />
+
+    </ContentPage.Resources>
 
     <ScrollView>
         <VerticalStackLayout
@@ -24,10 +30,22 @@
                 WidthRequest="200"
                 HorizontalOptions="Center" />
 
-            <!-- TODO: we don't have position yet --> 
-            <!--<Label Text="Postion:" />
-            <Slider x:Name="sliderPosition" />
-            <Label x:Name="lblPosition" />-->
+            <HorizontalStackLayout>
+                <Label Text="Postion:" />
+
+                <Label>
+                    <Label.Text>
+                        <MultiBinding StringFormat="{}{0}/{1}">
+                            <Binding Path="CurrentPosition" Converter="{StaticResource SecondsToStringConverter}" />
+                            <Binding Path="Duration" Converter="{StaticResource SecondsToStringConverter}" />
+                        </MultiBinding>
+                    </Label.Text>
+                </Label>
+            </HorizontalStackLayout>
+            
+            <Slider
+                Value="{Binding CurrentPosition}"
+                Maximum="{Binding Duration}" />
 
             <HorizontalStackLayout Spacing="5" HorizontalOptions="Center">
                 <Button
