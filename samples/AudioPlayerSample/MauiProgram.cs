@@ -1,4 +1,5 @@
 ﻿using Plugin.Maui.Audio;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace AudioPlayerSample;
 
@@ -9,6 +10,7 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseSkiaSharp()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -16,6 +18,7 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddTransient<MainPage>();
+		builder.Services.AddTransient<MainPageModel>();
 		builder.Services.AddSingleton(AudioManager.Current);
 
 		return builder.Build();

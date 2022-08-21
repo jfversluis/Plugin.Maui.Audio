@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
              x:Class="AudioPlayerSample.MainPage">
 
     <ScrollView>
@@ -9,10 +10,14 @@
             Padding="30,0"
             VerticalOptions="Center">
 
-            <Image
-                Source="dotnet_bot.png"
+            <skia:SKLottieView
+                IsAnimationEnabled="{Binding IsAnimationPlaying}"
+                Progress="{Binding AnimationProgress}"
+                RepeatCount="-1"
+                Source="dotnetbot.json"
                 SemanticProperties.Description="Dot net bot playing some tunes on a guitar next to a speaker"
                 HeightRequest="200"
+                WidthRequest="200"
                 HorizontalOptions="Center" />
 
             <!-- TODO: we don't have position yet --> 
@@ -25,41 +30,40 @@
                     x:Name="btnPlay"
                     Text="Play"
                     BackgroundColor="Green"
-                    Clicked="btnPlay_Clicked"
+                    Command="{Binding PlayCommand}"
                     SemanticProperties.Hint="Start playing a sound" />
 
                 <Button
                     x:Name="btnPause"
                     Text="Pause"
                     BackgroundColor="Blue"
-                    Clicked="btnPause_Clicked"
+                    Command="{Binding PauseCommand}"
                     SemanticProperties.Hint="Pause playing the sound" />
 
                 <Button
                     x:Name="btnStop"
                     Text="Stop"
                     BackgroundColor="Red"
-                    Clicked="btnStop_Clicked"
+                    Command="{Binding StopCommand}"
                     SemanticProperties.Hint="Stop playing the sound" />
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout HorizontalOptions="Center">
-                <Label Text="Loop:" />
-                <Switch Toggled="Switch_Toggled" />
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="3">
+                <Label Text="Loop:" VerticalOptions="Center" />
+                <Switch IsToggled="{Binding Loop}" VerticalOptions="Center" />
             </HorizontalStackLayout>
 
             <Label Text="Volume:" />
             <Slider
                 Minimum="0"
                 Maximum="1"
-                Value="1"
-                ValueChanged="sliderVolume_ValueChanged" />
+                Value="{Binding Volume}" />
 
             <Label Text="Balance:" />
             <Slider
                 Minimum="-1"
                 Maximum="1"
-                ValueChanged="sliderBalance_ValueChanged" />
+                Value="{Binding Balance}" />
 
         </VerticalStackLayout>
     </ScrollView>

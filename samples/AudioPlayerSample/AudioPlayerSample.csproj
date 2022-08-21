@@ -38,7 +38,6 @@
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
 		<!-- Images -->
-		<MauiImage Include="Resources\Images\*" />
 		<MauiFont Include="Resources\Fonts\*" />
 
 		<!-- Embedded Resources (also remove the "Resources\EmbeddedResources" prefix) -->
@@ -47,5 +46,9 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="SkiaSharp.Extended.UI.Maui" Version="2.0.0-preview.59" />
 	</ItemGroup>
 </Project>
