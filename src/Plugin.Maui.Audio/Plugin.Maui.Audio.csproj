@@ -65,4 +65,9 @@
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" IsImplicitlyDefined="true" />
 	</ItemGroup>
 
+	<!-- Package additions -->
+	<ItemGroup>
+		<PackageReference Include="..\..\nuget.png" PackagePath="icon.png" Pack="true" />
+	</ItemGroup>
+
 </Project>
