@@ -24,7 +24,7 @@ jobs:
         run: dotnet workload install maui
       - name: Set VERSION variable from tag
         run: |
-          echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+          echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $env:GITHUB_ENV
           echo "$env:VERSION"
           echo "${{ env.VERSION }}"
       - name: Restore dependencies
