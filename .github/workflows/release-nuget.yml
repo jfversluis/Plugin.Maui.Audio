@@ -1,3 +1,5 @@
+name: Create a (Pre)release on NuGet
+
 on:
   push:
     tags:
@@ -21,14 +23,17 @@ jobs:
       - name: Install .NET MAUI
         run: dotnet workload install maui
       - name: Set VERSION variable from tag
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+        run: |
+          echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+          echo $env:VERSION
+          echo ${{ env.VERSION }}
       - name: Restore dependencies
         run: dotnet restore src\Plugin.Maui.Audio.sln
       - name: Build
-        run: dotnet build src\Plugin.Maui.Audio.sln -c Release /p:Version=${{ env.VERSION }}
+        run: dotnet build src\Plugin.Maui.Audio.sln -c Release /p:Version=$env:VERSION
       - name: Pack
-        run: dotnet pack src\Plugin.Maui.Audio.sln -c Release /p:Version=${{ env.VERSION }} --no-build --output .
+        run: dotnet pack src\Plugin.Maui.Audio.sln -c Release /p:Version=$env:VERSION --no-build --output .
       - name: Push
-        run: dotnet nuget push Plugin.Maui.Audio.${{ env.VERSION }}.nupkg -s https://api.nuget.org/v3/index.json -k ${NUGET_API_KEY}
+        run: dotnet nuget push Plugin.Maui.Audio.$env:VERSION.nupkg -s https://api.nuget.org/v3/index.json -k ${NUGET_API_KEY}
         env:
           GITHUB_TOKEN: ${{ secrets.NUGET_API_KEY }}
