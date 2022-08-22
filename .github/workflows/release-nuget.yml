@@ -25,8 +25,8 @@ jobs:
       - name: Set VERSION variable from tag
         run: |
           echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
-          echo $env:VERSION
-          echo ${{ env.VERSION }}
+          echo "$env:VERSION"
+          echo "${{ env.VERSION }}"
       - name: Restore dependencies
         run: dotnet restore src\Plugin.Maui.Audio.sln
       - name: Build
