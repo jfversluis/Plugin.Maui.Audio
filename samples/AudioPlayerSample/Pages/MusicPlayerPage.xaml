@@ -10,7 +10,6 @@
 
     <ContentPage.Resources>
         <converters:SecondsToStringConverter x:Key="SecondsToStringConverter" />
-
     </ContentPage.Resources>
 
     <ScrollView>
@@ -30,18 +29,14 @@
                 WidthRequest="200"
                 HorizontalOptions="Center" />
 
-            <HorizontalStackLayout>
-                <Label Text="Postion:" />
-
-                <Label>
-                    <Label.Text>
-                        <MultiBinding StringFormat="{}{0}/{1}">
-                            <Binding Path="CurrentPosition" Converter="{StaticResource SecondsToStringConverter}" />
-                            <Binding Path="Duration" Converter="{StaticResource SecondsToStringConverter}" />
-                        </MultiBinding>
-                    </Label.Text>
-                </Label>
-            </HorizontalStackLayout>
+            <Label HorizontalOptions="Center">
+                <Label.Text>
+                    <MultiBinding StringFormat="{}Position: {0}/{1}">
+                        <Binding Path="CurrentPosition" Converter="{StaticResource SecondsToStringConverter}" />
+                        <Binding Path="Duration" Converter="{StaticResource SecondsToStringConverter}" />
+                    </MultiBinding>
+                </Label.Text>
+            </Label>
             
             <Slider
                 Value="{Binding CurrentPosition}"
