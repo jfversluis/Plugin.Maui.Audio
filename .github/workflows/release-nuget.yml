@@ -28,10 +28,10 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src\Plugin.Maui.Audio.sln
       - name: Build
-        run: dotnet build src\Plugin.Maui.Audio.sln -c Release /p:Version=${{ steps.get_version.outputs.version }}
+        run: dotnet build src\Plugin.Maui.Audio.sln -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
       - name: Pack
-        run: dotnet pack src\Plugin.Maui.Audio.sln -c Release /p:Version=${{ steps.get_version.outputs.version }} --no-build --output .
+        run: dotnet pack src\Plugin.Maui.Audio.sln -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }} --no-build --output .
       - name: Push
-        run: dotnet nuget push Plugin.Maui.Audio.${{ steps.get_version.outputs.version }}.nupkg -s https://api.nuget.org/v3/index.json -k ${NUGET_API_KEY}
+        run: dotnet nuget push Plugin.Maui.Audio.${{ steps.get_version.outputs.version-without-v }}.nupkg -s https://api.nuget.org/v3/index.json -k ${NUGET_API_KEY}
         env:
           GITHUB_TOKEN: ${{ secrets.NUGET_API_KEY }}
