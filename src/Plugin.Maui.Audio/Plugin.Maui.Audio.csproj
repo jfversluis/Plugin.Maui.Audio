@@ -68,7 +68,15 @@
 
 	<!-- Package additions -->
 	<ItemGroup>
+	  <None Remove="AudioPlayer\" />
+	  <None Remove="AudioRecorder\" />
+	</ItemGroup>
+	<ItemGroup>
 		<None Include="..\..\nuget.png" PackagePath="icon.png" Pack="true" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="AudioPlayer\" />
+	  <Folder Include="AudioRecorder\" />
+	</ItemGroup>
 </Project>
