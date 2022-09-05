@@ -24,7 +24,13 @@ partial class AudioPlayer : IAudioPlayer
         set => player.Pan = (float)Math.Clamp(value, -1, 1);
     }
 
-    public bool IsPlaying => player.Playing;
+	public double Speed
+	{
+		get => player.Rate;
+		set => player.Rate = (float)value;
+	}
+
+	public bool IsPlaying => player.Playing;
 
     public bool Loop
     {
@@ -96,6 +102,7 @@ partial class AudioPlayer : IAudioPlayer
     bool PreparePlayer()
     {
         player.FinishedPlaying += OnPlayerFinishedPlaying;
+		player.EnableRate = true;
         player.PrepareToPlay();
 
         return true;

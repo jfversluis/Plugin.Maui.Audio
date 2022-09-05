@@ -10,8 +10,8 @@ partial class AudioPlayer : IAudioPlayer
     readonly MediaPlayer player;
     static int index = 0;
     double volume = 0.5;
-    double balance = 0;
-    string path = string.Empty;
+	double balance = 0;
+	string path = string.Empty;
     bool isDisposed = false;
 
     public double Duration => player.Duration / 1000.0;
@@ -30,7 +30,13 @@ partial class AudioPlayer : IAudioPlayer
         set => SetVolume(Volume, balance = value);
     }
 
-    public bool IsPlaying => player.IsPlaying;
+	public double Speed
+	{
+		get => player.PlaybackParams.Speed;
+		set => player.PlaybackParams.SetSpeed((float)value);
+	}
+
+	public bool IsPlaying => player.IsPlaying;
 
     public bool Loop
     {

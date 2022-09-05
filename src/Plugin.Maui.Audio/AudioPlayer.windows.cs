@@ -24,6 +24,12 @@ partial class AudioPlayer : IAudioPlayer
 		set => SetVolume(Volume, value);
 	}
 
+	public double Speed
+	{
+		get => player.PlaybackRate;
+		set => player.PlaybackRate = value;
+	}
+
 	public bool IsPlaying =>
 		player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing; //might need to expand
 

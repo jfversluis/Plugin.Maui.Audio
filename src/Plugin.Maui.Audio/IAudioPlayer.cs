@@ -31,6 +31,11 @@ public interface IAudioPlayer : IDisposable
 	double Balance { get; set; }
 
 	///<Summary>
+	/// Gets or sets the playback speed where 1 is normal speed.
+	///</Summary>
+	double Speed { get; set; }
+
+	///<Summary>
 	/// Gets a value indicating whether the currently loaded audio file is playing.
 	///</Summary>
 	bool IsPlaying { get; }
