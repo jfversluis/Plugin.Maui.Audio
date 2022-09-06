@@ -33,7 +33,17 @@ partial class AudioPlayer : IAudioPlayer
 	public double Speed
 	{
 		get => player.PlaybackParams.Speed;
-		set => player.PlaybackParams.SetSpeed((float)value);
+		set
+		{
+			try
+			{
+				player.PlaybackParams = player.PlaybackParams.SetSpeed((float)value) ?? player.PlaybackParams;
+			}
+			catch (Exception)
+			{
+				//Ensures that the speed limitations on different devices are handled!
+			}
+		}
 	}
 
 	public bool IsPlaying => player.IsPlaying;
@@ -83,9 +93,9 @@ partial class AudioPlayer : IAudioPlayer
         }
 
         player.Prepare();
-    }
+	}
 
-    internal AudioPlayer(string fileName)
+	internal AudioPlayer(string fileName)
     {
         player = new MediaPlayer() { Looping = Loop };
         player.Completion += OnPlaybackEnded;

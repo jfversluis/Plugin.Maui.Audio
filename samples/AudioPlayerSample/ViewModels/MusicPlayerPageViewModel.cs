@@ -109,6 +109,19 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 	}
 
+	public double Speed
+	{
+		get => audioPlayer?.Speed ?? 1;
+		set
+		{
+			if (audioPlayer != null)
+			{
+				audioPlayer.Speed = Math.Round(value, 1, MidpointRounding.AwayFromZero);
+				NotifyPropertyChanged();
+			}
+		}
+	}
+
 	public bool Loop
 	{
 		get => audioPlayer?.Loop ?? false;
