@@ -89,11 +89,11 @@ Gets the length of audio in seconds.
 
 Gets a value indicating whether the currently loaded audio file is playing.
 
-##### `Loop`
+##### `Volume`
 
 Gets or sets the playback volume 0 to 1 where 0 is no-sound and 1 is full volume.
 
-##### `Volume`
+##### `Loop`
 
 Gets or sets whether the player will continuously repeat the currently playing sound.
 
