@@ -1,4 +1,5 @@
-﻿using Android.Content.Res;
+﻿using System.Runtime.Versioning;
+using Android.Content.Res;
 using Android.Media;
 using Stream = System.IO.Stream;
 using Uri = Android.Net.Uri;
@@ -30,21 +31,32 @@ partial class AudioPlayer : IAudioPlayer
         set => SetVolume(Volume, balance = value);
     }
 
+	[SupportedOSPlatform("Android23.0")]
 	public double Speed
 	{
 		get => player.PlaybackParams.Speed;
 		set
 		{
-			try
+			//Check if set speed is supported
+			if (CanSetSpeed)
 			{
-				player.PlaybackParams = player.PlaybackParams.SetSpeed((float)value) ?? player.PlaybackParams;
+				try
+				{
+					player.PlaybackParams = player.PlaybackParams.SetSpeed((float)value) ?? player.PlaybackParams;
+				}
+				catch (Exception ex)
+				{
+					SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value, innerException: ex);
+				}
 			}
-			catch (Exception)
+			else
 			{
-				//Ensures that the speed limitations on different devices are handled!
+				throw new NotSupportedException("Set playback speed is not supported!");
 			}
 		}
 	}
+
+	public bool CanSetSpeed => Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.M;
 
 	public bool IsPlaying => player.IsPlaying;
 

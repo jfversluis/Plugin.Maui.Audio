@@ -36,6 +36,11 @@ public interface IAudioPlayer : IDisposable
 	double Speed { get; set; }
 
 	///<Summary>
+	/// Gets a value indicating whether the playback speed can be changed.
+	///</Summary>
+	bool CanSetSpeed { get; }
+
+	///<Summary>
 	/// Gets a value indicating whether the currently loaded audio file is playing.
 	///</Summary>
 	bool IsPlaying { get; }

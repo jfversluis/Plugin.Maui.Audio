@@ -1,5 +1,6 @@
 ﻿using AVFoundation;
 using Foundation;
+using Microsoft.Maui.Controls.PlatformConfiguration;
 
 namespace Plugin.Maui.Audio;
 
@@ -27,8 +28,36 @@ partial class AudioPlayer : IAudioPlayer
 	public double Speed
 	{
 		get => player.Rate;
-		set => player.Rate = (float)value;
+		set
+		{
+			//Check if set speed is supported
+			if (CanSetSpeed)
+			{
+				try
+				{
+					//Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
+					if (value >= 0.5 && value <= 2.0)
+					{
+						player.Rate = (float)value;
+					}
+					else
+					{
+						SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value, 0.5, 2.0);
+					}
+				}
+				catch (Exception ex)
+				{
+					SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value, 0.5, 2.0, ex);
+				}
+			}
+			else
+			{
+				throw new NotSupportedException("Set playback speed is not supported!");
+			}
+		}
 	}
+
+	public bool CanSetSpeed => true;
 
 	public bool IsPlaying => player.Playing;
 
