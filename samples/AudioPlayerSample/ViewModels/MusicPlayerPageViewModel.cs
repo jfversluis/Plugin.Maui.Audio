@@ -114,10 +114,17 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		get => audioPlayer?.Speed ?? 1;
 		set
 		{
-			if (audioPlayer != null)
+			try
 			{
-				audioPlayer.Speed = Math.Round(value, 1, MidpointRounding.AwayFromZero);
-				NotifyPropertyChanged();
+				if (audioPlayer != null)
+				{
+					audioPlayer.Speed = Math.Round(value, 1, MidpointRounding.AwayFromZero);
+					NotifyPropertyChanged();
+				}
+			}
+			catch (SpeedOutOfRangeException ex)
+			{
+				App.Current.MainPage.DisplayAlert("Speed", ex.Message, "OK");
 			}
 		}
 	}
