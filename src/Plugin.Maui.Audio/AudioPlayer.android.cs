@@ -1,17 +1,15 @@
 ﻿using Android.Content.Res;
 using Android.Media;
 using Stream = System.IO.Stream;
-using Uri = Android.Net.Uri;
 
 namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
     readonly MediaPlayer player;
-    static int index = 0;
     double volume = 0.5;
     double balance = 0;
-    string path = string.Empty;
+	readonly MemoryStream stream;
     bool isDisposed = false;
 
     public double Duration => player.Duration / 1000.0;
@@ -40,44 +38,18 @@ partial class AudioPlayer : IAudioPlayer
 
     public bool CanSeek => true;
 
-    internal AudioPlayer(Stream audioStream)
-    {
-        player = new MediaPlayer();
-        player.Completion += OnPlaybackEnded;
+	internal AudioPlayer(Stream audioStream)
+	{
+		player = new MediaPlayer();
+		player.Completion += OnPlaybackEnded;
 
-        //cache to the file system
-        path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), $"cache{index++}.wav");
 
-        DeleteFile(path);
-
-        var fileStream = File.Create(path);
-        audioStream.CopyTo(fileStream);
-        fileStream.Close();
-
-        try
-        {
-            player.SetDataSource(path);
-        }
-        catch
-        {
-            try
-            {
-                var context = Android.App.Application.Context;
-                var encodedPath = Uri.Encode(path)
-                    ?? throw new FailedToLoadAudioException("Unable to generate encoded path.");
-                var uri = Uri.Parse(encodedPath)
-                    ?? throw new FailedToLoadAudioException("Unable to parse encoded path.");
-
-                player.SetDataSource(context, uri);
-            }
-            catch
-            {
-                //return false;
-            }
-        }
-
-        player.Prepare();
-    }
+		stream = new MemoryStream();
+		audioStream.CopyTo(stream);
+		var mediaDataSource = new StreamMediaDataSource(stream);
+		player.SetDataSource(mediaDataSource);
+		player.Prepare();
+	}
 
     internal AudioPlayer(string fileName)
     {
@@ -92,19 +64,6 @@ partial class AudioPlayer : IAudioPlayer
         player.Prepare();
     }
 
-    void DeleteFile(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path) == false)
-        {
-            try
-            {
-                File.Delete(path);
-            }
-            catch
-            {
-            }
-        }
-    }
 
     public void Play()
     {
@@ -178,9 +137,8 @@ partial class AudioPlayer : IAudioPlayer
             player.Completion -= OnPlaybackEnded;
             player.Release();
             player.Dispose();
-
-            DeleteFile(path);
-            path = string.Empty;
+			stream?.Dispose();
+         
         }
 
         isDisposed = true;
