@@ -83,7 +83,7 @@
                 Value="{Binding Balance}" />
 
 
-			<Label>
+			<Label IsVisible="{Binding CanSetSpeed}">
 				<Label.FormattedText>
 					<FormattedString>
 						<Span Text="Speed" />
@@ -92,6 +92,7 @@
 				</Label.FormattedText>
 			</Label>
 			<Slider
+				IsVisible="{Binding CanSetSpeed}"
                 Minimum="0.5"
                 Maximum="2"
                 Value="{Binding Speed}" />

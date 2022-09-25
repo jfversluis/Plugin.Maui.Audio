@@ -38,6 +38,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 
 			NotifyPropertyChanged(nameof(HasAudioSource));
 			NotifyPropertyChanged(nameof(Duration));
+			NotifyPropertyChanged(nameof(CanSetSpeed));
 		}
 	}
 
@@ -109,6 +110,8 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 	}
 
+	public bool CanSetSpeed => audioPlayer?.CanSetSpeed ?? false;
+
 	public double Speed
 	{
 		get => audioPlayer?.Speed ?? 1;
@@ -116,13 +119,13 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		{
 			try
 			{
-				if (audioPlayer != null)
+				if (audioPlayer?.CanSetSpeed ?? false)
 				{
 					audioPlayer.Speed = Math.Round(value, 1, MidpointRounding.AwayFromZero);
 					NotifyPropertyChanged();
 				}
 			}
-			catch (SpeedOutOfRangeException ex)
+			catch (Exception ex)
 			{
 				App.Current.MainPage.DisplayAlert("Speed", ex.Message, "OK");
 			}
