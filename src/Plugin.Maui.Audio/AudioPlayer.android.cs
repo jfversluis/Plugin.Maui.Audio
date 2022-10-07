@@ -12,7 +12,7 @@ partial class AudioPlayer : IAudioPlayer
     double volume = 0.5;
     double balance = 0;
     string path = string.Empty;
-    readonly MemoryStream stream;
+    readonly MemoryStream? stream;
     bool isDisposed = false;
 
     public double Duration => player.Duration / 1000.0;
