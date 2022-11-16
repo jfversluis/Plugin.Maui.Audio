@@ -18,4 +18,18 @@ public interface IAudioManager
 	/// <param name="fileName">The name of the file containing the audio to play.</param>
 	/// <returns>A new <see cref="IAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play.</returns>
 	IAudioPlayer CreatePlayer(string fileName) => new AudioPlayer(fileName);
+
+	/// <summary>
+	/// Creates a new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play audio using async/await.
+	/// </summary>
+	/// <param name="audioStream">The <see cref="Stream"/> containing the audio to play.</param>
+	/// <returns>A new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play.</returns>
+	AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream);
+
+	/// <summary>
+	/// Creates a new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play audio using async/await.
+	/// </summary>
+	/// <param name="fileName">The name of the file containing the audio to play.</param>
+	/// <returns>A new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play.</returns>
+	AsyncAudioPlayer CreateAsyncPlayer(string fileName);
 }

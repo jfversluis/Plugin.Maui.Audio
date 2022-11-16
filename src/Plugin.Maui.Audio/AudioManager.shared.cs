@@ -21,4 +21,12 @@ public class AudioManager : IAudioManager
 
         return new AudioPlayer(fileName);
     }
+
+	/// <inheritdoc />
+	public AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream) =>
+		new AsyncAudioPlayer(CreatePlayer(audioStream));
+
+	/// <inheritdoc />
+	public AsyncAudioPlayer CreateAsyncPlayer(string fileName) =>
+        new AsyncAudioPlayer(CreatePlayer(fileName));
 }
