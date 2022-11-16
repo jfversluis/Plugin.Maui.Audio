@@ -9,10 +9,11 @@ namespace Plugin.Maui.Audio;
 partial class AudioPlayer : IAudioPlayer
 {
     readonly MediaPlayer player;
-    static int index = 0;
+    int index = 0;
     double volume = 0.5;
-	double balance = 0;
-	string path = string.Empty;
+    double balance = 0;
+    string path = string.Empty;
+    readonly MemoryStream? stream;
     bool isDisposed = false;
 
     public double Duration => player.Duration / 1000.0;
@@ -73,6 +74,35 @@ partial class AudioPlayer : IAudioPlayer
         player = new MediaPlayer();
         player.Completion += OnPlaybackEnded;
 
+        if (OperatingSystem.IsAndroidVersionAtLeast(23))
+        {
+            stream = new MemoryStream();
+            audioStream.CopyTo(stream);
+            var mediaDataSource = new StreamMediaDataSource(stream);
+            player.SetDataSource(mediaDataSource);
+            player.Prepare();
+        }
+        else
+        {
+            PreparePlayerLegacy(audioStream);
+        }
+    }
+
+    internal AudioPlayer(string fileName)
+    {
+        player = new MediaPlayer() { Looping = Loop };
+        player.Completion += OnPlaybackEnded;
+
+        AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
+            ?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
+
+        player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+
+        player.Prepare();
+    }
+
+    void PreparePlayerLegacy(Stream audioStream)
+    {
         //cache to the file system
         path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), $"cache{index++}.wav");
 
@@ -107,30 +137,16 @@ partial class AudioPlayer : IAudioPlayer
         player.Prepare();
 	}
 
-	internal AudioPlayer(string fileName)
+    static void DeleteFile(string path)
     {
-        player = new MediaPlayer() { Looping = Loop };
-        player.Completion += OnPlaybackEnded;
-
-        AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
-            ?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
-
-        player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
-
-        player.Prepare();
-    }
-
-    void DeleteFile(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path) == false)
+        if (string.IsNullOrWhiteSpace(path)) { return; }
+        
+        try
         {
-            try
-            {
-                File.Delete(path);
-            }
-            catch
-            {
-            }
+            File.Delete(path);
+        }
+        catch
+        {
         }
     }
 
@@ -206,9 +222,9 @@ partial class AudioPlayer : IAudioPlayer
             player.Completion -= OnPlaybackEnded;
             player.Release();
             player.Dispose();
-
             DeleteFile(path);
             path = string.Empty;
+            stream?.Dispose();
         }
 
         isDisposed = true;
