@@ -81,9 +81,9 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 	}
 
-	public Command PlayCommand { get; set; }
-	public Command PauseCommand { get; set; }
-	public Command StopCommand { get; set; }
+	public Command PlayCommand { get; }
+	public Command PauseCommand { get; }
+	public Command StopCommand { get; }
 
 	public double Volume
 	{

@@ -12,7 +12,11 @@ public class MyLibraryPageViewModel : BaseViewModel
 		{
 			new MusicItemViewModel("The Happy Ukelele Song", "Stanislav Fomin", "ukelele.mp3")
 		};
+
+		AddRecordingCommand = new Command(AddRecording);
 	}
+
+	public Command AddRecordingCommand { get; }
 
 	public ObservableCollection<MusicItemViewModel> Music { get; }
 
@@ -26,6 +30,11 @@ public class MyLibraryPageViewModel : BaseViewModel
 
 			OnMusicItemSelected();
 		}
+	}
+
+	async void AddRecording()
+	{
+		await Shell.Current.GoToAsync(Routes.AudioRecorder.RouteName);
 	}
 
 	async void OnMusicItemSelected()
