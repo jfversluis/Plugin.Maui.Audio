@@ -21,4 +21,10 @@ public class AudioManager : IAudioManager
 
         return new AudioPlayer(fileName);
     }
+
+	/// <inheritdoc />
+	public IAudioRecorder CreateRecorder()
+    {
+        return new AudioRecorder();
+    }
 }

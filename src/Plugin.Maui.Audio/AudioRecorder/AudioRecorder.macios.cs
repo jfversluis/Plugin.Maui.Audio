@@ -6,40 +6,53 @@ using Foundation;
 
 namespace Plugin.Maui.Audio;
 
-public class AudioRecorder
+partial class AudioRecorder : IAudioRecorder
 {
 	public bool CanRecordAudio => AVAudioSession.SharedInstance().InputAvailable;
 
 	public bool IsRecording => recorder.Recording;
 
-	AVAudioRecorder recorder;
+	readonly string destinationFilePath;
+	readonly AVAudioRecorder recorder;
+	readonly TaskCompletionSource finishedRecordingCompletionSource;
 
 	public AudioRecorder()
 	{
 		InitAudioSession();
 
-		var url = NSUrl.FromFilename(GetTempFileName());
+		destinationFilePath = GetTempFileName();
+		var url = NSUrl.FromFilename(destinationFilePath);
 
 		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
 		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
 
+		// TODO: need to tidy this up.
+		recorder.FinishedRecording += Recorder_FinishedRecording;
+		finishedRecordingCompletionSource = new TaskCompletionSource();
 		recorder.PrepareToRecord();
 	}
 
-	void InitAudioSession()
+	static void InitAudioSession()
 	{
 	    var audioSession = AVAudioSession.SharedInstance();
 
 	    var err = audioSession.SetCategory(AVAudioSessionCategory.PlayAndRecord);
-	    if (err != null) throw new Exception(err.ToString());
+		if (err is not null)
+		{
+			throw new Exception(err.ToString());
+		}
 
 	    err = audioSession.SetActive(true);
-	    if (err != null) throw new Exception(err.ToString());
+		if (err is not null)
+		{
+			throw new Exception(err.ToString());
+		}
 	}
 
 	string GetTempFileName()
 	{
+		// TODO: Better MAUI options?
 		var docFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
 		var libFolder = Path.Combine(docFolder, "..", "Library");
 		var tempFileName = Path.Combine(libFolder, Path.GetTempFileName());
@@ -47,21 +60,21 @@ public class AudioRecorder
 		return tempFileName;
 	}
 
-	public Task RecordAsync()
+	public Task StartAsync()
 	{
 		return Task.FromResult(recorder.Record());
 	}
 
-	public Task<AudioRecording> StopAsync()
+	public async Task<IAudioSource> StopAsync()
 	{
 		recorder.Stop();
 
-		var recording = new AudioRecording(recorder.Url.Path);
+		await finishedRecordingCompletionSource.Task;
 
-		return Task.FromResult(recording);
+		return new FileAudioSource(destinationFilePath);
 	}
 
-	static NSObject[] keys = new NSObject[]
+	static readonly NSObject[] keys = new NSObject[]
 	{
 		AVAudioSettings.AVSampleRateKey,
 		AVAudioSettings.AVFormatIDKey,
@@ -71,7 +84,7 @@ public class AudioRecorder
 		AVAudioSettings.AVLinearPCMIsFloatKey
 	};
 
-	static NSObject[] objects = new NSObject[]
+	static readonly NSObject[] objects = new NSObject[]
 	{
 		NSNumber.FromFloat (16000), //Sample Rate
 	    NSNumber.FromInt32 ((int)AudioToolbox.AudioFormatType.LinearPCM), //AVFormat
@@ -80,6 +93,11 @@ public class AudioRecorder
 	    NSNumber.FromBoolean (false), //IsBigEndianKey
 	    NSNumber.FromBoolean (false) //IsFloatKey
 	};
+
+	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
+	{
+		finishedRecordingCompletionSource.SetResult();
+	}
 }
 
 

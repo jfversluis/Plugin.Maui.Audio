@@ -1,9 +1,8 @@
-﻿using System;
-namespace Plugin.Maui.Audio;
+﻿namespace Plugin.Maui.Audio;
 
-public class AudioRecording : IDisposable
+public class FileAudioSource : IAudioSource
 {
-	public AudioRecording(string filePath)
+	public FileAudioSource(string filePath)
 	{
 		this.filePath = filePath;
 	}
