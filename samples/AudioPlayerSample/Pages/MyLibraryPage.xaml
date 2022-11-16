@@ -16,31 +16,40 @@
         </Style>
     </ContentPage.Resources>
 
-    <CollectionView ItemsSource="{Binding Music}"
-                    SelectionMode="Single"
-                    SelectedItem="{Binding SelectedMusicItem}">
-        <CollectionView.ItemTemplate>
-            <DataTemplate x:DataType="viewmodels:MusicItemViewModel">
-                <Border Style="{StaticResource border_gallery_card}">
-                    <Grid ColumnDefinitions="75,*"
-                          RowDefinitions="3*,2*"
-                          ColumnSpacing="8">
-                        <!-- Placeholder for imagery -->
-                        <Image BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
-                               Grid.RowSpan="2" />
+    <Grid
+        RowDefinitions="50,*">
 
-                        <Label Text="{Binding Title}"
-                               FontSize="32"
-                               FontAttributes="Bold"
-                               Grid.Column="1" />
+        <Button
+            Text="Add"
+            Command="{Binding AddRecordingCommand}" />
 
-                        <Label Text="{Binding Artist}"
-                               FontSize="20"
-                               Grid.Column="1"
-                               Grid.Row="1" />
-                    </Grid>
-                </Border>
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-    </CollectionView>
+        <CollectionView ItemsSource="{Binding Music}"
+                        Grid.Row="1"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedMusicItem}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="viewmodels:MusicItemViewModel">
+                    <Border Style="{StaticResource border_gallery_card}">
+                        <Grid ColumnDefinitions="75,*"
+                              RowDefinitions="3*,2*"
+                              ColumnSpacing="8">
+                            <!-- Placeholder for imagery -->
+                            <Image BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
+                                   Grid.RowSpan="2" />
+
+                            <Label Text="{Binding Title}"
+                                   FontSize="32"
+                                   FontAttributes="Bold"
+                                   Grid.Column="1" />
+
+                            <Label Text="{Binding Artist}"
+                                   FontSize="20"
+                                   Grid.Column="1"
+                                   Grid.Row="1" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

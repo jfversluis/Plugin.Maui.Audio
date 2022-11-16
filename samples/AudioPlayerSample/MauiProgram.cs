@@ -22,13 +22,23 @@ public static class MauiProgram
 		builder.Services.AddTransient<MyLibraryPage>();
 		builder.Services.AddTransient<MyLibraryPageViewModel>();
 
-		builder.Services.AddTransient<MusicPlayerPage>();
-		builder.Services.AddTransient<MusicPlayerPageViewModel>();
-
-		Routing.RegisterRoute(Routes.MusicPlayer.RouteName, typeof(MusicPlayerPage));
+		RegisterPageRoute<AudioRecorderPage, AudioRecorderPageViewModel>(Routes.AudioRecorder.RouteName, builder.Services);
+		RegisterPageRoute<MusicPlayerPage, MusicPlayerPageViewModel>(Routes.MusicPlayer.RouteName, builder.Services);
 
 		builder.Services.AddSingleton(AudioManager.Current);
 
 		return builder.Build();
+	}
+
+	static void RegisterPageRoute<TPage, TPageViewModel>(
+		string route,
+		IServiceCollection services)
+		where TPage : ContentPage
+		where TPageViewModel : BaseViewModel
+	{
+		Routing.RegisterRoute(route, typeof(TPage));
+
+		services.AddTransient(typeof(TPage));
+		services.AddTransient(typeof(TPageViewModel));
 	}
 }

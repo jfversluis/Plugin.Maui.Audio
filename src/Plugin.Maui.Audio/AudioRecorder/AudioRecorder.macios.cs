@@ -14,7 +14,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	readonly string destinationFilePath;
 	readonly AVAudioRecorder recorder;
-	readonly TaskCompletionSource finishedRecordingCompletionSource;
+	readonly TaskCompletionSource<bool> finishedRecordingCompletionSource;
 
 	public AudioRecorder()
 	{
@@ -29,7 +29,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		// TODO: need to tidy this up.
 		recorder.FinishedRecording += Recorder_FinishedRecording;
-		finishedRecordingCompletionSource = new TaskCompletionSource();
+		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
 		recorder.PrepareToRecord();
 	}
 
@@ -96,7 +96,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
-		finishedRecordingCompletionSource.SetResult();
+		finishedRecordingCompletionSource.SetResult(true);
 	}
 }
 
