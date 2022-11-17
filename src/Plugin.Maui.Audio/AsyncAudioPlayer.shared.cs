@@ -1,31 +1,32 @@
 ﻿namespace Plugin.Maui.Audio;
 
+/// <summary>
+/// Provides async/await support by wrapping an <see cref="IAudioPlayer"/>.
+/// </summary>
 public class AsyncAudioPlayer
 {
 	private readonly IAudioPlayer audioPlayer;
 
-	public AsyncAudioPlayer(IAudioPlayer audioPlayer)
+	internal AsyncAudioPlayer(IAudioPlayer audioPlayer)
 	{
 		this.audioPlayer = audioPlayer;
 	}
 
-	public Task PlayAsync(CancellationToken cancellationToken)
+	/// <summary>
+	/// Begin audio playback asynchronously.
+	/// </summary>
+	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to allow for canceling the audio playback.</param>
+	/// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+	public async Task PlayAsync(CancellationToken cancellationToken)
 	{
-		var taskCompletionSource = new TaskCompletionSource<bool>();
+		var taskCompletionSource = new TaskCompletionSource();
 
-		try
-		{
-			audioPlayer.PlaybackEnded += (o, e) => taskCompletionSource.SetResult(true);
+		audioPlayer.PlaybackEnded += (o, e) => taskCompletionSource.SetResult();
 
-			audioPlayer.Play();
+		audioPlayer.Play();
 
-			return taskCompletionSource.Task;
-		}
-		catch (OperationCanceledException)
-		{
-			audioPlayer.Stop();
-		}
+		await Task.WhenAny(taskCompletionSource.Task, cancellationToken.WhenCanceled());
 
-		return Task.CompletedTask;
+		audioPlayer.Stop();
 	}
 }
