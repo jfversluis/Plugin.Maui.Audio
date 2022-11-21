@@ -76,7 +76,7 @@ partial class AudioPlayer : IAudioPlayer
     {
         if (player.Playing)
         {
-            player.CurrentTime = 0;
+            player.Pause();
         }
         else
         {
