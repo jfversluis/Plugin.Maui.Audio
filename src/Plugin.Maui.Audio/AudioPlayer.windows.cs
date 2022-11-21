@@ -29,23 +29,12 @@ partial class AudioPlayer : IAudioPlayer
 		get => player.PlaybackSession.PlaybackRate;
 		set
 		{
-			//Check if set speed is supported
+			// Check if set speed is supported
 			if (CanSetSpeed)
 			{
-				try
+				if (player.PlaybackSession.IsSupportedPlaybackRateRange(value, value))
 				{
-					if (player.PlaybackSession.IsSupportedPlaybackRateRange(value, value))
-					{
-							player.PlaybackSession.PlaybackRate = value;
-					}
-					else
-					{
-						SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value);
-					}
-				}
-				catch (Exception ex)
-				{
-					SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value, innerException: ex);
+					player.PlaybackSession.PlaybackRate = value;
 				}
 			}
 			else

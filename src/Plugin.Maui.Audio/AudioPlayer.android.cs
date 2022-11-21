@@ -38,17 +38,16 @@ partial class AudioPlayer : IAudioPlayer
 		get => player.PlaybackParams.Speed;
 		set
 		{
-			//Check if set speed is supported
+			// Check if set speed is supported
 			if (CanSetSpeed)
 			{
-				try
-				{
-					player.PlaybackParams = player.PlaybackParams.SetSpeed((float)value) ?? player.PlaybackParams;
-				}
-				catch (Exception ex)
-				{
-					SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value, innerException: ex);
-				}
+                // Speed on Android can be between 0 and 6
+                var speedValue = Math.Clamp((float)value, 0.0f, 6.0f);
+
+                if (speedValue == float.NaN)
+                    speedValue = 1.0f;
+
+				player.PlaybackParams = player.PlaybackParams.SetSpeed(speedValue) ?? player.PlaybackParams;
 			}
 			else
 			{

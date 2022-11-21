@@ -33,6 +33,11 @@ public interface IAudioPlayer : IDisposable
 	///<Summary>
 	/// Gets or sets the playback speed where 1 is normal speed.
 	///</Summary>
+	///<remarks>
+	/// The minimum and maximum speeds that can be set here are different per platform. Setting values ouside of these ranges will not throw an exception, it will clamp to the minimum or maximum value.
+	///<para>- Android: between 0 and 6. Setting the value to 0 will pause playback, playback will not be resumed when incrementing the value again.</para>
+	///<para>- iOS: between 0.5 and 2.</para>
+	///</remarks>
 	double Speed { get; set; }
 
 	///<Summary>

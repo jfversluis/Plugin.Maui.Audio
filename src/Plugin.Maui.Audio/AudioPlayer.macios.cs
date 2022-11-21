@@ -29,25 +29,16 @@ partial class AudioPlayer : IAudioPlayer
 		get => player.Rate;
 		set
 		{
-			//Check if set speed is supported
+			// Check if set speed is supported
 			if (CanSetSpeed)
 			{
-				try
-				{
-					//Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
-					if (value >= 0.5 && value <= 2.0)
-					{
-						player.Rate = (float)value;
-					}
-					else
-					{
-						SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value, 0.5, 2.0);
-					}
-				}
-				catch (Exception ex)
-				{
-					SpeedOutOfRangeException.Throw($"Speed value '{value}' is out of supported range!", value, 0.5, 2.0, ex);
-				}
+				// Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
+				var speedValue = Math.Clamp((float)value, 0.5f, 2.0f);
+
+				if (float.IsNaN(speedValue))
+					speedValue = 1.0f;
+
+				player.Rate = speedValue;
 			}
 			else
 			{

@@ -93,8 +93,8 @@
 			</Label>
 			<Slider
 				IsVisible="{Binding CanSetSpeed}"
-                Minimum="0.5"
-                Maximum="2"
+                Minimum="0"
+                Maximum="10"
                 Value="{Binding Speed}" />
 		</VerticalStackLayout>
     </ScrollView>
