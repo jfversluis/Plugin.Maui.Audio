@@ -32,6 +32,7 @@ partial class AudioPlayer : IAudioPlayer
 			// Check if set speed is supported
 			if (CanSetSpeed)
 			{
+				// Windows supports between 0 and 8, but will clamp automatically for us
 				if (player.PlaybackSession.IsSupportedPlaybackRateRange(value, value))
 				{
 					player.PlaybackSession.PlaybackRate = value;
