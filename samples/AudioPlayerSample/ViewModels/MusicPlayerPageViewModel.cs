@@ -132,6 +132,9 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 	}
 
+	public double MinimumSpeed => audioPlayer?.MinimumSpeed ?? 0;
+	public double MaximumSpeed => audioPlayer?.MaximumSpeed ?? 0;
+
 	public bool Loop
 	{
 		get => audioPlayer?.Loop ?? false;
