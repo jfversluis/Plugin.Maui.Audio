@@ -32,5 +32,9 @@ partial class AudioPlayer : IAudioPlayer
 
 	public double Speed { get; set; }
 
+	public double MinimumSpeed { get; }
+
+	public double MaximumSpeed { get; set; }
+
 	public bool CanSetSpeed { get; }
 }
