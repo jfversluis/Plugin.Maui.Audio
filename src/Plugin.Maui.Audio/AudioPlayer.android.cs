@@ -56,6 +56,10 @@ partial class AudioPlayer : IAudioPlayer
 		}
 	}
 
+    public double MinimumSpeed => 0;
+
+    public double MaximumSpeed => 6;
+
 	public bool CanSetSpeed => Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.M;
 
 	public bool IsPlaying => player.IsPlaying;
