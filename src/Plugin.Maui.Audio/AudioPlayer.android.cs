@@ -158,7 +158,6 @@ partial class AudioPlayer : IAudioPlayer
         if (IsPlaying)
         {
             Pause();
-            Seek(0);
         }
 
         player.Start();

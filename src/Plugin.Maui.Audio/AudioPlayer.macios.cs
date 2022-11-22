@@ -80,6 +80,17 @@ partial class AudioPlayer : IAudioPlayer
 
 		PreparePlayer();
 	}
+    public void Play()
+    {
+        if (player.Playing)
+        {
+            player.Pause();
+        }
+        else
+        {
+            player.Play();
+        }
+    }
 
 	protected virtual void Dispose(bool disposing)
 	{
@@ -100,18 +111,6 @@ partial class AudioPlayer : IAudioPlayer
 	}
 
 	public void Pause() => player.Pause();
-
-	public void Play()
-	{
-		if (player.Playing)
-		{
-			player.CurrentTime = 0;
-		}
-		else
-		{
-			player.Play();
-		}
-	}
 
 	public void Seek(double position) => player.CurrentTime = position;
 

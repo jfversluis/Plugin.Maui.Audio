@@ -103,7 +103,6 @@ partial class AudioPlayer : IAudioPlayer
 		if (player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
 		{
 			Pause();
-			Seek(0);
 		}
 
 		player.Play();
