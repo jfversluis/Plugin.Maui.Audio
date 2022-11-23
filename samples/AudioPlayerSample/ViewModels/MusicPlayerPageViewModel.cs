@@ -39,6 +39,8 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 			NotifyPropertyChanged(nameof(HasAudioSource));
 			NotifyPropertyChanged(nameof(Duration));
 			NotifyPropertyChanged(nameof(CanSetSpeed));
+			NotifyPropertyChanged(nameof(MinimumSpeed));
+			NotifyPropertyChanged(nameof(MaximumSpeed));
 		}
 	}
 
@@ -132,8 +134,8 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 	}
 
-	public double MinimumSpeed => audioPlayer?.MinimumSpeed ?? 0;
-	public double MaximumSpeed => audioPlayer?.MaximumSpeed ?? 0;
+	public double MinimumSpeed => audioPlayer?.MinimumSpeed ?? 1;
+	public double MaximumSpeed => audioPlayer?.MaximumSpeed ?? 1;
 
 	public bool Loop
 	{
