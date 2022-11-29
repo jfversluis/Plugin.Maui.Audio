@@ -5,73 +5,81 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
-    readonly AVAudioPlayer player;
-    bool isDisposed;
+	readonly AVAudioPlayer player;
+	bool isDisposed;
 
-    public double Duration => player.Duration;
+	public double Duration => player.Duration;
 
-    public double CurrentPosition => player.CurrentTime;
+	public double CurrentPosition => player.CurrentTime;
 
-    public double Volume
-    {
-        get => player.Volume;
-        set => player.Volume = (float)Math.Clamp(value, 0, 1);
-    }
+	public double Volume
+	{
+		get => player.Volume;
+		set => player.Volume = (float)Math.Clamp(value, 0, 1);
+	}
 
-    public double Balance
-    {
-        get => player.Pan;
-        set => player.Pan = (float)Math.Clamp(value, -1, 1);
-    }
+	public double Balance
+	{
+		get => player.Pan;
+		set => player.Pan = (float)Math.Clamp(value, -1, 1);
+	}
 
-    public bool IsPlaying => player.Playing;
+	public double Speed
+	{
+		get => player.Rate;
+		set
+		{
+			// Check if set speed is supported
+			if (CanSetSpeed)
+			{
+				// Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
+				var speedValue = Math.Clamp((float)value, 0.5f, 2.0f);
 
-    public bool Loop
-    {
-        get => player.NumberOfLoops != 0;
-        set => player.NumberOfLoops = value ? -1 : 0;
-    }
+				if (float.IsNaN(speedValue))
+					speedValue = 1.0f;
 
-    public bool CanSeek => true;
+				player.Rate = speedValue;
+			}
+			else
+			{
+				throw new NotSupportedException("Set playback speed is not supported!");
+			}
+		}
+	}
 
-    internal AudioPlayer(Stream audioStream)
-    {
-        var data = NSData.FromStream(audioStream)
-            ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
-        player = AVAudioPlayer.FromData(data)
-            ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
+	public double MinimumSpeed => 0.5;
 
-        PreparePlayer();
-    }
+	public double MaximumSpeed => 2;
 
-    internal AudioPlayer(string fileName)
-    {
-        player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName))
-            ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from url.");
+	public bool CanSetSpeed => true;
 
-        PreparePlayer();
-    }
+	public bool IsPlaying => player.Playing;
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (isDisposed)
-        {
-            return;
-        }
+	public bool Loop
+	{
+		get => player.NumberOfLoops != 0;
+		set => player.NumberOfLoops = value ? -1 : 0;
+	}
 
-        if (disposing)
-        {
-            Stop();
+	public bool CanSeek => true;
 
-            player.FinishedPlaying -= OnPlayerFinishedPlaying;
-            player.Dispose();
-        }
+	internal AudioPlayer(Stream audioStream)
+	{
+		var data = NSData.FromStream(audioStream)
+			?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
+		player = AVAudioPlayer.FromData(data)
+			?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
-        isDisposed = true;
-    }
+		PreparePlayer();
+	}
 
-    public void Pause() => player.Pause();
+	internal AudioPlayer(string fileName)
+	{
+		player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName))
+			?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from url.");
 
+		PreparePlayer();
+	}
     public void Play()
     {
         if (player.Playing)
@@ -84,25 +92,46 @@ partial class AudioPlayer : IAudioPlayer
         }
     }
 
-    public void Seek(double position) => player.CurrentTime = position;
+	protected virtual void Dispose(bool disposing)
+	{
+		if (isDisposed)
+		{
+			return;
+		}
 
-    public void Stop()
-    {
-        player.Stop();
-        Seek(0);
-        PlaybackEnded?.Invoke(this, EventArgs.Empty);
-    }
+		if (disposing)
+		{
+			Stop();
 
-    bool PreparePlayer()
-    {
-        player.FinishedPlaying += OnPlayerFinishedPlaying;
-        player.PrepareToPlay();
+			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			player.Dispose();
+		}
 
-        return true;
-    }
+		isDisposed = true;
+	}
 
-    void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
-    {
-        PlaybackEnded?.Invoke(this, e);
-    }
+	public void Pause() => player.Pause();
+
+	public void Seek(double position) => player.CurrentTime = position;
+
+	public void Stop()
+	{
+		player.Stop();
+		Seek(0);
+		PlaybackEnded?.Invoke(this, EventArgs.Empty);
+	}
+
+	bool PreparePlayer()
+	{
+		player.FinishedPlaying += OnPlayerFinishedPlaying;
+		player.EnableRate = true;
+		player.PrepareToPlay();
+
+		return true;
+	}
+
+	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
+	{
+		PlaybackEnded?.Invoke(this, e);
+	}
 }
