@@ -44,7 +44,7 @@ partial class AudioPlayer : IAudioPlayer
                 // Speed on Android can be between 0 and 6
                 var speedValue = Math.Clamp((float)value, 0.0f, 6.0f);
 
-                if (speedValue == float.NaN)
+                if (float.IsNaN(speedValue))
                     speedValue = 1.0f;
 
 				player.PlaybackParams = player.PlaybackParams.SetSpeed(speedValue) ?? player.PlaybackParams;
