@@ -77,6 +77,10 @@ Gets or sets the balance left/right: -1 is 100% left : 0% right, 1 is 100% right
 
 Gets a value indicating whether the position of the loaded audio file can be updated.
 
+##### `CanSetSpeed`
+
+Gets a value indicating whether the playback speed can be changed.
+
 ##### `CurrentPosition`
 
 Gets the current position of audio playback in seconds.
