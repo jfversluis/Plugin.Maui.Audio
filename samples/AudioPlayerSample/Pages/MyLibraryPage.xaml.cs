@@ -4,10 +4,10 @@ namespace AudioPlayerSample.Pages;
 
 public partial class MyLibraryPage : ContentPage
 {
-	public MyLibraryPage(MyLibraryPageViewModel myLibraryPageViewModel)
-	{
-		InitializeComponent();
+   public MyLibraryPage(MyLibraryPageViewModel myLibraryPageViewModel)
+   {
+      InitializeComponent();
 
-		BindingContext = myLibraryPageViewModel;
-	}
+      BindingContext = myLibraryPageViewModel;
+   }
 }

@@ -8,202 +8,211 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
-	public bool CanRecordAudio { get; private set; }
+   public bool CanRecordAudio { get; private set; }
+   public bool IsRecording => audioRecord?.RecordingState == RecordState.Recording;
 
-	public bool IsRecording => audioRecord?.RecordingState == RecordState.Recording;
+   AudioRecord? audioRecord;
+   string? rawFilePath;
+   string? audioFilePath;
 
-	AudioRecord? audioRecord;
+   int bufferSize;
+   int sampleRate;
 
-	string? rawFilePath;
-	string? audioFilePath;
+   public AudioRecorder()
+   {
+      var packageManager = Android.App.Application.Context.PackageManager;
+      // TODO: exception?
+      CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
+   }
 
-	int bufferSize;
-	int sampleRate;
+   // public async Task<bool> HavePermissionMicrophoneAsync()
+   // {
+   //    var status = await Permissions.CheckStatusAsync<Permissions.Microphone>();
+   //    string statusNow = status.ToString();
+   //    string statusGranted = PermissionStatus.Granted.ToString();
+   //    return statusNow == statusGranted;
+   // }
 
-	public AudioRecorder()
-	{
-		var packageManager = Android.App.Application.Context.PackageManager;
-		// TODO: exception?
-		CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
-	}
+   public Task StartAsync()
+   {
+      // // This should be done in the app but do it here just in case because otherwise we get exception
+      // Task.Run(() => HavePermissionMicrophoneAsync());
 
-	AudioRecord GetAudioRecord(int sampleRate)
-	{
-		this.sampleRate = sampleRate;
-		var channelConfig = ChannelIn.Mono;
-		var encoding = Encoding.Pcm16bit;
+      if (CanRecordAudio == false || audioRecord?.RecordingState == RecordState.Recording)
+      {
+         return Task.CompletedTask;
+      }
 
-		bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelConfig, encoding) * 8;
+      var audioManager = (Android.Media.AudioManager)Android.App.Application.Context.GetSystemService(Context.AudioService);
 
-		return new AudioRecord(AudioSource.Mic, sampleRate, ChannelIn.Stereo, encoding, bufferSize);
-	}
+      var micSampleRate = Int32.Parse(audioManager.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate));
 
-	public string GetAudioFilePath()
-	{
-		return audioFilePath;
-	}
+      audioRecord = GetAudioRecord(micSampleRate);
 
-	IAudioSource GetRecording()
-	{
-		if (audioRecord is null ||
-			audioRecord.RecordingState == RecordState.Recording ||
-			System.IO.File.Exists(audioFilePath) == false)
-		{
-			return new EmptyAudioSource();
-		}
+      audioRecord.StartRecording();
 
-		return new FileAudioSource(audioFilePath);
-	}
+      return Task.Run(() => WriteAudioDataToFile());
+   }
 
-	public Task StartAsync()
-	{
-		if (CanRecordAudio == false || audioRecord?.RecordingState == RecordState.Recording)
-		{
-			return Task.CompletedTask;
-		}
+   AudioRecord GetAudioRecord(int sampleRate)
+   {
+      this.sampleRate = sampleRate;
+      var channelConfig = ChannelIn.Mono;
+      var encoding = Encoding.Pcm16bit;
 
-		var audioManager = (Android.Media.AudioManager)Android.App.Application.Context.GetSystemService(Context.AudioService);
+      bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelConfig, encoding) * 8;
 
-		var micSampleRate = Int32.Parse(audioManager.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate));
+      return new AudioRecord(AudioSource.Mic, sampleRate, ChannelIn.Stereo, encoding, bufferSize);
+   }
 
-		audioRecord = GetAudioRecord(micSampleRate);
+   public Task<IAudioSource> StopAsync()
+   {
+      if (audioRecord?.RecordingState == RecordState.Recording)
+      {
+         audioRecord?.Stop();
+      }
 
-		audioRecord.StartRecording();
+      audioFilePath = GetTempFileName();
 
-		return Task.Run(() => WriteAudioDataToFile());
-	}
+      CopyWaveFile(rawFilePath, audioFilePath);
 
-	string GetTempFileName()
-	{
-		return Path.Combine("/sdcard/", Path.GetTempFileName());
-	}
+      return Task.FromResult(GetRecording());
+   }
 
-	void WriteAudioDataToFile()
-	{
-		var data = new byte[bufferSize];
+   IAudioSource GetRecording()
+   {
+      if (audioRecord is null ||
+          audioRecord.RecordingState == RecordState.Recording ||
+          System.IO.File.Exists(audioFilePath) == false)
+      {
+         return new EmptyAudioSource();
+      }
 
-		rawFilePath = GetTempFileName();
+      return new FileAudioSource(audioFilePath);
+   }
 
-		FileOutputStream outputStream = null;
+   public string GetAudioFilePath()
+   {
+      return audioFilePath;
+   }
 
-		try
-		{
-			outputStream = new FileOutputStream(rawFilePath);
-		}
-		catch (Exception ex)
-		{
-			throw new FileLoadException($"unable to create a new file: {ex.Message}");
-		}
+   string GetTempFileName()
+   {
+      return Path.Combine("/sdcard/", Path.GetTempFileName());
+   }
 
-		if (outputStream != null)
-		{
-			while (audioRecord.RecordingState == RecordState.Recording)
-			{
-				audioRecord.Read(data, 0, bufferSize);
+   void WriteAudioDataToFile()
+   {
+      var data = new byte[bufferSize];
 
-				outputStream.Write(data);
-			}
+      rawFilePath = GetTempFileName();
 
-			outputStream.Close();
-		}
-	}
+      FileOutputStream outputStream = null;
 
-	public Task<IAudioSource> StopAsync()
-	{
-		if (audioRecord?.RecordingState == RecordState.Recording)
-		{
-			audioRecord?.Stop();
-		}
+      try
+      {
+         outputStream = new FileOutputStream(rawFilePath);
+      }
+      catch (Exception ex)
+      {
+         throw new FileLoadException($"unable to create a new file: {ex.Message}");
+      }
 
-		audioFilePath = GetTempFileName();
+      if (outputStream != null)
+      {
+         while (audioRecord.RecordingState == RecordState.Recording)
+         {
+            audioRecord.Read(data, 0, bufferSize);
 
-		CopyWaveFile(rawFilePath, audioFilePath);
+            outputStream.Write(data);
+         }
 
-		return Task.FromResult(GetRecording());
-	}
+         outputStream.Close();
+      }
+   }
 
-	void CopyWaveFile(string sourcePath, string destinationPath)
-	{
-		FileInputStream inputStream = null;
-		FileOutputStream outputStream = null;
+   void CopyWaveFile(string sourcePath, string destinationPath)
+   {
+      FileInputStream inputStream = null;
+      FileOutputStream outputStream = null;
 
-		int channels = 2;
-		long byteRate = 16 * sampleRate * channels / 8;
+      int channels = 2;
+      long byteRate = 16 * sampleRate * channels / 8;
 
-		var data = new byte[bufferSize];
+      var data = new byte[bufferSize];
 
-		try
-		{
-			inputStream = new FileInputStream(sourcePath);
-			outputStream = new FileOutputStream(destinationPath);
-			var totalAudioLength = inputStream.Channel.Size();
-			var totalDataLength = totalAudioLength + 36;
+      try
+      {
+         inputStream = new FileInputStream(sourcePath);
+         outputStream = new FileOutputStream(destinationPath);
+         var totalAudioLength = inputStream.Channel.Size();
+         var totalDataLength = totalAudioLength + 36;
 
-			WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
+         WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
 
-			while (inputStream.Read(data) != -1)
-			{
-				outputStream.Write(data);
-			}
+         while (inputStream.Read(data) != -1)
+         {
+            outputStream.Write(data);
+         }
 
-			inputStream.Close();
-			outputStream.Close();
+         inputStream.Close();
+         outputStream.Close();
 
-		}
-		catch { }
-	}
+      }
+      catch { }
+   }
 
-	void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)
-	{
-		byte[] header = new byte[44];
+   void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)
+   {
+      byte[] header = new byte[44];
 
-		header[0] = Convert.ToByte('R'); // RIFF/WAVE header
-		header[1] = Convert.ToByte('I'); // (byte)'I'
-		header[2] = Convert.ToByte('F');
-		header[3] = Convert.ToByte('F');
-		header[4] = (byte)(dataLength & 0xff);
-		header[5] = (byte)((dataLength >> 8) & 0xff);
-		header[6] = (byte)((dataLength >> 16) & 0xff);
-		header[7] = (byte)((dataLength >> 24) & 0xff);
-		header[8] = Convert.ToByte('W');
-		header[9] = Convert.ToByte('A');
-		header[10] = Convert.ToByte('V');
-		header[11] = Convert.ToByte('E');
-		header[12] = Convert.ToByte('f'); // fmt chunk
-		header[13] = Convert.ToByte('m');
-		header[14] = Convert.ToByte('t');
-		header[15] = (byte)' ';
-		header[16] = 16; // 4 bytes - size of fmt chunk
-		header[17] = 0;
-		header[18] = 0;
-		header[19] = 0;
-		header[20] = 1; // format = 1
-		header[21] = 0;
-		header[22] = Convert.ToByte(channels);
-		header[23] = 0;
-		header[24] = (byte)(sampleRate & 0xff);
-		header[25] = (byte)((sampleRate >> 8) & 0xff);
-		header[26] = (byte)((sampleRate >> 16) & 0xff);
-		header[27] = (byte)((sampleRate >> 24) & 0xff);
-		header[28] = (byte)(byteRate & 0xff);
-		header[29] = (byte)((byteRate >> 8) & 0xff);
-		header[30] = (byte)((byteRate >> 16) & 0xff);
-		header[31] = (byte)((byteRate >> 24) & 0xff);
-		header[32] = (byte)(2 * 16 / 8); // block align
-		header[33] = 0;
-		header[34] = Convert.ToByte(16); // bits per sample
-		header[35] = 0;
-		header[36] = Convert.ToByte('d');
-		header[37] = Convert.ToByte('a');
-		header[38] = Convert.ToByte('t');
-		header[39] = Convert.ToByte('a');
-		header[40] = (byte)(audioLength & 0xff);
-		header[41] = (byte)((audioLength >> 8) & 0xff);
-		header[42] = (byte)((audioLength >> 16) & 0xff);
-		header[43] = (byte)((audioLength >> 24) & 0xff);
+      header[0] = Convert.ToByte('R'); // RIFF/WAVE header
+      header[1] = Convert.ToByte('I'); // (byte)'I'
+      header[2] = Convert.ToByte('F');
+      header[3] = Convert.ToByte('F');
+      header[4] = (byte)(dataLength & 0xff);
+      header[5] = (byte)((dataLength >> 8) & 0xff);
+      header[6] = (byte)((dataLength >> 16) & 0xff);
+      header[7] = (byte)((dataLength >> 24) & 0xff);
+      header[8] = Convert.ToByte('W');
+      header[9] = Convert.ToByte('A');
+      header[10] = Convert.ToByte('V');
+      header[11] = Convert.ToByte('E');
+      header[12] = Convert.ToByte('f'); // fmt chunk
+      header[13] = Convert.ToByte('m');
+      header[14] = Convert.ToByte('t');
+      header[15] = (byte)' ';
+      header[16] = 16; // 4 bytes - size of fmt chunk
+      header[17] = 0;
+      header[18] = 0;
+      header[19] = 0;
+      header[20] = 1; // format = 1
+      header[21] = 0;
+      header[22] = Convert.ToByte(channels);
+      header[23] = 0;
+      header[24] = (byte)(sampleRate & 0xff);
+      header[25] = (byte)((sampleRate >> 8) & 0xff);
+      header[26] = (byte)((sampleRate >> 16) & 0xff);
+      header[27] = (byte)((sampleRate >> 24) & 0xff);
+      header[28] = (byte)(byteRate & 0xff);
+      header[29] = (byte)((byteRate >> 8) & 0xff);
+      header[30] = (byte)((byteRate >> 16) & 0xff);
+      header[31] = (byte)((byteRate >> 24) & 0xff);
+      header[32] = (byte)(2 * 16 / 8); // block align
+      header[33] = 0;
+      header[34] = Convert.ToByte(16); // bits per sample
+      header[35] = 0;
+      header[36] = Convert.ToByte('d');
+      header[37] = Convert.ToByte('a');
+      header[38] = Convert.ToByte('t');
+      header[39] = Convert.ToByte('a');
+      header[40] = (byte)(audioLength & 0xff);
+      header[41] = (byte)((audioLength >> 8) & 0xff);
+      header[42] = (byte)((audioLength >> 16) & 0xff);
+      header[43] = (byte)((audioLength >> 24) & 0xff);
 
-		outputStream.Write(header, 0, 44);
-	}
+      outputStream.Write(header, 0, 44);
+   }
 }
 
 
@@ -217,198 +226,198 @@ partial class AudioRecorder : IAudioRecorder
 
 //namespace Plugin.SimpleAudioRecorder
 //{
-//	public class SimpleAudioRecorderImplementation : ISimpleAudioRecorder
-//	{
-//		public bool CanRecordAudio { get; private set; } = true;
+//      public class SimpleAudioRecorderImplementation : ISimpleAudioRecorder
+//      {
+//              public bool CanRecordAudio { get; private set; } = true;
 
-//		public bool IsRecording => audioRecord?.RecordingState == RecordState.Recording;
+//              public bool IsRecording => audioRecord?.RecordingState == RecordState.Recording;
 
-//		AudioRecord audioRecord;
+//              AudioRecord audioRecord;
 
-//		string rawFilePath;
-//		string audioFilePath;
+//              string rawFilePath;
+//              string audioFilePath;
 
-//		int bufferSize;
-//		int sampleRate;
+//              int bufferSize;
+//              int sampleRate;
 
-//		public SimpleAudioRecorderImplementation()
-//		{
-//			var pm = Application.Context.PackageManager;
-//			CanRecordAudio = pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone);
-//		}
+//              public SimpleAudioRecorderImplementation()
+//              {
+//                      var pm = Application.Context.PackageManager;
+//                      CanRecordAudio = pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone);
+//              }
 
-//		AudioRecord GetAudioRecord(int sampleRate)
-//		{
-//			this.sampleRate = sampleRate;
-//			var channelConfig = ChannelIn.Mono;
-//			var encoding = Encoding.Pcm16bit;
+//              AudioRecord GetAudioRecord(int sampleRate)
+//              {
+//                      this.sampleRate = sampleRate;
+//                      var channelConfig = ChannelIn.Mono;
+//                      var encoding = Encoding.Pcm16bit;
 
-//			bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelConfig, encoding) * 8;
+//                      bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelConfig, encoding) * 8;
 
-//			return new AudioRecord(AudioSource.Mic, sampleRate, ChannelIn.Stereo, encoding, bufferSize);
-//		}
+//                      return new AudioRecord(AudioSource.Mic, sampleRate, ChannelIn.Stereo, encoding, bufferSize);
+//              }
 
-//		public string GetAudioFilePath()
-//		{
-//			return audioFilePath;
-//		}
+//              public string GetAudioFilePath()
+//              {
+//                      return audioFilePath;
+//              }
 
-//		AudioRecording GetRecording()
-//		{
-//			if (audioRecord == null ||
-//				audioRecord.RecordingState == RecordState.Recording ||
-//				System.IO.File.Exists(audioFilePath) == false)
-//				return null;
+//              AudioRecording GetRecording()
+//              {
+//                      if (audioRecord == null ||
+//                              audioRecord.RecordingState == RecordState.Recording ||
+//                              System.IO.File.Exists(audioFilePath) == false)
+//                              return null;
 
-//			return new AudioRecording(audioFilePath);
-//		}
+//                      return new AudioRecording(audioFilePath);
+//              }
 
-//		public Task RecordAsync()
-//		{
-//			if (CanRecordAudio == false || audioRecord?.RecordingState == RecordState.Recording)
-//				return Task.CompletedTask;
+//              public Task RecordAsync()
+//              {
+//                      if (CanRecordAudio == false || audioRecord?.RecordingState == RecordState.Recording)
+//                              return Task.CompletedTask;
 
-//			var audioManager = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
+//                      var audioManager = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
 
-//			var micSampleRate = Int32.Parse(audioManager.GetProperty(AudioManager.PropertyOutputSampleRate));
+//                      var micSampleRate = Int32.Parse(audioManager.GetProperty(AudioManager.PropertyOutputSampleRate));
 
-//			audioRecord = GetAudioRecord(micSampleRate);
+//                      audioRecord = GetAudioRecord(micSampleRate);
 
-//			audioRecord.StartRecording();
+//                      audioRecord.StartRecording();
 
-//			return Task.Run(() => WriteAudioDataToFile());
-//		}
+//                      return Task.Run(() => WriteAudioDataToFile());
+//              }
 
-//		string GetTempFileName()
-//		{
-//			return Path.Combine("/sdcard/", Path.GetTempFileName());
-//		}
+//              string GetTempFileName()
+//              {
+//                      return Path.Combine("/sdcard/", Path.GetTempFileName());
+//              }
 
-//		void WriteAudioDataToFile()
-//		{
-//			var data = new byte[bufferSize];
+//              void WriteAudioDataToFile()
+//              {
+//                      var data = new byte[bufferSize];
 
-//			rawFilePath = GetTempFileName();
+//                      rawFilePath = GetTempFileName();
 
-//			FileOutputStream outputStream = null;
+//                      FileOutputStream outputStream = null;
 
-//			try
-//			{
-//				outputStream = new FileOutputStream(rawFilePath);
-//			}
-//			catch (Exception ex)
-//			{
-//				throw new FileLoadException($"unable to create a new file: {ex.Message}");
-//			}
+//                      try
+//                      {
+//                              outputStream = new FileOutputStream(rawFilePath);
+//                      }
+//                      catch (Exception ex)
+//                      {
+//                              throw new FileLoadException($"unable to create a new file: {ex.Message}");
+//                      }
 
-//			if (outputStream != null)
-//			{
-//				while (audioRecord.RecordingState == RecordState.Recording)
-//				{
-//					audioRecord.Read(data, 0, bufferSize);
+//                      if (outputStream != null)
+//                      {
+//                              while (audioRecord.RecordingState == RecordState.Recording)
+//                              {
+//                                      audioRecord.Read(data, 0, bufferSize);
 
-//					outputStream.Write(data);
-//				}
+//                                      outputStream.Write(data);
+//                              }
 
-//				outputStream.Close();
-//			}
-//		}
+//                              outputStream.Close();
+//                      }
+//              }
 
-//		public Task<AudioRecording> StopAsync()
-//		{
-//			if (audioRecord?.RecordingState == RecordState.Recording)
-//			{
-//				audioRecord?.Stop();
-//			}
+//              public Task<AudioRecording> StopAsync()
+//              {
+//                      if (audioRecord?.RecordingState == RecordState.Recording)
+//                      {
+//                              audioRecord?.Stop();
+//                      }
 
-//			audioFilePath = GetTempFileName();
+//                      audioFilePath = GetTempFileName();
 
-//			CopyWaveFile(rawFilePath, audioFilePath);
+//                      CopyWaveFile(rawFilePath, audioFilePath);
 
-//			return Task.FromResult(GetRecording());
-//		}
+//                      return Task.FromResult(GetRecording());
+//              }
 
-//		void CopyWaveFile(string sourcePath, string destinationPath)
-//		{
-//			FileInputStream inputStream = null;
-//			FileOutputStream outputStream = null;
+//              void CopyWaveFile(string sourcePath, string destinationPath)
+//              {
+//                      FileInputStream inputStream = null;
+//                      FileOutputStream outputStream = null;
 
-//			int channels = 2;
-//			long byteRate = 16 * sampleRate * channels / 8;
+//                      int channels = 2;
+//                      long byteRate = 16 * sampleRate * channels / 8;
 
-//			var data = new byte[bufferSize];
+//                      var data = new byte[bufferSize];
 
-//			try
-//			{
-//				inputStream = new FileInputStream(sourcePath);
-//				outputStream = new FileOutputStream(destinationPath);
-//				var totalAudioLength = inputStream.Channel.Size();
-//				var totalDataLength = totalAudioLength + 36;
+//                      try
+//                      {
+//                              inputStream = new FileInputStream(sourcePath);
+//                              outputStream = new FileOutputStream(destinationPath);
+//                              var totalAudioLength = inputStream.Channel.Size();
+//                              var totalDataLength = totalAudioLength + 36;
 
-//				WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
+//                              WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
 
-//				while (inputStream.Read(data) != -1)
-//				{
-//					outputStream.Write(data);
-//				}
+//                              while (inputStream.Read(data) != -1)
+//                              {
+//                                      outputStream.Write(data);
+//                              }
 
-//				inputStream.Close();
-//				outputStream.Close();
+//                              inputStream.Close();
+//                              outputStream.Close();
 
-//			}
-//			catch { }
-//		}
+//                      }
+//                      catch { }
+//              }
 
-//		void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)
-//		{
-//			byte[] header = new byte[44];
+//              void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)
+//              {
+//                      byte[] header = new byte[44];
 
-//			header[0] = Convert.ToByte('R'); // RIFF/WAVE header
-//			header[1] = Convert.ToByte('I'); // (byte)'I'
-//			header[2] = Convert.ToByte('F');
-//			header[3] = Convert.ToByte('F');
-//			header[4] = (byte)(dataLength & 0xff);
-//			header[5] = (byte)((dataLength >> 8) & 0xff);
-//			header[6] = (byte)((dataLength >> 16) & 0xff);
-//			header[7] = (byte)((dataLength >> 24) & 0xff);
-//			header[8] = Convert.ToByte('W');
-//			header[9] = Convert.ToByte('A');
-//			header[10] = Convert.ToByte('V');
-//			header[11] = Convert.ToByte('E');
-//			header[12] = Convert.ToByte('f'); // fmt chunk
-//			header[13] = Convert.ToByte('m');
-//			header[14] = Convert.ToByte('t');
-//			header[15] = (byte)' ';
-//			header[16] = 16; // 4 bytes - size of fmt chunk
-//			header[17] = 0;
-//			header[18] = 0;
-//			header[19] = 0;
-//			header[20] = 1; // format = 1
-//			header[21] = 0;
-//			header[22] = Convert.ToByte(channels);
-//			header[23] = 0;
-//			header[24] = (byte)(sampleRate & 0xff);
-//			header[25] = (byte)((sampleRate >> 8) & 0xff);
-//			header[26] = (byte)((sampleRate >> 16) & 0xff);
-//			header[27] = (byte)((sampleRate >> 24) & 0xff);
-//			header[28] = (byte)(byteRate & 0xff);
-//			header[29] = (byte)((byteRate >> 8) & 0xff);
-//			header[30] = (byte)((byteRate >> 16) & 0xff);
-//			header[31] = (byte)((byteRate >> 24) & 0xff);
-//			header[32] = (byte)(2 * 16 / 8); // block align
-//			header[33] = 0;
-//			header[34] = Convert.ToByte(16); // bits per sample
-//			header[35] = 0;
-//			header[36] = Convert.ToByte('d');
-//			header[37] = Convert.ToByte('a');
-//			header[38] = Convert.ToByte('t');
-//			header[39] = Convert.ToByte('a');
-//			header[40] = (byte)(audioLength & 0xff);
-//			header[41] = (byte)((audioLength >> 8) & 0xff);
-//			header[42] = (byte)((audioLength >> 16) & 0xff);
-//			header[43] = (byte)((audioLength >> 24) & 0xff);
+//                      header[0] = Convert.ToByte('R'); // RIFF/WAVE header
+//                      header[1] = Convert.ToByte('I'); // (byte)'I'
+//                      header[2] = Convert.ToByte('F');
+//                      header[3] = Convert.ToByte('F');
+//                      header[4] = (byte)(dataLength & 0xff);
+//                      header[5] = (byte)((dataLength >> 8) & 0xff);
+//                      header[6] = (byte)((dataLength >> 16) & 0xff);
+//                      header[7] = (byte)((dataLength >> 24) & 0xff);
+//                      header[8] = Convert.ToByte('W');
+//                      header[9] = Convert.ToByte('A');
+//                      header[10] = Convert.ToByte('V');
+//                      header[11] = Convert.ToByte('E');
+//                      header[12] = Convert.ToByte('f'); // fmt chunk
+//                      header[13] = Convert.ToByte('m');
+//                      header[14] = Convert.ToByte('t');
+//                      header[15] = (byte)' ';
+//                      header[16] = 16; // 4 bytes - size of fmt chunk
+//                      header[17] = 0;
+//                      header[18] = 0;
+//                      header[19] = 0;
+//                      header[20] = 1; // format = 1
+//                      header[21] = 0;
+//                      header[22] = Convert.ToByte(channels);
+//                      header[23] = 0;
+//                      header[24] = (byte)(sampleRate & 0xff);
+//                      header[25] = (byte)((sampleRate >> 8) & 0xff);
+//                      header[26] = (byte)((sampleRate >> 16) & 0xff);
+//                      header[27] = (byte)((sampleRate >> 24) & 0xff);
+//                      header[28] = (byte)(byteRate & 0xff);
+//                      header[29] = (byte)((byteRate >> 8) & 0xff);
+//                      header[30] = (byte)((byteRate >> 16) & 0xff);
+//                      header[31] = (byte)((byteRate >> 24) & 0xff);
+//                      header[32] = (byte)(2 * 16 / 8); // block align
+//                      header[33] = 0;
+//                      header[34] = Convert.ToByte(16); // bits per sample
+//                      header[35] = 0;
+//                      header[36] = Convert.ToByte('d');
+//                      header[37] = Convert.ToByte('a');
+//                      header[38] = Convert.ToByte('t');
+//                      header[39] = Convert.ToByte('a');
+//                      header[40] = (byte)(audioLength & 0xff);
+//                      header[41] = (byte)((audioLength >> 8) & 0xff);
+//                      header[42] = (byte)((audioLength >> 16) & 0xff);
+//                      header[43] = (byte)((audioLength >> 24) & 0xff);
 
-//			outputStream.Write(header, 0, 44);
-//		}
-//	}
+//                      outputStream.Write(header, 0, 44);
+//              }
+//      }
 //}
