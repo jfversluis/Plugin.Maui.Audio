@@ -20,7 +20,7 @@
         RowDefinitions="50,*">
 
         <Button
-            Text="Add"
+            Text="Test Recorder"
             Command="{Binding AddRecordingCommand}" />
 
         <CollectionView ItemsSource="{Binding Music}"
