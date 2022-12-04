@@ -8,6 +8,8 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
    readonly IAudioManager audioManager;
    IAudioRecorder? audioRecorder;
+   IAudioPlayer audioPlayer;
+   IAudioSource audioSource = null;
 
    string _RecordButtonText = "Record";
    public string RecordButtonText
@@ -31,15 +33,13 @@ public class AudioRecorderPageViewModel : BaseViewModel
       }
    }
 
-   // keep track of trim points
-   public Double start=0.0, end=0.0;
-   private TimeSpan _audioTime = TimeSpan.Zero;
-   public TimeSpan audioTime
+   double audioTime = 0;
+   public double AudioTime
    {
-      get => _audioTime;
+      get => audioTime;
       set
       {
-         _audioTime = value;
+         audioTime = value;
          NotifyPropertyChanged();
       }
    }
@@ -47,6 +47,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
    public AudioRecorderPageViewModel(IAudioManager audioManager)
    {
       StartCommand = new Command(Start);
+      PlayCommand = new Command(playAudio);
       this.audioManager = audioManager;
    }
 
@@ -59,6 +60,25 @@ public class AudioRecorderPageViewModel : BaseViewModel
       catch (Exception ex)
       {
          page.DisplayAlert("Alert", $"setPage Exception: {ex.Message}", "OK");
+      }
+   }
+
+   void DonePlaying(object sender, EventArgs e)
+   {
+      AudioTime = audioPlayer.Duration;
+   }
+   
+   public Command PlayCommand { get; set; }
+   public async void playAudio()
+   {
+      if (audioSource != null)
+      {
+         audioPlayer = this.audioManager.CreatePlayer(((FileAudioSource)audioSource).GetAudioStream());
+         audioPlayer.PlaybackEnded += DonePlaying;
+         await Task.Run(() =>
+               {
+                  audioPlayer.Play();
+               });
       }
    }
 
@@ -85,11 +105,11 @@ public class AudioRecorderPageViewModel : BaseViewModel
          }
          else
          {
-            var audioSource = await audioRecorder.StopAsync();
-            audioTime = audioRecorder.LastDuration();
+            audioSource = await audioRecorder.StopAsync();
+            AudioTime = audioRecorder.Duration();
             RecordButtonColor = Colors.Blue;
             RecordButtonText = "Record";
-            await Task.Run(() => this.audioManager.CreatePlayer(((FileAudioSource)audioSource).GetAudioStream()).Play());
+            // playAudio();
          }
       }
       else

@@ -90,11 +90,7 @@ partial class AudioRecorder : IAudioRecorder
       return new FileAudioSource(destinationFilePath);
    }
 
-   public TimeSpan LastDuration() => ts;
-   // public TimeSpan LastDuration()
-   // {
-   //    return new TimeSpan();
-   // }
+   public double Duration() => ts.TotalMilliseconds/1000;
 
    static readonly NSObject[] keys = new NSObject[]
       {

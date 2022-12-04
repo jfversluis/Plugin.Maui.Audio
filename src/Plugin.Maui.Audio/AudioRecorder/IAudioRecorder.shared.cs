@@ -29,5 +29,5 @@ public interface IAudioRecorder
    ///<Summary>
    /// Returns the duration of the last audio recording or playback.
    ///</Summary>
-   TimeSpan LastDuration();
+   double Duration();
 }

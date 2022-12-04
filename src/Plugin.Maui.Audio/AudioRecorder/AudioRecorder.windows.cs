@@ -111,7 +111,7 @@ partial class AudioRecorder : IAudioRecorder
       return GetRecording();
    }
 
-   public TimeSpan LastDuration() => ts;
+   public double Duration() => ts.TotalMilliseconds/1000;
 
    IAudioSource GetRecording()
    {

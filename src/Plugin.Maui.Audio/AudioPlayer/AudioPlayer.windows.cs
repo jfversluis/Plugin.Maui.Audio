@@ -5,139 +5,165 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
-	bool isDisposed = false;
-	readonly MediaPlayer player;
+   bool isDisposed = false;
+   readonly MediaPlayer player;
 
-	public double Duration => player.PlaybackSession.NaturalDuration.TotalSeconds;
+   public double CurrentPosition => player.PlaybackSession.Position.TotalSeconds;
 
-	public double CurrentPosition => player.PlaybackSession.Position.TotalSeconds;
+   IDispatcherTimer myTimer = null;
+   DateTime startTime;
+   public TimeSpan ts = TimeSpan.Zero;
 
-	public double Volume
-	{
-		get => player.Volume;
-		set => SetVolume(value, Balance);
-	}
+   public double Duration {
+      get {
+         double duration = ts.TotalMilliseconds/1000;
+         if (duration == 0)
+            duration = player.PlaybackSession.NaturalDuration.TotalSeconds;
+         return duration;
+      }
+   }
 
-	public double Balance
-	{
-		get => player.AudioBalance;
-		set => SetVolume(Volume, value);
-	}
+   void t_Tick(object sender, EventArgs e)
+   {
+      ts = DateTime.Now - startTime;
+   }
 
-	public bool IsPlaying =>
-		player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing; //might need to expand
+   public double Volume
+   {
+      get => player.Volume;
+      set => SetVolume(value, Balance);
+   }
 
-	public bool Loop
-	{
-		get => player.IsLoopingEnabled;
-		set => player.IsLoopingEnabled = value;
-	}
+   public double Balance
+   {
+      get => player.AudioBalance;
+      set => SetVolume(Volume, value);
+   }
 
-	public bool CanSeek => player.PlaybackSession.CanSeek;
+   public bool IsPlaying =>
+           player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing; //might need to expand
 
-	public AudioPlayer(Stream audioStream)
-	{
-		player = CreatePlayer();
+   public bool Loop
+   {
+      get => player.IsLoopingEnabled;
+      set => player.IsLoopingEnabled = value;
+   }
 
-		if (player is null)
-		{
-			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
-		}
+   public bool CanSeek => player.PlaybackSession.CanSeek;
 
-		player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
-		player.MediaEnded += OnPlaybackEnded;
-	}
+   public AudioPlayer(Stream audioStream)
+   {
+      player = CreatePlayer();
 
-	public AudioPlayer(string fileName)
-	{
-		player = CreatePlayer();
+      if (player is null)
+      {
+         throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
+      }
 
-		if (player is null)
-		{
-			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
-		}
+      player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+      player.MediaEnded += OnPlaybackEnded;
+   }
 
-		player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
-		player.MediaEnded += OnPlaybackEnded;
-	}
+   public AudioPlayer(string fileName)
+   {
+      player = CreatePlayer();
 
-	void OnPlaybackEnded(MediaPlayer sender, object args)
-	{
-		PlaybackEnded?.Invoke(sender, EventArgs.Empty);
-	}
+      if (player is null)
+      {
+         throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
+      }
 
-	public void Play()
-	{
-		if (player.Source is null)
-		{
-			return;
-		}
+      player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
+      player.MediaEnded += OnPlaybackEnded;
+   }
 
-		if (player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-		{
-			Pause();
-			Seek(0);
-		}
+   void OnPlaybackEnded(MediaPlayer sender, object args)
+   {
+      myTimer?.Stop();
 
-		player.Play();
-	}
+      PlaybackEnded?.Invoke(sender, EventArgs.Empty);
+   }
 
-	public void Pause()
-	{
-		player.Pause();
-	}
+   public void Play()
+   {
+      if (player.Source is null)
+      {
+         return;
+      }
 
-	public void Stop()
-	{
-		Pause();
-		Seek(0);
-		PlaybackEnded?.Invoke(this, EventArgs.Empty);
-	}
+      if (player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+      {
+         Pause();
+         Seek(0);
+      }
 
-	public void Seek(double position)
-	{
-		if (player.PlaybackSession is null)
-		{
-			return;
-		}
+      myTimer = Microsoft.Maui.Controls.Application.Current.Dispatcher.CreateTimer();
+      myTimer.Interval = TimeSpan.FromMilliseconds(100);
+      myTimer.Tick += t_Tick;
+      startTime = DateTime.Now;
+      myTimer.Start();
 
-		if (player.PlaybackSession.CanSeek)
-		{
-			player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
-		}
-	}
+      player.Play();
+   }
 
-	void SetVolume(double volume, double balance)
-	{
-		if (isDisposed)
-		{
-			return;
-		}
+   public void Pause()
+   {
+      player.Pause();
+   }
 
-		player.Volume = Math.Clamp(volume, 0, 1);
-		player.AudioBalance = Math.Clamp(balance, -1, 1);
-	}
+   public void Stop()
+   {
+      myTimer?.Stop();
 
-	MediaPlayer CreatePlayer()
-	{
-		return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = false };
-	}
+      Pause();
+      Seek(0);
+      PlaybackEnded?.Invoke(this, EventArgs.Empty);
+   }
 
-	protected virtual void Dispose(bool disposing)
-	{
-		if (isDisposed)
-		{
-			return;
-		}
+   public void Seek(double position)
+   {
+      if (player.PlaybackSession is null)
+      {
+         return;
+      }
 
-		if (disposing)
-		{
-			Stop();
+      if (player.PlaybackSession.CanSeek)
+      {
+         player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
+      }
+   }
 
-			player.MediaEnded -= OnPlaybackEnded;
-			player.Dispose();
-		}
+   void SetVolume(double volume, double balance)
+   {
+      if (isDisposed)
+      {
+         return;
+      }
 
-		isDisposed = true;
-	}
+      player.Volume = Math.Clamp(volume, 0, 1);
+      player.AudioBalance = Math.Clamp(balance, -1, 1);
+   }
+
+   MediaPlayer CreatePlayer()
+   {
+      return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = false };
+   }
+
+   protected virtual void Dispose(bool disposing)
+   {
+      if (isDisposed)
+      {
+         return;
+      }
+
+      if (disposing)
+      {
+         Stop();
+
+         player.MediaEnded -= OnPlaybackEnded;
+         player.Dispose();
+      }
+
+      isDisposed = true;
+   }
 }

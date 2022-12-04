@@ -14,9 +14,8 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
    bool isPositionChangeSystemDriven;
    bool isDisposed;
 
-	public MusicPlayerPageViewModel(
-		IAudioManager audioManager,
-        IDispatcher dispatcher)
+   public MusicPlayerPageViewModel(IAudioManager audioManager,
+                                   IDispatcher dispatcher)
    {
       this.audioManager = audioManager;
       this.dispatcher = dispatcher;
@@ -33,8 +32,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
       {
          MusicItemViewModel = musicItem;
 
-         audioPlayer = audioManager.CreatePlayer(
-                                                 await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
+         audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
 
          NotifyPropertyChanged(nameof(HasAudioSource));
          NotifyPropertyChanged(nameof(Duration));
