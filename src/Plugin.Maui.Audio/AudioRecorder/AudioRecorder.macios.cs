@@ -15,6 +15,10 @@ partial class AudioRecorder : IAudioRecorder
    readonly AVAudioRecorder recorder;
    readonly TaskCompletionSource<bool> finishedRecordingCompletionSource;
 
+   IDispatcherTimer myTimer = null;
+   DateTime startTime;
+   public TimeSpan ts = TimeSpan.Zero;
+
    public AudioRecorder()
    {
       InitAudioSession();
@@ -61,17 +65,36 @@ partial class AudioRecorder : IAudioRecorder
 
    public Task StartAsync()
    {
+      myTimer = Application.Current.Dispatcher.CreateTimer();
+      myTimer.Interval = TimeSpan.FromMilliseconds(100);
+      myTimer.Tick += t_Tick;
+      startTime = DateTime.Now;
+      myTimer.Start();
+
       return Task.FromResult(recorder.Record());
+   }
+
+   void t_Tick(object sender, EventArgs e)
+   {
+      ts = DateTime.Now - startTime;
    }
 
    public async Task<IAudioSource> StopAsync()
    {
       recorder.Stop();
 
+      myTimer?.Stop();
+
       await finishedRecordingCompletionSource.Task;
 
       return new FileAudioSource(destinationFilePath);
    }
+
+   public TimeSpan LastDuration() => ts;
+   // public TimeSpan LastDuration()
+   // {
+   //    return new TimeSpan();
+   // }
 
    static readonly NSObject[] keys = new NSObject[]
       {

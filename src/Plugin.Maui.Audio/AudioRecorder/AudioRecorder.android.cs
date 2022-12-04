@@ -18,6 +18,10 @@ partial class AudioRecorder : IAudioRecorder
    int bufferSize;
    int sampleRate;
 
+   IDispatcherTimer myTimer = null;
+   DateTime startTime;
+   public TimeSpan ts = TimeSpan.Zero;
+
    public AudioRecorder()
    {
       var packageManager = Android.App.Application.Context.PackageManager;
@@ -49,9 +53,20 @@ partial class AudioRecorder : IAudioRecorder
 
       audioRecord = GetAudioRecord(micSampleRate);
 
+      myTimer = Microsoft.Maui.Controls.Application.Current.Dispatcher.CreateTimer();
+      myTimer.Interval = TimeSpan.FromMilliseconds(100);
+      myTimer.Tick += t_Tick;
+      startTime = DateTime.Now;
+      myTimer.Start();
+
       audioRecord.StartRecording();
 
       return Task.Run(() => WriteAudioDataToFile());
+   }
+
+   void t_Tick(object sender, EventArgs e)
+   {
+      ts = DateTime.Now - startTime;
    }
 
    AudioRecord GetAudioRecord(int sampleRate)
@@ -72,12 +87,16 @@ partial class AudioRecorder : IAudioRecorder
          audioRecord?.Stop();
       }
 
+      myTimer?.Stop();
+
       audioFilePath = GetTempFileName();
 
       CopyWaveFile(rawFilePath, audioFilePath);
 
       return Task.FromResult(GetRecording());
    }
+
+   public TimeSpan LastDuration() => ts;
 
    IAudioSource GetRecording()
    {

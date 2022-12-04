@@ -16,4 +16,6 @@ partial class AudioRecorder : IAudioRecorder
    public Task StartAsync() => Task.CompletedTask;
 
    public Task<IAudioSource> StopAsync() => Task.FromResult<IAudioSource>(new EmptyAudioSource());
+
+   public TimeSpan LastDuration() => new TimeSpan();
 }

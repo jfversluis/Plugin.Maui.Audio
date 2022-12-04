@@ -31,6 +31,19 @@ public class AudioRecorderPageViewModel : BaseViewModel
       }
    }
 
+   // keep track of trim points
+   public Double start=0.0, end=0.0;
+   private TimeSpan _audioTime = TimeSpan.Zero;
+   public TimeSpan audioTime
+   {
+      get => _audioTime;
+      set
+      {
+         _audioTime = value;
+         NotifyPropertyChanged();
+      }
+   }
+
    public AudioRecorderPageViewModel(IAudioManager audioManager)
    {
       StartCommand = new Command(Start);
@@ -73,6 +86,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
          else
          {
             var audioSource = await audioRecorder.StopAsync();
+            audioTime = audioRecorder.LastDuration();
             RecordButtonColor = Colors.Blue;
             RecordButtonText = "Record";
             await Task.Run(() => this.audioManager.CreatePlayer(((FileAudioSource)audioSource).GetAudioStream()).Play());

@@ -10,5 +10,8 @@
             Text="{Binding RecordButtonText}"
             Command="{Binding StartCommand}"
             BackgroundColor="{Binding RecordButtonColor}"/>
+        <Label Text="{Binding audioTime, StringFormat='{0:s\\.f} sec'}"
+               HorizontalOptions="Center">
+        </Label>
     </VerticalStackLayout>
 </ContentPage>
