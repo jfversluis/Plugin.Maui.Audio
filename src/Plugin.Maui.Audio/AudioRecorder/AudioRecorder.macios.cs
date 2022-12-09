@@ -15,9 +15,9 @@ partial class AudioRecorder : IAudioRecorder
    readonly AVAudioRecorder recorder;
    readonly TaskCompletionSource<bool> finishedRecordingCompletionSource;
 
-   IDispatcherTimer myTimer = null;
+   IDispatcherTimer? myTimer = null;
    DateTime startTime;
-   public TimeSpan ts = TimeSpan.Zero;
+   public TimeSpan Ts = TimeSpan.Zero;
 
    public AudioRecorder()
    {
@@ -65,18 +65,20 @@ partial class AudioRecorder : IAudioRecorder
 
    public Task StartAsync()
    {
-      myTimer = Application.Current.Dispatcher.CreateTimer();
-      myTimer.Interval = TimeSpan.FromMilliseconds(100);
-      myTimer.Tick += t_Tick;
-      startTime = DateTime.Now;
-      myTimer.Start();
-
+      myTimer = Application.Current?.Dispatcher.CreateTimer();
+      if (myTimer != null)
+      {
+         myTimer.Interval = TimeSpan.FromMilliseconds(100);
+         myTimer.Tick += t_Tick;
+         startTime = DateTime.Now;
+         myTimer.Start();
+      }
       return Task.FromResult(recorder.Record());
    }
 
-   void t_Tick(object sender, EventArgs e)
+   void t_Tick(object? sender, EventArgs e)
    {
-      ts = DateTime.Now - startTime;
+      Ts = DateTime.Now - startTime;
    }
 
    public async Task<IAudioSource> StopAsync()
@@ -90,7 +92,7 @@ partial class AudioRecorder : IAudioRecorder
       return new FileAudioSource(destinationFilePath);
    }
 
-   public double Duration() => ts.TotalMilliseconds/1000;
+   public double Duration() => Ts.TotalMilliseconds/1000;
 
    static readonly NSObject[] keys = new NSObject[]
       {

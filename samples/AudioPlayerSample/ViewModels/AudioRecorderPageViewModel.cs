@@ -7,28 +7,28 @@ public class AudioRecorderPageViewModel : BaseViewModel
    ContentPage page;
 
    readonly IAudioManager audioManager;
-   IAudioRecorder? audioRecorder;
+   IAudioRecorder audioRecorder;
    IAudioPlayer audioPlayer;
    IAudioSource audioSource = null;
 
-   string _RecordButtonText = "Record";
+   string recordButtonText = "Record";
    public string RecordButtonText
    {
-      get => _RecordButtonText;
+      get => recordButtonText;
       set
       {
-         _RecordButtonText = value;
+         recordButtonText = value;
          NotifyPropertyChanged();
       }
    }
 
-   Color _RecordButtonColor = Colors.Blue;
+   Color recordButtonColor = Colors.Blue;
    public Color RecordButtonColor
    {
-      get => _RecordButtonColor;
+      get => recordButtonColor;
       set
       {
-         _RecordButtonColor = value;
+         recordButtonColor = value;
          NotifyPropertyChanged();
       }
    }

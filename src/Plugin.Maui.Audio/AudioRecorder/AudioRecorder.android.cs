@@ -18,9 +18,9 @@ partial class AudioRecorder : IAudioRecorder
    int bufferSize;
    int sampleRate;
 
-   IDispatcherTimer myTimer = null;
+   IDispatcherTimer? myTimer = null;
    DateTime startTime;
-   public TimeSpan ts = TimeSpan.Zero;
+   public TimeSpan Ts = TimeSpan.Zero;
 
    public AudioRecorder()
    {
@@ -47,26 +47,32 @@ partial class AudioRecorder : IAudioRecorder
          return Task.CompletedTask;
       }
 
-      var audioManager = (Android.Media.AudioManager)Android.App.Application.Context.GetSystemService(Context.AudioService);
+      var audioManager = Android.App.Application.Context.GetSystemService(Context.AudioService) as Android.Media.AudioManager;
 
-      var micSampleRate = Int32.Parse(audioManager.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate));
+      var rate = audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate);
+      if (rate != null)
+      {
+         var micSampleRate = Int32.Parse(rate);
 
-      audioRecord = GetAudioRecord(micSampleRate);
+         audioRecord = GetAudioRecord(micSampleRate);
 
-      myTimer = Microsoft.Maui.Controls.Application.Current.Dispatcher.CreateTimer();
-      myTimer.Interval = TimeSpan.FromMilliseconds(100);
-      myTimer.Tick += t_Tick;
-      startTime = DateTime.Now;
-      myTimer.Start();
-
-      audioRecord.StartRecording();
-
-      return Task.Run(() => WriteAudioDataToFile());
+         myTimer = Microsoft.Maui.Controls.Application.Current?.Dispatcher.CreateTimer();
+         if (myTimer != null)
+         {
+            myTimer.Interval = TimeSpan.FromMilliseconds(100);
+            myTimer.Tick += t_Tick;
+            startTime = DateTime.Now;
+            myTimer.Start();
+         }
+         audioRecord.StartRecording();
+         return Task.Run(() => WriteAudioDataToFile());
+      }
+      return Task.CompletedTask;
    }
 
-   void t_Tick(object sender, EventArgs e)
+   void t_Tick(object? sender, EventArgs e)
    {
-      ts = DateTime.Now - startTime;
+      Ts = DateTime.Now - startTime;
    }
 
    AudioRecord GetAudioRecord(int sampleRate)
@@ -96,7 +102,7 @@ partial class AudioRecorder : IAudioRecorder
       return Task.FromResult(GetRecording());
    }
 
-   public double Duration() => ts.TotalMilliseconds/1000;
+   public double Duration() => Ts.TotalMilliseconds/1000;
 
    IAudioSource GetRecording()
    {
@@ -110,7 +116,7 @@ partial class AudioRecorder : IAudioRecorder
       return new FileAudioSource(audioFilePath);
    }
 
-   public string GetAudioFilePath()
+   public string? GetAudioFilePath()
    {
       return audioFilePath;
    }
@@ -126,7 +132,7 @@ partial class AudioRecorder : IAudioRecorder
 
       rawFilePath = GetTempFileName();
 
-      FileOutputStream outputStream = null;
+      FileOutputStream? outputStream = null;
 
       try
       {
@@ -137,7 +143,8 @@ partial class AudioRecorder : IAudioRecorder
          throw new FileLoadException($"unable to create a new file: {ex.Message}");
       }
 
-      if (outputStream != null)
+      if (   (audioRecord != null)
+          && (outputStream != null))
       {
          while (audioRecord.RecordingState == RecordState.Recording)
          {
@@ -150,11 +157,8 @@ partial class AudioRecorder : IAudioRecorder
       }
    }
 
-   void CopyWaveFile(string sourcePath, string destinationPath)
+   void CopyWaveFile(string? sourcePath, string destinationPath)
    {
-      FileInputStream inputStream = null;
-      FileOutputStream outputStream = null;
-
       int channels = 2;
       long byteRate = 16 * sampleRate * channels / 8;
 
@@ -162,21 +166,24 @@ partial class AudioRecorder : IAudioRecorder
 
       try
       {
-         inputStream = new FileInputStream(sourcePath);
-         outputStream = new FileOutputStream(destinationPath);
-         var totalAudioLength = inputStream.Channel.Size();
-         var totalDataLength = totalAudioLength + 36;
-
-         WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
-
-         while (inputStream.Read(data) != -1)
+         FileInputStream inputStream = new FileInputStream(sourcePath);
+         FileOutputStream outputStream = new FileOutputStream(destinationPath);
+         if (   (inputStream != null)
+             && (inputStream.Channel != null))
          {
-            outputStream.Write(data);
+            var totalAudioLength = inputStream.Channel.Size();
+            var totalDataLength = totalAudioLength + 36;
+
+            WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
+
+            while (inputStream.Read(data) != -1)
+            {
+               outputStream.Write(data);
+            }
+
+            inputStream.Close();
+            outputStream.Close();
          }
-
-         inputStream.Close();
-         outputStream.Close();
-
       }
       catch { }
    }

@@ -10,7 +10,7 @@ partial class AudioPlayer : IAudioPlayer
 
    public double CurrentPosition => player.PlaybackSession.Position.TotalSeconds;
 
-   IDispatcherTimer myTimer = null;
+   IDispatcherTimer? myTimer = null;
    DateTime startTime;
    public TimeSpan ts = TimeSpan.Zero;
 
@@ -23,7 +23,7 @@ partial class AudioPlayer : IAudioPlayer
       }
    }
 
-   void t_Tick(object sender, EventArgs e)
+   void t_Tick(object? sender, EventArgs e)
    {
       ts = DateTime.Now - startTime;
    }
@@ -97,12 +97,14 @@ partial class AudioPlayer : IAudioPlayer
          Seek(0);
       }
 
-      myTimer = Microsoft.Maui.Controls.Application.Current.Dispatcher.CreateTimer();
-      myTimer.Interval = TimeSpan.FromMilliseconds(100);
-      myTimer.Tick += t_Tick;
-      startTime = DateTime.Now;
-      myTimer.Start();
-
+      myTimer = Microsoft.Maui.Controls.Application.Current?.Dispatcher.CreateTimer();
+      if (myTimer != null)
+      {
+         myTimer.Interval = TimeSpan.FromMilliseconds(100);
+         myTimer.Tick += t_Tick;
+         startTime = DateTime.Now;
+         myTimer.Start();
+      }
       player.Play();
    }
 
