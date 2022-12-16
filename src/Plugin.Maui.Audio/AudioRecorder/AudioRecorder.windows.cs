@@ -9,128 +9,145 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
-	MediaCapture mediaCapture;
+   MediaCapture? mediaCapture;
+   public bool CanRecordAudio { get; private set; } = true;
+   public bool IsRecording => mediaCapture != null;
+   string audioFilePath = string.Empty;
 
-	public bool CanRecordAudio { get; private set; } = true;
+   IDispatcherTimer? myTimer = null;
+   DateTime startTime;
+   public TimeSpan Ts = TimeSpan.Zero;
 
-	public bool IsRecording => mediaCapture != null;
+   public async Task StartAsync()
+   {
+      if (mediaCapture != null)
+      {
+         throw new InvalidOperationException("Recording already in progress");
+      }
 
-	string audioFilePath;
+      try
+      {
+         var captureSettings = new MediaCaptureInitializationSettings()
+            {
+               StreamingCaptureMode = StreamingCaptureMode.Audio
+            };
+         await InitMediaCapture(captureSettings);
+      }
+      catch (Exception ex)
+      {
+         CanRecordAudio = false;
+         DeleteMediaCapture();
 
-	public async Task StartAsync()
-	{
-		if (mediaCapture != null)
-		{
-			throw new InvalidOperationException("Recording already in progress");
-		}
+         if (ex.InnerException != null && ex.InnerException.GetType() == typeof(UnauthorizedAccessException))
+         {
+            throw ex.InnerException;
+         }
+         throw;
+      }
 
-		try
-		{
-			var captureSettings = new MediaCaptureInitializationSettings()
-			{
-				StreamingCaptureMode = StreamingCaptureMode.Audio
-			};
+      var localFolder = ApplicationData.Current.LocalFolder;
+      var fileName = Path.GetRandomFileName();
 
-			await InitMediaCapture(captureSettings);
-		}
-		catch (Exception ex)
-		{
-			CanRecordAudio = false;
-			DeleteMediaCapture();
+      var fileOnDisk = await localFolder.CreateFileAsync(fileName);
 
-			if (ex.InnerException != null && ex.InnerException.GetType() == typeof(UnauthorizedAccessException))
-			{
-				throw ex.InnerException;
-			}
-			throw;
-		}
+      try
+      {
+         await mediaCapture?.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto), fileOnDisk);
+         //   await mediaCapture.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateMp3(AudioEncodingQuality.Auto), fileOnDisk);
+         myTimer = Application.Current?.Dispatcher.CreateTimer();
+         if (myTimer != null)
+         {
+            myTimer.Interval = TimeSpan.FromMilliseconds(100);
+            myTimer.Tick += t_Tick;
+            startTime = DateTime.Now;
+            myTimer.Start();
+         }
+      }
+      catch
+      {
+         CanRecordAudio = false;
+         DeleteMediaCapture();
+         throw;
+      }
 
-		var localFolder = ApplicationData.Current.LocalFolder;
-		var fileName = Path.GetRandomFileName();
+      audioFilePath = fileOnDisk.Path;
+   }
 
-		var fileOnDisk = await localFolder.CreateFileAsync(fileName);
+   void t_Tick(object? sender, EventArgs e)
+   {
+      Ts = DateTime.Now - startTime;
+   }
 
-		try
-		{
-			await mediaCapture.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto), fileOnDisk);
-			//   await mediaCapture.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateMp3(AudioEncodingQuality.Auto), fileOnDisk);
-		}
-		catch
-		{
-			CanRecordAudio = false;
-			DeleteMediaCapture();
-			throw;
-		}
+   async Task InitMediaCapture(MediaCaptureInitializationSettings settings)
+   {
+      mediaCapture = new MediaCapture();
 
-		audioFilePath = fileOnDisk.Path;
-	}
+      await mediaCapture.InitializeAsync(settings);
 
-	async Task InitMediaCapture(MediaCaptureInitializationSettings settings)
-	{
-		mediaCapture = new MediaCapture();
+      mediaCapture.RecordLimitationExceeded += (MediaCapture sender) =>
+         {
+            CanRecordAudio = false;
+            DeleteMediaCapture();
+            throw new Exception("Record Limitation Exceeded");
+         };
 
-		await mediaCapture.InitializeAsync(settings);
+      mediaCapture.Failed += (MediaCapture sender, MediaCaptureFailedEventArgs errorEventArgs) =>
+         {
+            CanRecordAudio = false;
+            DeleteMediaCapture();
+            throw new Exception(string.Format("Code: {0}. {1}", errorEventArgs.Code, errorEventArgs.Message));
+         };
+   }
 
-		mediaCapture.RecordLimitationExceeded += (MediaCapture sender) =>
-		{
-			CanRecordAudio = false;
-			DeleteMediaCapture();
-			throw new Exception("Record Limitation Exceeded");
-		};
+   public async Task<IAudioSource> StopAsync()
+   {
+      myTimer?.Stop();
 
-		mediaCapture.Failed += (MediaCapture sender, MediaCaptureFailedEventArgs errorEventArgs) =>
-		{
-			CanRecordAudio = false;
-			DeleteMediaCapture();
-			throw new Exception(string.Format("Code: {0}. {1}", errorEventArgs.Code, errorEventArgs.Message));
-		};
-	}
+      if (mediaCapture == null)
+         throw new InvalidOperationException("No recording in progress");
 
-	public async Task<IAudioSource> StopAsync()
-	{
-		if (mediaCapture == null)
-			throw new InvalidOperationException("No recording in progress");
+      await mediaCapture.StopRecordAsync();
 
-		await mediaCapture.StopRecordAsync();
+      mediaCapture.Dispose();
+      mediaCapture = null;
 
-		mediaCapture.Dispose();
-		mediaCapture = null;
+      return GetRecording();
+   }
 
-		return GetRecording();
-	}
+   public double Duration() => Ts.TotalMilliseconds/1000;
 
-	AudioRecording GetRecording()
-	{
-		if (File.Exists(audioFilePath))
-		{
-			return new FileAudioSource(audioFilePath);
-		}
+   IAudioSource GetRecording()
+   {
+      if (File.Exists(audioFilePath))
+      {
+         return new FileAudioSource(audioFilePath);
+      }
 
-		return new EmptyAudioSource();
-	}
+      return new EmptyAudioSource();
+   }
 
-	void DeleteMediaCapture()
-	{
-		try
-		{
-			mediaCapture?.Dispose();
-		}
-		catch
-		{
-			//ignore
-		}
+   void DeleteMediaCapture()
+   {
+      try
+      {
+         mediaCapture?.Dispose();
+      }
+      catch
+      {
+         //ignore
+      }
 
-		try
-		{
-			if (!string.IsNullOrWhiteSpace(audioFilePath) && File.Exists(audioFilePath))
-				File.Delete(audioFilePath);
-		}
-		catch
-		{
-			//ignore
-		}
+      try
+      {
+         if (!string.IsNullOrWhiteSpace(audioFilePath) && File.Exists(audioFilePath))
+            File.Delete(audioFilePath);
+      }
+      catch
+      {
+         //ignore
+      }
 
-		audioFilePath = string.Empty;
-		mediaCapture = null;
-	}
+      audioFilePath = string.Empty;
+      mediaCapture = null;
+   }
 }
