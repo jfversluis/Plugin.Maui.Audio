@@ -2,9 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:AudioPlayerSample.ViewModels"
+             xmlns:converters="clr-namespace:AudioPlayerSample.Converters"
              x:Class="AudioPlayerSample.Pages.AudioRecorderPage"
              Title="Audio Recorder"
              x:DataType="viewmodels:AudioRecorderPageViewModel">
+
+    <ContentPage.Resources>
+        <converters:SecondsToStringConverter x:Key="SecondsToStringConverter" />
+    </ContentPage.Resources>
+
     <Grid>
         <VerticalStackLayout
             HorizontalOptions="Center"
@@ -22,29 +28,15 @@
                 Command="{Binding StartCommand}" />
 
             <Button
-                Text="Play"
-                Command="{Binding PlayCommand}"/>
-        </VerticalStackLayout>
-
-        <VerticalStackLayout
-            HorizontalOptions="Center"
-            VerticalOptions="Center"
-            IsVisible="False">
-
-            <VerticalStackLayout.Triggers>
-                <DataTrigger
-                    TargetType="VerticalStackLayout"
-                    Binding="{Binding IsRecording}"
-                    Value="True" />
-            </VerticalStackLayout.Triggers>
+                Text="Stop"
+                Command="{Binding StopCommand}" />
 
             <Button
-                Text="Stop"
-                Command="{Binding StopCommand}"/>
+                Text="Play"
+                Command="{Binding PlayCommand}" />
 
             <Label
-                Text="{Binding AudioTime, StringFormat='{0:0.00} sec'}"
-                HorizontalOptions="Center" />
+                Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
         </VerticalStackLayout>
 
     </Grid>

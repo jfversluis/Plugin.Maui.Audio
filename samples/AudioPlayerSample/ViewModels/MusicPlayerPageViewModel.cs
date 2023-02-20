@@ -14,8 +14,9 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 	bool isPositionChangeSystemDriven;
 	bool isDisposed;
 
-	public MusicPlayerPageViewModel(IAudioManager audioManager,
-									IDispatcher dispatcher)
+	public MusicPlayerPageViewModel(
+		IAudioManager audioManager,
+		IDispatcher dispatcher)
 	{
 		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
@@ -159,19 +160,19 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 
 		dispatcher.DispatchDelayed(
-								   TimeSpan.FromMilliseconds(16),
-								   () =>
-									  {
-										  Console.WriteLine($"{CurrentPosition} with duration of {Duration}");
+			TimeSpan.FromMilliseconds(16),
+			() =>
+			{
+				Console.WriteLine($"{CurrentPosition} with duration of {Duration}");
 
-										  isPositionChangeSystemDriven = true;
+				isPositionChangeSystemDriven = true;
 
-										  NotifyPropertyChanged(nameof(CurrentPosition));
+				NotifyPropertyChanged(nameof(CurrentPosition));
 
-										  isPositionChangeSystemDriven = false;
+				isPositionChangeSystemDriven = false;
 
-										  UpdatePlaybackPosition();
-									  });
+				UpdatePlaybackPosition();
+			});
 	}
 
 	public void TidyUp()

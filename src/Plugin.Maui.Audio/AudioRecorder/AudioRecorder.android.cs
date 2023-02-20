@@ -25,12 +25,16 @@ partial class AudioRecorder : IAudioRecorder
 		CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
 	}
 
-	public Task StartAsync()
+	public Task StartAsync() => StartAsync(GetTempFilePath());
+
+	public Task StartAsync(string filePath)
 	{
 		if (CanRecordAudio == false || audioRecord?.RecordingState == RecordState.Recording)
 		{
 			return Task.CompletedTask;
 		}
+
+		audioFilePath = filePath;
 
 		var audioManager = Android.App.Application.Context.GetSystemService(Context.AudioService) as Android.Media.AudioManager;
 
@@ -65,8 +69,6 @@ partial class AudioRecorder : IAudioRecorder
 			audioRecord?.Stop();
 		}
 
-		audioFilePath = GetTempFileName();
-
 		CopyWaveFile(rawFilePath, audioFilePath);
 
 		return Task.FromResult(GetRecording());
@@ -89,7 +91,7 @@ partial class AudioRecorder : IAudioRecorder
 		return audioFilePath;
 	}
 
-	string GetTempFileName()
+	string GetTempFilePath()
 	{
 		return Path.Combine("/sdcard/", Path.GetTempFileName());
 	}
@@ -98,7 +100,7 @@ partial class AudioRecorder : IAudioRecorder
 	{
 		var data = new byte[bufferSize];
 
-		rawFilePath = GetTempFileName();
+		rawFilePath = GetTempFilePath();
 
 		FileOutputStream? outputStream = null;
 

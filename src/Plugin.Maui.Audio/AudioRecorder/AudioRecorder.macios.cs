@@ -9,27 +9,15 @@ namespace Plugin.Maui.Audio;
 partial class AudioRecorder : IAudioRecorder
 {
 	public bool CanRecordAudio => AVAudioSession.SharedInstance().InputAvailable;
-	public bool IsRecording => recorder.Recording;
+	public bool IsRecording => recorder?.Recording ?? false;
 
-	readonly string destinationFilePath;
-	readonly AVAudioRecorder recorder;
-	readonly TaskCompletionSource<bool> finishedRecordingCompletionSource;
+	string? destinationFilePath;
+	AVAudioRecorder? recorder;
+	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
 
 	public AudioRecorder()
 	{
 		InitAudioSession();
-
-		destinationFilePath = AudioRecorder.GetTempFilePath();
-		var url = NSUrl.FromFilename(destinationFilePath);
-
-		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
-
-		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
-
-		// TODO: need to tidy this up.
-		recorder.FinishedRecording += Recorder_FinishedRecording;
-		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
-		recorder.PrepareToRecord();
 	}
 
 	static void InitAudioSession()
@@ -54,16 +42,43 @@ partial class AudioRecorder : IAudioRecorder
 		return Path.GetTempFileName();
 	}
 
-	public Task StartAsync()
+	public Task StartAsync() => StartAsync(AudioRecorder.GetTempFilePath());
+
+	public Task StartAsync(string filePath)
 	{
+		if (IsRecording)
+		{
+			throw new InvalidOperationException("The recorder is already recording.");
+		}
+
+		var url = NSUrl.FromFilename(filePath);
+		destinationFilePath = filePath;
+
+		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
+
+		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
+
+		recorder.FinishedRecording += Recorder_FinishedRecording;
+		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
+		recorder.PrepareToRecord();
+
 		return Task.FromResult(recorder.Record());
 	}
 
 	public async Task<IAudioSource> StopAsync()
 	{
+		if (recorder is null ||
+			destinationFilePath is null ||
+			finishedRecordingCompletionSource is null)
+		{
+			throw new InvalidOperationException("The recorder is not recording, call StartAsync first.");
+		}
+
 		recorder.Stop();
 
 		await finishedRecordingCompletionSource.Task;
+
+		recorder.FinishedRecording -= Recorder_FinishedRecording;
 
 		return new FileAudioSource(destinationFilePath);
 	}
@@ -90,6 +105,6 @@ partial class AudioRecorder : IAudioRecorder
 
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
-		finishedRecordingCompletionSource.SetResult(true);
+		finishedRecordingCompletionSource?.SetResult(true);
 	}
 }

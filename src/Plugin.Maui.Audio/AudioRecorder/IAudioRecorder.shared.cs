@@ -1,25 +1,29 @@
-﻿using System;
-namespace Plugin.Maui.Audio;
+﻿namespace Plugin.Maui.Audio;
 
 /// <summary>
-/// Interface for SimpleAudioPlayer
+/// Provides the ability to record audio.
 /// </summary>
 public interface IAudioRecorder
 {
 	///<Summary>
-	/// Check if the executing device is capable of recording audio
+	/// Gets whether the device is capable of recording audio.
 	///</Summary>
 	bool CanRecordAudio { get; }
 
 	///<Summary>
-	/// Check if the executing device is capable of recording audio
+	/// Gets whether the recorder is currently recording audio.
 	///</Summary>
 	bool IsRecording { get; }
 
 	///<Summary>
-	/// Start recording 
+	/// Start recording
 	///</Summary>
 	Task StartAsync();
+
+	///<Summary>
+	/// Start recording 
+	///</Summary>
+	Task StartAsync(string filePath);
 
 	///<Summary>
 	/// Stop recording and return the AudioRecording instance with the recording data
