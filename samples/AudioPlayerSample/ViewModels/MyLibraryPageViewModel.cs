@@ -12,9 +12,9 @@ public class MyLibraryPageViewModel : BaseViewModel
 	public MyLibraryPageViewModel()
 	{
 		Music = new ObservableCollection<MusicItemViewModel>
-		 {
+		{
 			new MusicItemViewModel("The Happy Ukelele Song", "Stanislav Fomin", "ukelele.mp3")
-		 };
+		};
 
 		AddRecordingCommand = new Command(AddRecording);
 	}
@@ -39,10 +39,10 @@ public class MyLibraryPageViewModel : BaseViewModel
 	async void OnMusicItemSelected()
 	{
 		await Shell.Current.GoToAsync(
-									  Routes.MusicPlayer.RouteName,
-									  new Dictionary<string, object>
-									  {
-										  [Routes.MusicPlayer.Arguments.Music] = SelectedMusicItem
-									  });
+			Routes.MusicPlayer.RouteName,
+			new Dictionary<string, object>
+			{
+				[Routes.MusicPlayer.Arguments.Music] = SelectedMusicItem
+			});
 	}
 }

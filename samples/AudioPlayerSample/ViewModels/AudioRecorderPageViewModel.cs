@@ -1,39 +1,17 @@
-﻿using Plugin.Maui.Audio;
+﻿using System.Diagnostics;
+using Plugin.Maui.Audio;
 
 namespace AudioPlayerSample.ViewModels;
 
 public class AudioRecorderPageViewModel : BaseViewModel
 {
-	ContentPage page;
-
 	readonly IAudioManager audioManager;
 	IAudioRecorder audioRecorder;
 	IAudioPlayer audioPlayer;
 	IAudioSource audioSource = null;
-
-	string recordButtonText = "Record";
-	public string RecordButtonText
-	{
-		get => recordButtonText;
-		set
-		{
-			recordButtonText = value;
-			NotifyPropertyChanged();
-		}
-	}
-
-	Color recordButtonColor = Colors.Blue;
-	public Color RecordButtonColor
-	{
-		get => recordButtonColor;
-		set
-		{
-			recordButtonColor = value;
-			NotifyPropertyChanged();
-		}
-	}
-
+	bool isRecording;
 	double audioTime = 0;
+
 	public double AudioTime
 	{
 		get => audioTime;
@@ -44,77 +22,75 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		}
 	}
 
+	public bool IsRecording
+	{
+		get => isRecording;
+		set
+		{
+			isRecording = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	public Command PlayCommand { get; }
+	public Command StartCommand { get; }
+	public Command StopCommand { get; }
+
 	public AudioRecorderPageViewModel(IAudioManager audioManager)
 	{
 		StartCommand = new Command(Start);
-		PlayCommand = new Command(playAudio);
+		StopCommand = new Command(Stop);
+		PlayCommand = new Command(PlayAudio);
 		this.audioManager = audioManager;
 	}
 
-	public void setPage(ContentPage page)
-	{
-		try
-		{
-			this.page = page;
-		}
-		catch (Exception ex)
-		{
-			page.DisplayAlert("Alert", $"setPage Exception: {ex.Message}", "OK");
-		}
-	}
-
-	void DonePlaying(object sender, EventArgs e)
-	{
-		AudioTime = audioPlayer.Duration;
-	}
-
-	public Command PlayCommand { get; set; }
-	public async void playAudio()
+	public void PlayAudio()
 	{
 		if (audioSource != null)
 		{
 			audioPlayer = this.audioManager.CreatePlayer(((FileAudioSource)audioSource).GetAudioStream());
-			audioPlayer.PlaybackEnded += DonePlaying;
-			await Task.Run(() =>
-				  {
-					  audioPlayer.Play();
-				  });
+
+			audioPlayer.Play();
 		}
 	}
 
-	public Command StartCommand { get; set; }
 	async void Start()
 	{
-		// This must be done for Android to avoid an exception but I don't think it would hurt in any case
-		if (await HavePermissionMicrophoneAsync())
-		{
+		this.IsRecording = true;
 
-			if (RecordButtonText == "Record")
+		try
+		{
+			var stopwatch = new Stopwatch();
+			stopwatch.Start();
+
+			Debug.WriteLine($"{stopwatch.Elapsed} Before permission check");
+
+			// This must be done for Android to avoid an exception but I don't think it would hurt in any case
+			if (await HavePermissionMicrophoneAsync())
 			{
+				Debug.WriteLine($"{stopwatch.Elapsed} After permission check");
+
+				Debug.WriteLine($"{stopwatch.Elapsed} Before recorder create");
 				audioRecorder = audioManager.CreateRecorder();
-				try
-				{
-					RecordButtonColor = Colors.Red;
-					RecordButtonText = "Stop and play";
-					await audioRecorder.StartAsync();
-				}
-				catch (Exception ex)
-				{
-					await page.DisplayAlert("Alert", $"Start() recording exception: {ex.Message}", "OK");
-				}
+				Debug.WriteLine($"{stopwatch.Elapsed} After recorder create");
+
+				Debug.WriteLine($"{stopwatch.Elapsed} Before recorder start");
+				await audioRecorder.StartAsync();
+				Debug.WriteLine($"{stopwatch.Elapsed} After recorder start");
 			}
 			else
 			{
-				audioSource = await audioRecorder.StopAsync();
-				AudioTime = audioRecorder.Duration();
-				RecordButtonColor = Colors.Blue;
-				RecordButtonText = "Record";
-				// playAudio();
+				//await page.DisplayAlert("Alert", $"It is necessary to go to the settings for this app and give permission for the microphone.", "OK");
 			}
 		}
-		else
+		catch (Exception ex)
 		{
-			await page.DisplayAlert("Alert", $"It is necessary to go to the settings for this app and give permission for the microphone.", "OK");
+			this.IsRecording = false;
 		}
+	}
+
+	async void Stop()
+	{
+		await audioRecorder.StopAsync();
 	}
 }

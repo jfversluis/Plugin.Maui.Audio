@@ -1,6 +1,6 @@
-﻿using System;
-namespace Plugin.Maui.Audio;
+﻿namespace Plugin.Maui.Audio;
 
 public interface IAudioSource
 {
+	Stream GetAudioStream();
 }

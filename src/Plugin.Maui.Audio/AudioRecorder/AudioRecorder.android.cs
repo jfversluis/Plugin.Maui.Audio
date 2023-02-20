@@ -25,19 +25,8 @@ partial class AudioRecorder : IAudioRecorder
 		CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
 	}
 
-	// public async Task<bool> HavePermissionMicrophoneAsync()
-	// {
-	//    var status = await Permissions.CheckStatusAsync<Permissions.Microphone>();
-	//    string statusNow = status.ToString();
-	//    string statusGranted = PermissionStatus.Granted.ToString();
-	//    return statusNow == statusGranted;
-	// }
-
 	public Task StartAsync()
 	{
-		// // This should be done in the app but do it here just in case because otherwise we get exception
-		// Task.Run(() => HavePermissionMicrophoneAsync());
-
 		if (CanRecordAudio == false || audioRecord?.RecordingState == RecordState.Recording)
 		{
 			return Task.CompletedTask;

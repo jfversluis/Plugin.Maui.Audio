@@ -14,8 +14,7 @@ public class BaseViewModel : INotifyPropertyChanged
 	public async Task<bool> HavePermissionMicrophoneAsync()
 	{
 		var status = await Permissions.CheckStatusAsync<Permissions.Microphone>();
-		string statusNow = status.ToString();
-		string statusGranted = PermissionStatus.Granted.ToString();
-		return (statusNow == "Unknown") || (statusNow == statusGranted);
+
+		return (status == PermissionStatus.Unknown) || (status == PermissionStatus.Granted);
 	}
 }

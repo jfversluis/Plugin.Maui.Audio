@@ -7,6 +7,5 @@ public partial class AudioRecorderPage : ContentPage
 		InitializeComponent();
 
 		BindingContext = audioRecorderPageViewModel;
-		(BindingContext as ViewModels.AudioRecorderPageViewModel).setPage(this);
 	}
 }

@@ -19,7 +19,7 @@ partial class AudioRecorder : IAudioRecorder
 	{
 		InitAudioSession();
 
-		destinationFilePath = GetTempFileName();
+		destinationFilePath = AudioRecorder.GetTempFilePath();
 		var url = NSUrl.FromFilename(destinationFilePath);
 
 		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
@@ -36,27 +36,22 @@ partial class AudioRecorder : IAudioRecorder
 	{
 		var audioSession = AVAudioSession.SharedInstance();
 
-		var err = audioSession.SetCategory(AVAudioSessionCategory.PlayAndRecord);
-		if (err is not null)
+		var error = audioSession.SetCategory(AVAudioSessionCategory.Record);
+		if (error is not null)
 		{
-			throw new Exception(err.ToString());
+			throw new Exception(error.ToString());
 		}
 
-		err = audioSession.SetActive(true);
-		if (err is not null)
+		error = audioSession.SetActive(true);
+		if (error is not null)
 		{
-			throw new Exception(err.ToString());
+			throw new Exception(error.ToString());
 		}
 	}
 
-	string GetTempFileName()
+	static string GetTempFilePath()
 	{
-		// TODO: Better MAUI options?
-		var docFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-		var libFolder = Path.Combine(docFolder, "..", "Library");
-		var tempFileName = Path.Combine(libFolder, Path.GetTempFileName());
-
-		return tempFileName;
+		return Path.GetTempFileName();
 	}
 
 	public Task StartAsync()
@@ -98,95 +93,3 @@ partial class AudioRecorder : IAudioRecorder
 		finishedRecordingCompletionSource.SetResult(true);
 	}
 }
-
-
-
-
-//namespace Plugin.SimpleAudioRecorder
-//{
-//      public class SimpleAudioRecorderImplementation : ISimpleAudioRecorder
-//      {
-//#if __IOS__
-//        public bool CanRecordAudio => AVAudioSession.SharedInstance().InputAvailable;
-//#else
-//              public bool CanRecordAudio => true;
-//#endif
-
-//              public bool IsRecording => recorder.Recording;
-
-//              AVAudioRecorder recorder;
-
-//              public SimpleAudioRecorderImplementation()
-//              {
-//                      InitAudioSession();
-//                      InitAudioRecorder();
-//              }
-
-//              void InitAudioSession()
-//              {
-//#if __IOS__
-//            var audioSession = AVAudioSession.SharedInstance();
-
-//            var err = audioSession.SetCategory(AVAudioSessionCategory.PlayAndRecord);
-//            if (err != null) throw new Exception(err.ToString());
-
-//            err = audioSession.SetActive(true);
-//            if (err != null) throw new Exception(err.ToString());
-//#endif
-//              }
-
-//              void InitAudioRecorder()
-//              {
-//                      var url = NSUrl.FromFilename(GetTempFileName());
-
-//                      var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
-
-//                      recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError error);
-
-//                      recorder.PrepareToRecord();
-//              }
-
-//              string GetTempFileName()
-//              {
-//                      var docFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-//                      var libFolder = Path.Combine(docFolder, "..", "Library");
-//                      var tempFileName = Path.Combine(libFolder, Path.GetTempFileName());
-
-//                      return tempFileName;
-//              }
-
-//              public Task RecordAsync()
-//              {
-//                      return Task.FromResult(recorder.Record());
-//              }
-
-//              public Task<AudioRecording> StopAsync()
-//              {
-//                      recorder.Stop();
-
-//                      var recording = new AudioRecording(recorder.Url.Path);
-
-//                      return Task.FromResult(recording);
-//              }
-
-//              static NSObject[] keys = new NSObject[]
-//              {
-//                      AVAudioSettings.AVSampleRateKey,
-//                      AVAudioSettings.AVFormatIDKey,
-//                      AVAudioSettings.AVNumberOfChannelsKey,
-//                      AVAudioSettings.AVLinearPCMBitDepthKey,
-//                      AVAudioSettings.AVLinearPCMIsBigEndianKey,
-//                      AVAudioSettings.AVLinearPCMIsFloatKey
-//              };
-
-//              static NSObject[] objects = new NSObject[]
-//              {
-//                      NSNumber.FromFloat (16000), //Sample Rate
-//            NSNumber.FromInt32 ((int)AudioToolbox.AudioFormatType.LinearPCM), //AVFormat
-//            NSNumber.FromInt32 (1), //Channels
-//            NSNumber.FromInt32 (16), //PCMBitDepth
-//            NSNumber.FromBoolean (false), //IsBigEndianKey
-//            NSNumber.FromBoolean (false) //IsFloatKey
-//        };
-//      }
-//}
