@@ -25,9 +25,4 @@ public interface IAudioRecorder
 	/// Stop recording and return the AudioRecording instance with the recording data
 	///</Summary>
 	Task<IAudioSource> StopAsync();
-
-	///<Summary>
-	/// Returns the duration of the last audio recording or playback.
-	///</Summary>
-	double Duration();
 }

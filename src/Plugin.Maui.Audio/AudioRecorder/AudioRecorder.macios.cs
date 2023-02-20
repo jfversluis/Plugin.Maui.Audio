@@ -15,10 +15,6 @@ partial class AudioRecorder : IAudioRecorder
 	readonly AVAudioRecorder recorder;
 	readonly TaskCompletionSource<bool> finishedRecordingCompletionSource;
 
-	IDispatcherTimer? myTimer = null;
-	DateTime startTime;
-	public TimeSpan Ts = TimeSpan.Zero;
-
 	public AudioRecorder()
 	{
 		InitAudioSession();
@@ -65,54 +61,37 @@ partial class AudioRecorder : IAudioRecorder
 
 	public Task StartAsync()
 	{
-		myTimer = Application.Current?.Dispatcher.CreateTimer();
-		if (myTimer != null)
-		{
-			myTimer.Interval = TimeSpan.FromMilliseconds(100);
-			myTimer.Tick += t_Tick;
-			startTime = DateTime.Now;
-			myTimer.Start();
-		}
 		return Task.FromResult(recorder.Record());
-	}
-
-	void t_Tick(object? sender, EventArgs e)
-	{
-		Ts = DateTime.Now - startTime;
 	}
 
 	public async Task<IAudioSource> StopAsync()
 	{
 		recorder.Stop();
 
-		myTimer?.Stop();
-
 		await finishedRecordingCompletionSource.Task;
 
 		return new FileAudioSource(destinationFilePath);
 	}
 
-	public double Duration() => Ts.TotalMilliseconds / 1000;
-
 	static readonly NSObject[] keys = new NSObject[]
-	   {
-		 AVAudioSettings.AVSampleRateKey,
-		 AVAudioSettings.AVFormatIDKey,
-		 AVAudioSettings.AVNumberOfChannelsKey,
-		 AVAudioSettings.AVLinearPCMBitDepthKey,
-		 AVAudioSettings.AVLinearPCMIsBigEndianKey,
-		 AVAudioSettings.AVLinearPCMIsFloatKey
-	   };
+	{
+		AVAudioSettings.AVSampleRateKey,
+		AVAudioSettings.AVFormatIDKey,
+		AVAudioSettings.AVNumberOfChannelsKey,
+		AVAudioSettings.AVLinearPCMBitDepthKey,
+		AVAudioSettings.AVLinearPCMIsBigEndianKey,
+		AVAudioSettings.AVLinearPCMIsFloatKey
+	};
 
 	static readonly NSObject[] objects = new NSObject[]
-	   {
-		 NSNumber.FromFloat (16000), //Sample Rate
-         NSNumber.FromInt32 ((int)AudioToolbox.AudioFormatType.LinearPCM), //AVFormat
-         NSNumber.FromInt32 (1), //Channels
-         NSNumber.FromInt32 (16), //PCMBitDepth
-         NSNumber.FromBoolean (false), //IsBigEndianKey
-         NSNumber.FromBoolean (false) //IsFloatKey
-	   };
+	{
+		NSNumber.FromFloat (16000), //Sample Rate
+        NSNumber.FromInt32 ((int)AudioToolbox.AudioFormatType.LinearPCM), //AVFormat
+        NSNumber.FromInt32 (1), //Channels
+        NSNumber.FromInt32 (16), //PCMBitDepth
+        NSNumber.FromBoolean (false), //IsBigEndianKey
+        NSNumber.FromBoolean (false) //IsFloatKey
+	};
 
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
