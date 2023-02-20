@@ -2,11 +2,11 @@
 
 public partial class AudioRecorderPage : ContentPage
 {
-   public AudioRecorderPage(ViewModels.AudioRecorderPageViewModel audioRecorderPageViewModel)
-   {
-      InitializeComponent();
+	public AudioRecorderPage(ViewModels.AudioRecorderPageViewModel audioRecorderPageViewModel)
+	{
+		InitializeComponent();
 
-      BindingContext = audioRecorderPageViewModel;
-      (BindingContext as ViewModels.AudioRecorderPageViewModel).setPage(this);
-   }
+		BindingContext = audioRecorderPageViewModel;
+		(BindingContext as ViewModels.AudioRecorderPageViewModel).setPage(this);
+	}
 }

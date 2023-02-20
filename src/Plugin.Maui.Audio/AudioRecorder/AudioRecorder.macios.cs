@@ -8,116 +8,116 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
-   public bool CanRecordAudio => AVAudioSession.SharedInstance().InputAvailable;
-   public bool IsRecording => recorder.Recording;
+	public bool CanRecordAudio => AVAudioSession.SharedInstance().InputAvailable;
+	public bool IsRecording => recorder.Recording;
 
-   readonly string destinationFilePath;
-   readonly AVAudioRecorder recorder;
-   readonly TaskCompletionSource<bool> finishedRecordingCompletionSource;
+	readonly string destinationFilePath;
+	readonly AVAudioRecorder recorder;
+	readonly TaskCompletionSource<bool> finishedRecordingCompletionSource;
 
-   IDispatcherTimer? myTimer = null;
-   DateTime startTime;
-   public TimeSpan Ts = TimeSpan.Zero;
+	IDispatcherTimer? myTimer = null;
+	DateTime startTime;
+	public TimeSpan Ts = TimeSpan.Zero;
 
-   public AudioRecorder()
-   {
-      InitAudioSession();
+	public AudioRecorder()
+	{
+		InitAudioSession();
 
-      destinationFilePath = GetTempFileName();
-      var url = NSUrl.FromFilename(destinationFilePath);
+		destinationFilePath = GetTempFileName();
+		var url = NSUrl.FromFilename(destinationFilePath);
 
-      var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
+		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
-      recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
+		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
 
-      // TODO: need to tidy this up.
-      recorder.FinishedRecording += Recorder_FinishedRecording;
-      finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
-      recorder.PrepareToRecord();
-   }
+		// TODO: need to tidy this up.
+		recorder.FinishedRecording += Recorder_FinishedRecording;
+		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
+		recorder.PrepareToRecord();
+	}
 
-   static void InitAudioSession()
-   {
-      var audioSession = AVAudioSession.SharedInstance();
+	static void InitAudioSession()
+	{
+		var audioSession = AVAudioSession.SharedInstance();
 
-      var err = audioSession.SetCategory(AVAudioSessionCategory.PlayAndRecord);
-      if (err is not null)
-      {
-         throw new Exception(err.ToString());
-      }
+		var err = audioSession.SetCategory(AVAudioSessionCategory.PlayAndRecord);
+		if (err is not null)
+		{
+			throw new Exception(err.ToString());
+		}
 
-      err = audioSession.SetActive(true);
-      if (err is not null)
-      {
-         throw new Exception(err.ToString());
-      }
-   }
+		err = audioSession.SetActive(true);
+		if (err is not null)
+		{
+			throw new Exception(err.ToString());
+		}
+	}
 
-   string GetTempFileName()
-   {
-      // TODO: Better MAUI options?
-      var docFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-      var libFolder = Path.Combine(docFolder, "..", "Library");
-      var tempFileName = Path.Combine(libFolder, Path.GetTempFileName());
+	string GetTempFileName()
+	{
+		// TODO: Better MAUI options?
+		var docFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+		var libFolder = Path.Combine(docFolder, "..", "Library");
+		var tempFileName = Path.Combine(libFolder, Path.GetTempFileName());
 
-      return tempFileName;
-   }
+		return tempFileName;
+	}
 
-   public Task StartAsync()
-   {
-      myTimer = Application.Current?.Dispatcher.CreateTimer();
-      if (myTimer != null)
-      {
-         myTimer.Interval = TimeSpan.FromMilliseconds(100);
-         myTimer.Tick += t_Tick;
-         startTime = DateTime.Now;
-         myTimer.Start();
-      }
-      return Task.FromResult(recorder.Record());
-   }
+	public Task StartAsync()
+	{
+		myTimer = Application.Current?.Dispatcher.CreateTimer();
+		if (myTimer != null)
+		{
+			myTimer.Interval = TimeSpan.FromMilliseconds(100);
+			myTimer.Tick += t_Tick;
+			startTime = DateTime.Now;
+			myTimer.Start();
+		}
+		return Task.FromResult(recorder.Record());
+	}
 
-   void t_Tick(object? sender, EventArgs e)
-   {
-      Ts = DateTime.Now - startTime;
-   }
+	void t_Tick(object? sender, EventArgs e)
+	{
+		Ts = DateTime.Now - startTime;
+	}
 
-   public async Task<IAudioSource> StopAsync()
-   {
-      recorder.Stop();
+	public async Task<IAudioSource> StopAsync()
+	{
+		recorder.Stop();
 
-      myTimer?.Stop();
+		myTimer?.Stop();
 
-      await finishedRecordingCompletionSource.Task;
+		await finishedRecordingCompletionSource.Task;
 
-      return new FileAudioSource(destinationFilePath);
-   }
+		return new FileAudioSource(destinationFilePath);
+	}
 
-   public double Duration() => Ts.TotalMilliseconds/1000;
+	public double Duration() => Ts.TotalMilliseconds / 1000;
 
-   static readonly NSObject[] keys = new NSObject[]
-      {
-         AVAudioSettings.AVSampleRateKey,
-         AVAudioSettings.AVFormatIDKey,
-         AVAudioSettings.AVNumberOfChannelsKey,
-         AVAudioSettings.AVLinearPCMBitDepthKey,
-         AVAudioSettings.AVLinearPCMIsBigEndianKey,
-         AVAudioSettings.AVLinearPCMIsFloatKey
-      };
+	static readonly NSObject[] keys = new NSObject[]
+	   {
+		 AVAudioSettings.AVSampleRateKey,
+		 AVAudioSettings.AVFormatIDKey,
+		 AVAudioSettings.AVNumberOfChannelsKey,
+		 AVAudioSettings.AVLinearPCMBitDepthKey,
+		 AVAudioSettings.AVLinearPCMIsBigEndianKey,
+		 AVAudioSettings.AVLinearPCMIsFloatKey
+	   };
 
-   static readonly NSObject[] objects = new NSObject[]
-      {
-         NSNumber.FromFloat (16000), //Sample Rate
+	static readonly NSObject[] objects = new NSObject[]
+	   {
+		 NSNumber.FromFloat (16000), //Sample Rate
          NSNumber.FromInt32 ((int)AudioToolbox.AudioFormatType.LinearPCM), //AVFormat
          NSNumber.FromInt32 (1), //Channels
          NSNumber.FromInt32 (16), //PCMBitDepth
          NSNumber.FromBoolean (false), //IsBigEndianKey
          NSNumber.FromBoolean (false) //IsFloatKey
-      };
+	   };
 
-   void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
-   {
-      finishedRecordingCompletionSource.SetResult(true);
-   }
+	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
+	{
+		finishedRecordingCompletionSource.SetResult(true);
+	}
 }
 
 

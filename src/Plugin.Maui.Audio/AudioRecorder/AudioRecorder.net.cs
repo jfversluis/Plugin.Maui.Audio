@@ -5,17 +5,17 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
-   public AudioRecorder()
-   {
-   }
+	public AudioRecorder()
+	{
+	}
 
-   public bool CanRecordAudio => false;
+	public bool CanRecordAudio => false;
 
-   public bool IsRecording => false;
+	public bool IsRecording => false;
 
-   public Task StartAsync() => Task.CompletedTask;
+	public Task StartAsync() => Task.CompletedTask;
 
-   public Task<IAudioSource> StopAsync() => Task.FromResult<IAudioSource>(new EmptyAudioSource());
+	public Task<IAudioSource> StopAsync() => Task.FromResult<IAudioSource>(new EmptyAudioSource());
 
-   public double Duration() => 0;
+	public double Duration() => 0;
 }

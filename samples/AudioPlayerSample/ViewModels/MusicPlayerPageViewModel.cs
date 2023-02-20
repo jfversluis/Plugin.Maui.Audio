@@ -6,204 +6,204 @@ namespace AudioPlayerSample.ViewModels;
 
 public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisposable
 {
-   readonly IAudioManager audioManager;
-   readonly IDispatcher dispatcher;
-   IAudioPlayer audioPlayer;
-   TimeSpan animationProgress;
-   MusicItemViewModel musicItemViewModel;
-   bool isPositionChangeSystemDriven;
-   bool isDisposed;
+	readonly IAudioManager audioManager;
+	readonly IDispatcher dispatcher;
+	IAudioPlayer audioPlayer;
+	TimeSpan animationProgress;
+	MusicItemViewModel musicItemViewModel;
+	bool isPositionChangeSystemDriven;
+	bool isDisposed;
 
-   public MusicPlayerPageViewModel(IAudioManager audioManager,
-                                   IDispatcher dispatcher)
-   {
-      this.audioManager = audioManager;
-      this.dispatcher = dispatcher;
+	public MusicPlayerPageViewModel(IAudioManager audioManager,
+									IDispatcher dispatcher)
+	{
+		this.audioManager = audioManager;
+		this.dispatcher = dispatcher;
 
-      PlayCommand = new Command(Play);
-      PauseCommand = new Command(Pause);
-      StopCommand = new Command(Stop);
-   }
+		PlayCommand = new Command(Play);
+		PauseCommand = new Command(Pause);
+		StopCommand = new Command(Stop);
+	}
 
-   public async void ApplyQueryAttributes(IDictionary<string, object> query)
-   {
-      if (query.TryGetValue(Routes.MusicPlayer.Arguments.Music, out object musicObject) &&
-          musicObject is MusicItemViewModel musicItem)
-      {
-         MusicItemViewModel = musicItem;
+	public async void ApplyQueryAttributes(IDictionary<string, object> query)
+	{
+		if (query.TryGetValue(Routes.MusicPlayer.Arguments.Music, out object musicObject) &&
+			musicObject is MusicItemViewModel musicItem)
+		{
+			MusicItemViewModel = musicItem;
 
-         audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
+			audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
 
-         NotifyPropertyChanged(nameof(HasAudioSource));
-         NotifyPropertyChanged(nameof(Duration));
-      }
-   }
+			NotifyPropertyChanged(nameof(HasAudioSource));
+			NotifyPropertyChanged(nameof(Duration));
+		}
+	}
 
-   public double CurrentPosition
-   {
-      get => audioPlayer?.CurrentPosition ?? 0;
-      set
-      {
-         if (audioPlayer is not null &&
-             audioPlayer.CanSeek &&
-             isPositionChangeSystemDriven is false)
-         {
-            audioPlayer.Seek(value);
-         }
-      }
-   }
+	public double CurrentPosition
+	{
+		get => audioPlayer?.CurrentPosition ?? 0;
+		set
+		{
+			if (audioPlayer is not null &&
+				audioPlayer.CanSeek &&
+				isPositionChangeSystemDriven is false)
+			{
+				audioPlayer.Seek(value);
+			}
+		}
+	}
 
-   public double Duration => audioPlayer?.Duration ?? 1;
+	public double Duration => audioPlayer?.Duration ?? 1;
 
-   public MusicItemViewModel MusicItemViewModel
-   {
-      get => musicItemViewModel;
-      set
-      {
-         musicItemViewModel = value;
-         NotifyPropertyChanged();
-      }
-   }
+	public MusicItemViewModel MusicItemViewModel
+	{
+		get => musicItemViewModel;
+		set
+		{
+			musicItemViewModel = value;
+			NotifyPropertyChanged();
+		}
+	}
 
-   public bool HasAudioSource => audioPlayer is not null;
+	public bool HasAudioSource => audioPlayer is not null;
 
-   public bool IsPlaying => audioPlayer?.IsPlaying ?? false;
-        
-   public TimeSpan AnimationProgress
-   {
-      get => animationProgress;
-      set
-      {
-         animationProgress = value;
-         NotifyPropertyChanged();
-      }
-   }
+	public bool IsPlaying => audioPlayer?.IsPlaying ?? false;
 
-   public Command PlayCommand { get; }
-   public Command PauseCommand { get; }
-   public Command StopCommand { get; }
+	public TimeSpan AnimationProgress
+	{
+		get => animationProgress;
+		set
+		{
+			animationProgress = value;
+			NotifyPropertyChanged();
+		}
+	}
 
-   public double Volume
-   {
-      get => audioPlayer?.Volume ?? 1;
-      set
-      {
-         if (audioPlayer != null)
-         {
-            audioPlayer.Volume = value;
-         }
-      }
-   }
+	public Command PlayCommand { get; }
+	public Command PauseCommand { get; }
+	public Command StopCommand { get; }
 
-   public double Balance
-   {
-      get => audioPlayer?.Balance ?? 0;
-      set
-      {
-         if (audioPlayer != null)
-         {
-            audioPlayer.Balance = value;
-         }
-      }
-   }
+	public double Volume
+	{
+		get => audioPlayer?.Volume ?? 1;
+		set
+		{
+			if (audioPlayer != null)
+			{
+				audioPlayer.Volume = value;
+			}
+		}
+	}
 
-   public bool Loop
-   {
-      get => audioPlayer?.Loop ?? false;
-      set
-      {
-         audioPlayer.Loop = value;
-      }
-   }
+	public double Balance
+	{
+		get => audioPlayer?.Balance ?? 0;
+		set
+		{
+			if (audioPlayer != null)
+			{
+				audioPlayer.Balance = value;
+			}
+		}
+	}
 
-   void Play()
-   {
-      audioPlayer.Play();
+	public bool Loop
+	{
+		get => audioPlayer?.Loop ?? false;
+		set
+		{
+			audioPlayer.Loop = value;
+		}
+	}
 
-      UpdatePlaybackPosition();
-      NotifyPropertyChanged(nameof(IsPlaying));
-   }
+	void Play()
+	{
+		audioPlayer.Play();
 
-   void Pause()
-   {
-      if (audioPlayer.IsPlaying)
-      {
-         audioPlayer.Pause();
-      }
-      else
-      {
-         audioPlayer.Play();
-      }
+		UpdatePlaybackPosition();
+		NotifyPropertyChanged(nameof(IsPlaying));
+	}
 
-      UpdatePlaybackPosition();
-      NotifyPropertyChanged(nameof(IsPlaying));
-   }
+	void Pause()
+	{
+		if (audioPlayer.IsPlaying)
+		{
+			audioPlayer.Pause();
+		}
+		else
+		{
+			audioPlayer.Play();
+		}
 
-   void Stop()
-   {
-      if (audioPlayer.IsPlaying)
-      {
-         audioPlayer.Stop();
+		UpdatePlaybackPosition();
+		NotifyPropertyChanged(nameof(IsPlaying));
+	}
 
-         AnimationProgress = TimeSpan.Zero;
+	void Stop()
+	{
+		if (audioPlayer.IsPlaying)
+		{
+			audioPlayer.Stop();
 
-         NotifyPropertyChanged(nameof(IsPlaying));
-      }
-   }
+			AnimationProgress = TimeSpan.Zero;
 
-   void UpdatePlaybackPosition()
-   {
-      if (audioPlayer?.IsPlaying is false)
-      {
-         return;
-      }
+			NotifyPropertyChanged(nameof(IsPlaying));
+		}
+	}
 
-      dispatcher.DispatchDelayed(
-                                 TimeSpan.FromMilliseconds(16),
-                                 () =>
-                                    {
-                                       Console.WriteLine($"{CurrentPosition} with duration of {Duration}");
+	void UpdatePlaybackPosition()
+	{
+		if (audioPlayer?.IsPlaying is false)
+		{
+			return;
+		}
 
-                                       isPositionChangeSystemDriven = true;
+		dispatcher.DispatchDelayed(
+								   TimeSpan.FromMilliseconds(16),
+								   () =>
+									  {
+										  Console.WriteLine($"{CurrentPosition} with duration of {Duration}");
 
-                                       NotifyPropertyChanged(nameof(CurrentPosition));
+										  isPositionChangeSystemDriven = true;
 
-                                       isPositionChangeSystemDriven = false;
+										  NotifyPropertyChanged(nameof(CurrentPosition));
 
-                                       UpdatePlaybackPosition();
-                                    });
-   }
+										  isPositionChangeSystemDriven = false;
 
-   public void TidyUp()
-   {
-      audioPlayer?.Dispose();
-      audioPlayer = null;
-   }
+										  UpdatePlaybackPosition();
+									  });
+	}
 
-   ~MusicPlayerPageViewModel()
-   {
-      Dispose(false);
-   }
+	public void TidyUp()
+	{
+		audioPlayer?.Dispose();
+		audioPlayer = null;
+	}
 
-   public void Dispose()
-   {
-      Dispose(true);
+	~MusicPlayerPageViewModel()
+	{
+		Dispose(false);
+	}
 
-      GC.SuppressFinalize(this);
-   }
+	public void Dispose()
+	{
+		Dispose(true);
 
-   protected virtual void Dispose(bool disposing)
-   {
-      if (isDisposed)
-      {
-         return;
-      }
+		GC.SuppressFinalize(this);
+	}
 
-      if (disposing)
-      {
-         TidyUp();
-      }
+	protected virtual void Dispose(bool disposing)
+	{
+		if (isDisposed)
+		{
+			return;
+		}
 
-      isDisposed = true;
-   }
+		if (disposing)
+		{
+			TidyUp();
+		}
+
+		isDisposed = true;
+	}
 }

@@ -4,45 +4,45 @@ namespace AudioPlayerSample.ViewModels;
 
 public class MyLibraryPageViewModel : BaseViewModel
 {
-   MusicItemViewModel selectedMusicItem;
-   public Command AddRecordingCommand { get; }
-   public ObservableCollection<MusicItemViewModel> Music { get; }
+	MusicItemViewModel selectedMusicItem;
+	public Command AddRecordingCommand { get; }
+	public ObservableCollection<MusicItemViewModel> Music { get; }
 
 
-   public MyLibraryPageViewModel()
-   {
-      Music = new ObservableCollection<MusicItemViewModel>
-         {
-            new MusicItemViewModel("The Happy Ukelele Song", "Stanislav Fomin", "ukelele.mp3")
-         };
+	public MyLibraryPageViewModel()
+	{
+		Music = new ObservableCollection<MusicItemViewModel>
+		 {
+			new MusicItemViewModel("The Happy Ukelele Song", "Stanislav Fomin", "ukelele.mp3")
+		 };
 
-      AddRecordingCommand = new Command(AddRecording);
-   }
+		AddRecordingCommand = new Command(AddRecording);
+	}
 
-   public MusicItemViewModel SelectedMusicItem
-   {
-      get => selectedMusicItem;
-      set
-      {
-         selectedMusicItem = value;
-         NotifyPropertyChanged();
+	public MusicItemViewModel SelectedMusicItem
+	{
+		get => selectedMusicItem;
+		set
+		{
+			selectedMusicItem = value;
+			NotifyPropertyChanged();
 
-         OnMusicItemSelected();
-      }
-   }
+			OnMusicItemSelected();
+		}
+	}
 
-   async void AddRecording()
-   {
-      await Shell.Current.GoToAsync(Routes.AudioRecorder.RouteName);
-   }
+	async void AddRecording()
+	{
+		await Shell.Current.GoToAsync(Routes.AudioRecorder.RouteName);
+	}
 
-   async void OnMusicItemSelected()
-   {
-      await Shell.Current.GoToAsync(
-                                    Routes.MusicPlayer.RouteName,
-                                    new Dictionary<string, object>
-                                    {
-                                       [Routes.MusicPlayer.Arguments.Music] = SelectedMusicItem
-                                          });
-   }
+	async void OnMusicItemSelected()
+	{
+		await Shell.Current.GoToAsync(
+									  Routes.MusicPlayer.RouteName,
+									  new Dictionary<string, object>
+									  {
+										  [Routes.MusicPlayer.Arguments.Music] = SelectedMusicItem
+									  });
+	}
 }
