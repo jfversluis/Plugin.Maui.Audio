@@ -19,7 +19,7 @@ partial class AudioRecorder : IAudioRecorder
 	public AudioRecorder()
 	{
 		var packageManager = Android.App.Application.Context.PackageManager;
-		// TODO: exception?
+
 		CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
 	}
 
@@ -44,7 +44,7 @@ partial class AudioRecorder : IAudioRecorder
 			audioRecord = GetAudioRecord(micSampleRate);
 
 			audioRecord.StartRecording();
-			return Task.Run(() => WriteAudioDataToFile());
+			Task.Run(() => WriteAudioDataToFile());
 		}
 		return Task.CompletedTask;
 	}
@@ -65,6 +65,11 @@ partial class AudioRecorder : IAudioRecorder
 		if (audioRecord?.RecordingState == RecordState.Recording)
 		{
 			audioRecord?.Stop();
+		}
+
+		if (audioFilePath is null)
+		{
+			throw new InvalidOperationException("'audioFilePath' is null, this really should not happen.");
 		}
 
 		CopyWaveFile(rawFilePath, audioFilePath);
@@ -100,7 +105,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		rawFilePath = GetTempFilePath();
 
-		FileOutputStream? outputStream = null;
+		FileOutputStream? outputStream;
 
 		try
 		{
@@ -111,8 +116,7 @@ partial class AudioRecorder : IAudioRecorder
 			throw new FileLoadException($"unable to create a new file: {ex.Message}");
 		}
 
-		if ((audioRecord != null)
-			&& (outputStream != null))
+		if (audioRecord is not null && outputStream is not null)
 		{
 			while (audioRecord.RecordingState == RecordState.Recording)
 			{
@@ -134,10 +138,10 @@ partial class AudioRecorder : IAudioRecorder
 
 		try
 		{
-			FileInputStream inputStream = new FileInputStream(sourcePath);
-			FileOutputStream outputStream = new FileOutputStream(destinationPath);
-			if ((inputStream != null)
-				&& (inputStream.Channel != null))
+			FileInputStream inputStream = new(sourcePath);
+			FileOutputStream outputStream = new(destinationPath);
+
+			if (inputStream?.Channel is not null)
 			{
 				var totalAudioLength = inputStream.Channel.Size();
 				var totalDataLength = totalAudioLength + 36;
