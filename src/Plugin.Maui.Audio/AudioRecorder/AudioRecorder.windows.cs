@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Windows.Media.Capture;
+﻿using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
 
@@ -10,55 +7,63 @@ namespace Plugin.Maui.Audio;
 partial class AudioRecorder : IAudioRecorder
 {
     MediaCapture? mediaCapture;
-    public bool CanRecordAudio { get; private set; } = true;
+	string audioFilePath = string.Empty;
+
+	public bool CanRecordAudio { get; private set; } = true;
     public bool IsRecording => mediaCapture != null;
-    string audioFilePath = string.Empty;
 
-    public async Task StartAsync()
+	public async Task StartAsync()
+	{
+		var localFolder = ApplicationData.Current.LocalFolder;
+		var fileName = Path.GetRandomFileName();
+
+		var fileOnDisk = await localFolder.CreateFileAsync(fileName);
+
+		await StartAsync(fileOnDisk.Path);
+	}
+
+	public async Task StartAsync(string filePath)
     {
-        if (mediaCapture != null)
-        {
-            throw new InvalidOperationException("Recording already in progress");
-        }
+		if (mediaCapture is not null)
+		{
+			throw new InvalidOperationException("Recording already in progress");
+		}
 
-        try
-        {
-            var captureSettings = new MediaCaptureInitializationSettings()
-            {
-                StreamingCaptureMode = StreamingCaptureMode.Audio
-            };
-            await InitMediaCapture(captureSettings);
-        }
-        catch (Exception ex)
-        {
-            CanRecordAudio = false;
-            DeleteMediaCapture();
+		try
+		{
+			var captureSettings = new MediaCaptureInitializationSettings()
+			{
+				StreamingCaptureMode = StreamingCaptureMode.Audio
+			};
+			await InitMediaCapture(captureSettings);
+		}
+		catch (Exception ex)
+		{
+			CanRecordAudio = false;
+			DeleteMediaCapture();
 
-            if (ex.InnerException != null && ex.InnerException.GetType() == typeof(UnauthorizedAccessException))
-            {
-                throw ex.InnerException;
-            }
-            throw;
-        }
+			if (ex.InnerException != null && ex.InnerException.GetType() == typeof(UnauthorizedAccessException))
+			{
+				throw ex.InnerException;
+			}
+			throw;
+		}
 
-        var localFolder = ApplicationData.Current.LocalFolder;
-        var fileName = Path.GetRandomFileName();
+		var fileOnDisk = await StorageFile.GetFileFromPathAsync(filePath);
 
-        var fileOnDisk = await localFolder.CreateFileAsync(fileName);
+		try
+		{
+			await mediaCapture?.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto), fileOnDisk);
+		}
+		catch
+		{
+			CanRecordAudio = false;
+			DeleteMediaCapture();
+			throw;
+		}
 
-        try
-        {
-            await mediaCapture?.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto), fileOnDisk);
-        }
-        catch
-        {
-            CanRecordAudio = false;
-            DeleteMediaCapture();
-            throw;
-        }
-
-        audioFilePath = fileOnDisk.Path;
-    }
+		audioFilePath = fileOnDisk.Path;
+	}
 
     async Task InitMediaCapture(MediaCaptureInitializationSettings settings)
     {

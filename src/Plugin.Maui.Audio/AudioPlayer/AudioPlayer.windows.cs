@@ -62,8 +62,6 @@ partial class AudioPlayer : IAudioPlayer
 
     void OnPlaybackEnded(MediaPlayer sender, object args)
     {
-        myTimer?.Stop();
-
         PlaybackEnded?.Invoke(sender, EventArgs.Empty);
     }
 
@@ -80,14 +78,6 @@ partial class AudioPlayer : IAudioPlayer
             Seek(0);
         }
 
-        myTimer = Microsoft.Maui.Controls.Application.Current?.Dispatcher.CreateTimer();
-        if (myTimer != null)
-        {
-            myTimer.Interval = TimeSpan.FromMilliseconds(100);
-            myTimer.Tick += t_Tick;
-            startTime = DateTime.Now;
-            myTimer.Start();
-        }
         player.Play();
     }
 
@@ -98,8 +88,6 @@ partial class AudioPlayer : IAudioPlayer
 
     public void Stop()
     {
-        myTimer?.Stop();
-
         Pause();
         Seek(0);
         PlaybackEnded?.Invoke(this, EventArgs.Empty);
