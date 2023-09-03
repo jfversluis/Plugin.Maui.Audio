@@ -1,13 +1,14 @@
 ﻿namespace Plugin.Maui.Audio;
 
+/// <summary>
+/// A file based <see cref="IAudioSource"/> implementation.
+/// </summary>
 public class FileAudioSource : IAudioSource
 {
 	public FileAudioSource(string filePath)
 	{
 		this.filePath = filePath;
 	}
-
-	public bool HasRecording => File.Exists(filePath);
 
 	readonly string filePath;
 

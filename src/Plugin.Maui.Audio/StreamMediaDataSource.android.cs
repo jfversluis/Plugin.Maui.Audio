@@ -2,32 +2,38 @@ namespace Plugin.Maui.Audio;
 
 class StreamMediaDataSource : Android.Media.MediaDataSource
 {
-	Stream? data;
+	Stream data;
 
 	public StreamMediaDataSource(Stream data)
 	{
 		this.data = data;
 	}
 
-	public override long Size => data?.Length ?? 0;
+	public override long Size => data.Length;
+
 	public override int ReadAt(long position, byte[]? buffer, int offset, int size)
 	{
 		ArgumentNullException.ThrowIfNull(buffer);
 
-		data?.Seek(position, SeekOrigin.Begin);
+		if (data.CanSeek)
+		{
+			data.Seek(position, SeekOrigin.Begin);
+		}
 
-		return data?.Read(buffer, offset, size) ?? 0;
+		return data.Read(buffer, offset, size);
 	}
+
 	public override void Close()
 	{
-		data?.Dispose();
-		data = null;
+		data.Dispose();
+		data = Stream.Null;
 	}
+
 	protected override void Dispose(bool disposing)
 	{
 		base.Dispose(disposing);
 
-		data?.Dispose();
-		data = null;
+		data.Dispose();
+		data = Stream.Null;
 	}
 }
