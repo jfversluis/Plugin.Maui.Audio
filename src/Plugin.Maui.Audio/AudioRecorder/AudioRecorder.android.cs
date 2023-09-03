@@ -1,6 +1,4 @@
-﻿using System;
-using Android.App;
-using Android.Content;
+﻿using Android.Content;
 using Android.Media;
 using Java.IO;
 
@@ -41,7 +39,7 @@ partial class AudioRecorder : IAudioRecorder
 		var rate = audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate);
 		if (rate != null)
 		{
-			var micSampleRate = Int32.Parse(rate);
+			var micSampleRate = int.Parse(rate);
 
 			audioRecord = GetAudioRecord(micSampleRate);
 
@@ -91,7 +89,7 @@ partial class AudioRecorder : IAudioRecorder
 		return audioFilePath;
 	}
 
-	string GetTempFilePath()
+	static string GetTempFilePath()
 	{
 		return Path.Combine("/sdcard/", Path.GetTempFileName());
 	}
@@ -158,7 +156,7 @@ partial class AudioRecorder : IAudioRecorder
 		catch { }
 	}
 
-	void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)
+	static void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)
 	{
 		byte[] header = new byte[44];
 

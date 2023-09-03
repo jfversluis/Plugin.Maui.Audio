@@ -9,7 +9,7 @@ public class FileAudioSource : IAudioSource
 
 	public bool HasRecording => File.Exists(filePath);
 
-	string filePath;
+	readonly string filePath;
 
 	public string GetFilePath()
 	{
@@ -24,30 +24,5 @@ public class FileAudioSource : IAudioSource
 		}
 
 		return Stream.Null;
-	}
-
-	void DeleteFile()
-	{
-		if (File.Exists(filePath))
-		{
-			File.Delete(filePath);
-		}
-
-		filePath = string.Empty;
-	}
-
-	public void Dispose()
-	{
-		Dispose(true);
-
-		GC.SuppressFinalize(this);
-	}
-
-	protected virtual void Dispose(bool disposing)
-	{
-		if (disposing)
-		{
-			DeleteFile();
-		}
 	}
 }

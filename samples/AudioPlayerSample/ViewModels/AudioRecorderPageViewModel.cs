@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using Microsoft.Maui.Dispatching;
 using Plugin.Maui.Audio;
+using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace AudioPlayerSample.ViewModels;
 
@@ -49,53 +49,25 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		}
 	}
 
-	void Start()
+	async void Start()
 	{
-		_ = Task.Run(async () =>
+		if (await CheckPermissionIsGrantedAsync<Microphone>())
 		{
-			try
-			{
-				var stopwatch = new Stopwatch();
-				stopwatch.Start();
+			audioRecorder = audioManager.CreateRecorder();
+					
+			await audioRecorder.StartAsync();
+		}
 
-				Debug.WriteLine($"{stopwatch.Elapsed} Before permission check");
-
-				// This must be done for Android to avoid an exception but I don't think it would hurt in any case
-				if (await HavePermissionMicrophoneAsync())
-				{
-					Debug.WriteLine($"{stopwatch.Elapsed} After permission check");
-
-					Debug.WriteLine($"{stopwatch.Elapsed} Before recorder create");
-					audioRecorder = audioManager.CreateRecorder();
-					Debug.WriteLine($"{stopwatch.Elapsed} After recorder create");
-
-					Debug.WriteLine($"{stopwatch.Elapsed} Before recorder start");
-					_ = audioRecorder.StartAsync();
-					Debug.WriteLine($"{stopwatch.Elapsed} After recorder start");
-				}
-				else
-				{
-					//await page.DisplayAlert("Alert", $"It is necessary to go to the settings for this app and give permission for the microphone.", "OK");
-				}
-			}
-			catch (Exception ex)
-			{
-			}
-
-			MainThread.BeginInvokeOnMainThread(() =>
-			{
-				recordingStopwatch.Restart();
-				UpdateRecordingTime();
-				NotifyPropertyChanged(nameof(IsRecording));
-				StartCommand.ChangeCanExecute();
-				StopCommand.ChangeCanExecute();
-			});
-		});
+		recordingStopwatch.Restart();
+		UpdateRecordingTime();
+		NotifyPropertyChanged(nameof(IsRecording));
+		StartCommand.ChangeCanExecute();
+		StopCommand.ChangeCanExecute();
 	}
 
 	async void Stop()
 	{
-		await audioRecorder.StopAsync();
+		audioSource = await audioRecorder.StopAsync();
 
 		recordingStopwatch.Stop();
 		NotifyPropertyChanged(nameof(IsRecording));

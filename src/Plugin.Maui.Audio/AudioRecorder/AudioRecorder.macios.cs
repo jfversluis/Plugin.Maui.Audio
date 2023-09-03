@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using AVFoundation;
+﻿using AVFoundation;
 using Foundation;
 
 namespace Plugin.Maui.Audio;
@@ -60,6 +57,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		recorder.FinishedRecording += Recorder_FinishedRecording;
 		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
+
 		recorder.PrepareToRecord();
 
 		return Task.FromResult(recorder.Record());

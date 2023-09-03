@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace Plugin.Maui.Audio;
+﻿namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {

@@ -49,7 +49,6 @@ partial class AudioRecorder : IAudioRecorder
         try
         {
             await mediaCapture?.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto), fileOnDisk);
-            //   await mediaCapture.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateMp3(AudioEncodingQuality.Auto), fileOnDisk);
         }
         catch
         {
@@ -121,7 +120,9 @@ partial class AudioRecorder : IAudioRecorder
         try
         {
             if (!string.IsNullOrWhiteSpace(audioFilePath) && File.Exists(audioFilePath))
+            {
                 File.Delete(audioFilePath);
+            }
         }
         catch
         {

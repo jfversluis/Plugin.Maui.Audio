@@ -17,10 +17,12 @@
     </ContentPage.Resources>
 
     <Grid
-        RowDefinitions="50,*">
+        RowDefinitions="60,*">
 
         <Button
-            Text="My Recordings"
+            Text="Create Recording"
+            HorizontalOptions="End"
+            Margin="10"
             Command="{Binding AddRecordingCommand}" />
 
         <CollectionView ItemsSource="{Binding Music}"

@@ -16,13 +16,6 @@
             HorizontalOptions="Center"
             VerticalOptions="Center">
 
-            <VerticalStackLayout.Triggers>
-                <DataTrigger
-                    TargetType="VerticalStackLayout"
-                    Binding="{Binding IsRecording}"
-                    Value="False" />
-            </VerticalStackLayout.Triggers>
-
             <Button
                 Text="Start"
                 Command="{Binding StartCommand}" />
