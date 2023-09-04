@@ -29,4 +29,12 @@ partial class AudioPlayer : IAudioPlayer
 	public void Stop() { }
 
 	public void Seek(double position) { }
+
+	public double Speed { get; set; }
+
+	public double MinimumSpeed { get; }
+
+	public double MaximumSpeed { get; }
+
+	public bool CanSetSpeed { get; }
 }
