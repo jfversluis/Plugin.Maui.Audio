@@ -1,5 +1,5 @@
-﻿using AudioPlayerSample.Pages;
-using AudioPlayerSample.ViewModels;
+﻿using Plugin.Maui.Audio.Sample.Pages;
+using Plugin.Maui.Audio.Sample.ViewModels;
 using Plugin.Maui.Audio;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
