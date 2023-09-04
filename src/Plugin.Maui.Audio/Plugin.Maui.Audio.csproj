@@ -23,13 +23,13 @@
 		<PackageProjectUrl>https://github.com/jfversluis/Plugin.Maui.Audio</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/jfversluis/Plugin.Maui.Audio</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>dotnet-maui;maui;audio;sound</PackageTags>
+		<PackageTags>dotnet-maui;maui;audio;sound;play;record;</PackageTags>
 		<IncludeSymbols>True</IncludeSymbols>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<Title>.NET MAUI Audio Plugin</Title>
-		<Description>Plugin.Maui.Audio provides the ability to play audio inside a .NET MAUI application.</Description>
+		<Description>Plugin.Maui.Audio provides the ability to play and record audio inside a .NET MAUI application.</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 		<DebugType>portable</DebugType>
