@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 
-namespace AudioPlayerSample.Converters;
+namespace Plugin.Maui.Audio.Sample.Converters;
 
 public class SecondsToStringConverter : IValueConverter
 {
