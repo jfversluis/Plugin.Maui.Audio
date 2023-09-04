@@ -6,11 +6,11 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
-    MediaCapture? mediaCapture;
+	MediaCapture? mediaCapture;
 	string audioFilePath = string.Empty;
 
 	public bool CanRecordAudio { get; private set; } = true;
-    public bool IsRecording => mediaCapture != null;
+	public bool IsRecording => mediaCapture != null;
 
 	public async Task StartAsync()
 	{
@@ -23,7 +23,7 @@ partial class AudioRecorder : IAudioRecorder
 	}
 
 	public async Task StartAsync(string filePath)
-    {
+	{
 		if (mediaCapture is not null)
 		{
 			throw new InvalidOperationException("Recording already in progress");
