@@ -15,7 +15,7 @@
     <ScrollView>
         <VerticalStackLayout
             Spacing="25"
-            Padding="30,0,30,30"
+            Padding="30,0"
             VerticalOptions="Center"
             IsEnabled="{Binding HasAudioSource}">
 
@@ -76,27 +76,13 @@
                 Maximum="1"
                 Value="{Binding Volume}" />
 
-			<Label Text="Balance:" />
-			<Slider
+            <Label Text="Balance:" />
+            <Slider
                 Minimum="-1"
                 Maximum="1"
                 Value="{Binding Balance}" />
 
-
-			<Label IsVisible="{Binding CanSetSpeed}">
-				<Label.FormattedText>
-					<FormattedString>
-						<Span Text="Speed" />
-						<Span Text="{Binding Speed, StringFormat=' ({0:F1}):'}"/>
-					</FormattedString>
-				</Label.FormattedText>
-			</Label>
-			<Slider
-				IsVisible="{Binding CanSetSpeed}"
-                Minimum="{Binding MinimumSpeed}"
-                Maximum="{Binding MaximumSpeed}"
-                Value="{Binding Speed}" />
-		</VerticalStackLayout>
+        </VerticalStackLayout>
     </ScrollView>
 
 </ContentPage>

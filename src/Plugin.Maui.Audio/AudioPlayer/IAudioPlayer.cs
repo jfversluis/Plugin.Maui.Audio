@@ -31,32 +31,6 @@ public interface IAudioPlayer : IDisposable
 	double Balance { get; set; }
 
 	///<Summary>
-	/// Gets or sets the playback speed where 1 is normal speed. <see cref="MinimumSpeed"/> and <see cref="MaximumSpeed"/> can be used to determine the minumum and maximum value for each platform.
-	///</Summary>
-	///<remarks>
-	/// The minimum and maximum speeds that can be set here are different per platform. Setting values ouside of these ranges will not throw an exception, it will clamp to the minimum or maximum value.
-	///<para>- Android: between 0 and 6. Setting the value to 0 will pause playback, playback will not be resumed when incrementing the value again.</para>
-	///<para>- iOS: between 0.5 and 2.</para>
-	///<para>- Windows: between 0 and 8. Setting the value to 0 will pause playback, playback will be resumed when incrementing the value again.</para>
-	///</remarks>
-	double Speed { get; set; }
-
-	/// <summary>
-	/// Gets the minimum speed value that can be set for <see cref="Speed"/> on this platform.
-	/// </summary>
-	double MinimumSpeed { get; }
-
-	/// <summary>
-	/// Gets the maximum speed value that can be set for <see cref="Speed"/> on this platform.
-	/// </summary>
-	double MaximumSpeed { get; }
-
-	///<Summary>
-	/// Gets a value indicating whether the playback speed can be changed.
-	///</Summary>
-	bool CanSetSpeed { get; }
-
-	///<Summary>
 	/// Gets a value indicating whether the currently loaded audio file is playing.
 	///</Summary>
 	bool IsPlaying { get; }

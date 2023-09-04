@@ -77,10 +77,6 @@ Gets or sets the balance left/right: -1 is 100% left : 0% right, 1 is 100% right
 
 Gets a value indicating whether the position of the loaded audio file can be updated.
 
-##### `CanSetSpeed`
-
-Gets a value indicating whether the playback speed can be changed.
-
 ##### `CurrentPosition`
 
 Gets the current position of audio playback in seconds.
@@ -92,25 +88,6 @@ Gets the length of audio in seconds.
 ##### `IsPlaying`
 
 Gets a value indicating whether the currently loaded audio file is playing.
-
-##### `MaximumSpeed`
-
-Gets the minumum speed that is supported on the platform the app is running on that can be set for the `Speed` property.
-
-##### `MinimumSpeed`
-
-Gets the maximum speed that is supported on the platform the app is running on that can be set for the `Speed` property.
-
-##### `Speed`
-
-Gets or sets the speed of the playback. Note: the maximum and minimum value that can be set is dependant on the platform you're running on. Setting a value that is not supported on the platform will gracefully fallback, but will not have the desired result.
-
-To determine the supported minimum and maximum speeds at runtime for that platform you can use `MaximumSpeed` and `MinimumSpeed`.
-
-Platform notes:
-- Android: between 0 and 6. Setting the value to 0 will pause playback, playback will not be resumed when incrementing the value again.
-- iOS: between 0.5 and 2.
-- Windows: between 0 and 8. Setting the value to 0 will pause playback, playback will be resumed when incrementing the value again.
 
 ##### `Volume`
 

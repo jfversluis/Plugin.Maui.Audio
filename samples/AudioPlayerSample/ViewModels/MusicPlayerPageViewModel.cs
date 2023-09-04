@@ -37,9 +37,6 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 
 			NotifyPropertyChanged(nameof(HasAudioSource));
 			NotifyPropertyChanged(nameof(Duration));
-			NotifyPropertyChanged(nameof(CanSetSpeed));
-			NotifyPropertyChanged(nameof(MinimumSpeed));
-			NotifyPropertyChanged(nameof(MaximumSpeed));
 		}
 	}
 
@@ -110,31 +107,6 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 			}
 		}
 	}
-
-	public bool CanSetSpeed => audioPlayer?.CanSetSpeed ?? false;
-
-	public double Speed
-	{
-		get => audioPlayer?.Speed ?? 1;
-		set
-		{
-			try
-			{
-				if (audioPlayer?.CanSetSpeed ?? false)
-				{
-					audioPlayer.Speed = Math.Round(value, 1, MidpointRounding.AwayFromZero);
-					NotifyPropertyChanged();
-				}
-			}
-			catch (Exception ex)
-			{
-				App.Current.MainPage.DisplayAlert("Speed", ex.Message, "OK");
-			}
-		}
-	}
-
-	public double MinimumSpeed => audioPlayer?.MinimumSpeed ?? 1;
-	public double MaximumSpeed => audioPlayer?.MaximumSpeed ?? 1;
 
 	public bool Loop
 	{
