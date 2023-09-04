@@ -7,7 +7,6 @@ public partial class AudioPlayer : IAudioPlayer
 	public event EventHandler? PlaybackEnded;
 
 #pragma warning restore CS0067
-
 	~AudioPlayer()
 	{
 		Dispose(false);

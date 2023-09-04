@@ -8,9 +8,9 @@ partial class AudioPlayer : IAudioPlayer
 	readonly AVAudioPlayer player;
 	bool isDisposed;
 
-	public double Duration => player.Duration;
-
 	public double CurrentPosition => player.CurrentTime;
+
+	public double Duration => player.Duration;
 
 	public double Volume
 	{
@@ -66,9 +66,9 @@ partial class AudioPlayer : IAudioPlayer
 	internal AudioPlayer(Stream audioStream)
 	{
 		var data = NSData.FromStream(audioStream)
-			?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
+		   ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
 		player = AVAudioPlayer.FromData(data)
-			?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
+		   ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
 		PreparePlayer();
 	}
@@ -76,21 +76,10 @@ partial class AudioPlayer : IAudioPlayer
 	internal AudioPlayer(string fileName)
 	{
 		player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName))
-			?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from url.");
+		   ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from url.");
 
 		PreparePlayer();
 	}
-    public void Play()
-    {
-        if (player.Playing)
-        {
-            player.Pause();
-        }
-        else
-        {
-            player.Play();
-        }
-    }
 
 	protected virtual void Dispose(bool disposing)
 	{
@@ -112,6 +101,18 @@ partial class AudioPlayer : IAudioPlayer
 
 	public void Pause() => player.Pause();
 
+	public void Play()
+	{
+		if (player.Playing)
+		{
+			player.CurrentTime = 0;
+		}
+		else
+		{
+			player.Play();
+		}
+	}
+
 	public void Seek(double position) => player.CurrentTime = position;
 
 	public void Stop()
@@ -124,7 +125,6 @@ partial class AudioPlayer : IAudioPlayer
 	bool PreparePlayer()
 	{
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
-		player.EnableRate = true;
 		player.PrepareToPlay();
 
 		return true;

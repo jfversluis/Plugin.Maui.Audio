@@ -5,6 +5,9 @@ namespace AudioPlayerSample.ViewModels;
 public class MyLibraryPageViewModel : BaseViewModel
 {
 	MusicItemViewModel selectedMusicItem;
+	public Command AddRecordingCommand { get; }
+	public ObservableCollection<MusicItemViewModel> Music { get; }
+
 
 	public MyLibraryPageViewModel()
 	{
@@ -12,9 +15,9 @@ public class MyLibraryPageViewModel : BaseViewModel
 		{
 			new MusicItemViewModel("The Happy Ukelele Song", "Stanislav Fomin", "ukelele.mp3")
 		};
-	}
 
-	public ObservableCollection<MusicItemViewModel> Music { get; }
+		AddRecordingCommand = new Command(AddRecording);
+	}
 
 	public MusicItemViewModel SelectedMusicItem
 	{
@@ -26,6 +29,11 @@ public class MyLibraryPageViewModel : BaseViewModel
 
 			OnMusicItemSelected();
 		}
+	}
+
+	async void AddRecording()
+	{
+		await Shell.Current.GoToAsync(Routes.AudioRecorder.RouteName);
 	}
 
 	async void OnMusicItemSelected()
