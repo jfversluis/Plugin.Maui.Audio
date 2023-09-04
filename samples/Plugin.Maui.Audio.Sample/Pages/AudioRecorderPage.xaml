@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewmodels="clr-namespace:AudioPlayerSample.ViewModels"
-             xmlns:converters="clr-namespace:AudioPlayerSample.Converters"
-             x:Class="AudioPlayerSample.Pages.AudioRecorderPage"
+             xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
+             xmlns:converters="clr-namespace:Plugin.Maui.Audio.Sample.Converters"
+             x:Class="Plugin.Maui.Audio.Sample.Pages.AudioRecorderPage"
              Title="Audio Recorder"
              x:DataType="viewmodels:AudioRecorderPageViewModel">
 
