@@ -31,6 +31,36 @@ partial class AudioPlayer : IAudioPlayer
 		set => SetVolume(Volume, balance = value);
 	}
 
+	[SupportedOSPlatform("Android23.0")]
+	public double Speed
+	{
+		get => player.PlaybackParams.Speed;
+		set
+		{
+			// Check if set speed is supported
+			if (CanSetSpeed)
+			{
+				// Speed on Android can be between 0 and 6
+				var speedValue = Math.Clamp((float)value, 0.0f, 6.0f);
+
+				if (float.IsNaN(speedValue))
+					speedValue = 1.0f;
+
+				player.PlaybackParams = player.PlaybackParams.SetSpeed(speedValue) ?? player.PlaybackParams;
+			}
+			else
+			{
+				throw new NotSupportedException("Set playback speed is not supported!");
+			}
+		}
+	}
+
+	public double MinimumSpeed => 0;
+
+	public double MaximumSpeed => 6;
+
+	public bool CanSetSpeed => Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.M;
+
 	public bool IsPlaying => player.IsPlaying;
 
 	public bool Loop

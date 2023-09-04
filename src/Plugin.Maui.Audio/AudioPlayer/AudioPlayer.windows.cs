@@ -24,7 +24,34 @@ partial class AudioPlayer : IAudioPlayer
         set => SetVolume(Volume, value);
     }
 
-    public bool IsPlaying => player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing; //might need to expand
+	public double Speed
+	{
+		get => player.PlaybackSession.PlaybackRate;
+		set
+		{
+			// Check if set speed is supported
+			if (CanSetSpeed)
+			{
+				// Windows supports between 0 and 8, but will clamp automatically for us
+				if (player.PlaybackSession.IsSupportedPlaybackRateRange(value, value))
+				{
+					player.PlaybackSession.PlaybackRate = value;
+				}
+			}
+			else
+			{
+				throw new NotSupportedException("Set playback speed is not supported!");
+			}
+		}
+	}
+
+	public double MinimumSpeed => 0;
+
+	public double MaximumSpeed => 8;
+
+	public bool CanSetSpeed => true;
+
+	public bool IsPlaying => player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing; //might need to expand
 
     public bool Loop
     {

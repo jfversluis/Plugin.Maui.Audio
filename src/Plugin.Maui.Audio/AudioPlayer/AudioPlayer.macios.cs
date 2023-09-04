@@ -24,6 +24,35 @@ partial class AudioPlayer : IAudioPlayer
 		set => player.Pan = (float)Math.Clamp(value, -1, 1);
 	}
 
+	public double Speed
+	{
+		get => player.Rate;
+		set
+		{
+			// Check if set speed is supported
+			if (CanSetSpeed)
+			{
+				// Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
+				var speedValue = Math.Clamp((float)value, 0.5f, 2.0f);
+
+				if (float.IsNaN(speedValue))
+					speedValue = 1.0f;
+
+				player.Rate = speedValue;
+			}
+			else
+			{
+				throw new NotSupportedException("Set playback speed is not supported!");
+			}
+		}
+	}
+
+	public double MinimumSpeed => 0.5;
+
+	public double MaximumSpeed => 2;
+
+	public bool CanSetSpeed => true;
+
 	public bool IsPlaying => player.Playing;
 
 	public bool Loop
