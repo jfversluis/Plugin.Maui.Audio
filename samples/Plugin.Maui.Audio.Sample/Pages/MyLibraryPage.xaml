@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
+             x:Class="Plugin.Maui.Audio.Sample.Pages.MyLibraryPage"
+             Title="My Library"
+             x:DataType="viewmodels:MyLibraryPageViewModel">
+
+    <ContentPage.Resources>
+        <Style x:Key="border_gallery_card" TargetType="Border">
+            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid
+        RowDefinitions="60,*">
+
+        <Button
+            Text="Create Recording"
+            HorizontalOptions="End"
+            Margin="10"
+            Command="{Binding AddRecordingCommand}" />
+
+        <CollectionView ItemsSource="{Binding Music}"
+                        Grid.Row="1"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedMusicItem}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="viewmodels:MusicItemViewModel">
+                    <Border Style="{StaticResource border_gallery_card}">
+                        <Grid ColumnDefinitions="75,*"
+                              RowDefinitions="3*,2*"
+                              ColumnSpacing="8">
+                            <!-- Placeholder for imagery -->
+                            <Image BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
+                                   Grid.RowSpan="2" />
+
+                            <Label Text="{Binding Title}"
+                                   FontSize="32"
+                                   FontAttributes="Bold"
+                                   Grid.Column="1" />
+
+                            <Label Text="{Binding Artist}"
+                                   FontSize="20"
+                                   Grid.Column="1"
+                                   Grid.Row="1" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
