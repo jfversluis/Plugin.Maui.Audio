@@ -33,8 +33,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		{
 			MusicItemViewModel = musicItem;
 
-			audioPlayer = audioManager.CreatePlayer(
-				await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
+			audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
 
 			NotifyPropertyChanged(nameof(HasAudioSource));
 			NotifyPropertyChanged(nameof(Duration));

@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio;
 
+/// <summary>
+/// A file based <see cref="IAudioSource"/> implementation.
+/// </summary>
 public class FileAudioSource : IAudioSource
 {
 	public FileAudioSource(string filePath)
@@ -7,9 +10,7 @@ public class FileAudioSource : IAudioSource
 		this.filePath = filePath;
 	}
 
-	public bool HasRecording => File.Exists(filePath);
-
-	string filePath;
+	readonly string filePath;
 
 	public string GetFilePath()
 	{
@@ -24,30 +25,5 @@ public class FileAudioSource : IAudioSource
 		}
 
 		return Stream.Null;
-	}
-
-	void DeleteFile()
-	{
-		if (File.Exists(filePath))
-		{
-			File.Delete(filePath);
-		}
-
-		filePath = string.Empty;
-	}
-
-	public void Dispose()
-	{
-		Dispose(true);
-
-		GC.SuppressFinalize(this);
-	}
-
-	protected virtual void Dispose(bool disposing)
-	{
-		if (disposing)
-		{
-			DeleteFile();
-		}
 	}
 }

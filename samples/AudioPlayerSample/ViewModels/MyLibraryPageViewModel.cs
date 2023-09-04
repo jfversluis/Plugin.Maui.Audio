@@ -5,6 +5,9 @@ namespace AudioPlayerSample.ViewModels;
 public class MyLibraryPageViewModel : BaseViewModel
 {
 	MusicItemViewModel selectedMusicItem;
+	public Command AddRecordingCommand { get; }
+	public ObservableCollection<MusicItemViewModel> Music { get; }
+
 
 	public MyLibraryPageViewModel()
 	{
@@ -15,10 +18,6 @@ public class MyLibraryPageViewModel : BaseViewModel
 
 		AddRecordingCommand = new Command(AddRecording);
 	}
-
-	public Command AddRecordingCommand { get; }
-
-	public ObservableCollection<MusicItemViewModel> Music { get; }
 
 	public MusicItemViewModel SelectedMusicItem
 	{

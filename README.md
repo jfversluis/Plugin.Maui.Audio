@@ -1,6 +1,6 @@
 # Plugin.Maui.Audio
 
-`Plugin.Maui.Audio` provides the ability to play audio inside a .NET MAUI application.
+`Plugin.Maui.Audio` provides the ability to play and record audio inside a .NET MAUI application.
 
 ## Getting Started
 
@@ -8,7 +8,7 @@
 
 ## API Usage
 
-`Plugin.Maui.Audio` provides the `AudioManager` class that allows for the creation of `AudioPlayer`s. The `AudioManager` can be used with or without dependency injection.
+`Plugin.Maui.Audio` provides the `AudioManager` class that allows for the creation of `AudioPlayer`s and `AudioRecorder`s. The `AudioManager` can be used with or without dependency injection.
 
 ### `AudioManager`
 
@@ -115,7 +115,37 @@ Set the current playback position (in seconds).
 
 Stop playback and set the current position to the beginning.
 
-# Acknowledgements
+### AudioRecorder
+
+You can create an `AudioRecorder` through the `AudioManager` and its `CreateRecorder` method.
+
+Once you have created an `AudioRecorder` you can interact with it in the following ways:
+
+#### Properties
+
+##### `CanRecordAudio`
+
+Gets whether the device is capable of recording audio.
+
+##### `IsRecording`
+
+Gets whether the recorder is currently recording audio.
+
+#### Methods
+
+##### `StartAsync()`
+
+Start recording audio to disk in a randomly generated file.
+
+##### `StartAsync(string filePath)`
+
+Start recording audio to disk in the supplied filePath.
+
+##### `StopAsync()`
+
+Stop recording and return the `IAudioSource` instance with the recording data.
+
+## Acknowledgements
 
 This project could not have came to be without these projects and people, thank you! <3
 

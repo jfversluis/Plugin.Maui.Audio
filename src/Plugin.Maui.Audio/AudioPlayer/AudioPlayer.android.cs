@@ -7,198 +7,197 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
-    readonly MediaPlayer player;
-    int index = 0;
-    double volume = 0.5;
-    double balance = 0;
-    string path = string.Empty;
-    readonly MemoryStream? stream;
-    bool isDisposed = false;
+	readonly MediaPlayer player;
+	int index = 0;
+	double volume = 0.5;
+	double balance = 0;
+	string path = string.Empty;
+	readonly MemoryStream? stream;
+	bool isDisposed = false;
 
-    public double Duration => player.Duration / 1000.0;
+	public double Duration => player.Duration;
 
-    public double CurrentPosition => player.CurrentPosition / 1000.0;
+	public double CurrentPosition => player.CurrentPosition / 1000.0;
 
-    public double Volume
-    {
-        get => volume;
-        set => SetVolume(volume = value, Balance);
-    }
+	public double Volume
+	{
+		get => volume;
+		set => SetVolume(volume = value, Balance);
+	}
 
-    public double Balance
-    {
-        get => balance;
-        set => SetVolume(Volume, balance = value);
-    }
+	public double Balance
+	{
+		get => balance;
+		set => SetVolume(Volume, balance = value);
+	}
 
-    public bool IsPlaying => player.IsPlaying;
+	public bool IsPlaying => player.IsPlaying;
 
-    public bool Loop
-    {
-        get => player.Looping;
-        set => player.Looping = value;
-    }
+	public bool Loop
+	{
+		get => player.Looping;
+		set => player.Looping = value;
+	}
 
-    public bool CanSeek => true;
+	public bool CanSeek => true;
 
-    internal AudioPlayer(Stream audioStream)
-    {
-        player = new MediaPlayer();
-        player.Completion += OnPlaybackEnded;
+	internal AudioPlayer(Stream audioStream)
+	{
+		player = new MediaPlayer();
+		player.Completion += OnPlaybackEnded;
 
-        if (OperatingSystem.IsAndroidVersionAtLeast(23))
-        {
-            stream = new MemoryStream();
-            audioStream.CopyTo(stream);
-            var mediaDataSource = new StreamMediaDataSource(stream);
-            player.SetDataSource(mediaDataSource);
-            player.Prepare();
-        }
-        else
-        {
-            PreparePlayerLegacy(audioStream);
-        }
-    }
+		if (OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			stream = new MemoryStream();
+			audioStream.CopyTo(stream);
+			var mediaDataSource = new StreamMediaDataSource(stream);
+			player.SetDataSource(mediaDataSource);
+			player.Prepare();
+		}
+		else
+		{
+			PreparePlayerLegacy(audioStream);
+		}
+	}
 
-    internal AudioPlayer(string fileName)
-    {
-        player = new MediaPlayer() { Looping = Loop };
-        player.Completion += OnPlaybackEnded;
+	internal AudioPlayer(string fileName)
+	{
+		player = new MediaPlayer() { Looping = Loop };
+		player.Completion += OnPlaybackEnded;
 
-        AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
-            ?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
+		AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
+			?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
 
-        player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+		player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
 
-        player.Prepare();
-    }
+		player.Prepare();
+	}
 
-    void PreparePlayerLegacy(Stream audioStream)
-    {
-        //cache to the file system
-        path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), $"cache{index++}.wav");
+	void PreparePlayerLegacy(Stream audioStream)
+	{
+		//cache to the file system
+		path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), $"cache{index++}.wav");
 
-        DeleteFile(path);
+		DeleteFile(path);
 
-        var fileStream = File.Create(path);
-        audioStream.CopyTo(fileStream);
-        fileStream.Close();
+		var fileStream = File.Create(path);
+		audioStream.CopyTo(fileStream);
+		fileStream.Close();
 
-        try
-        {
-            player.SetDataSource(path);
-        }
-        catch
-        {
-            try
-            {
-                var context = Android.App.Application.Context;
-                var encodedPath = Uri.Encode(path)
-                    ?? throw new FailedToLoadAudioException("Unable to generate encoded path.");
-                var uri = Uri.Parse(encodedPath)
-                    ?? throw new FailedToLoadAudioException("Unable to parse encoded path.");
+		try
+		{
+			player.SetDataSource(path);
+		}
+		catch
+		{
+			try
+			{
+				var context = Android.App.Application.Context;
+				var encodedPath = Uri.Encode(path)
+					?? throw new FailedToLoadAudioException("Unable to generate encoded path.");
+				var uri = Uri.Parse(encodedPath)
+					?? throw new FailedToLoadAudioException("Unable to parse encoded path.");
 
-                player.SetDataSource(context, uri);
-            }
-            catch
-            {
-                //return false;
-            }
-        }
+				player.SetDataSource(context, uri);
+			}
+			catch
+			{
+				//return false;
+			}
+		}
 
-        player.Prepare();
-    }
+		player.Prepare();
+	}
 
-    static void DeleteFile(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path)) { return; }
-        
-        try
-        {
-            File.Delete(path);
-        }
-        catch
-        {
-        }
-    }
+	static void DeleteFile(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path)) { return; }
 
-    public void Play()
-    {
-        if (IsPlaying)
-        {
-            Pause();
-            Seek(0);
-        }
+		try
+		{
+			File.Delete(path);
+		}
+		catch
+		{
+		}
+	}
 
-        player.Start();
-    }
+	public void Play()
+	{
+		if (IsPlaying)
+		{
+			Pause();
+			Seek(0);
+		}
+		player.Start();
+	}
 
-    public void Stop()
-    {
-        if (!IsPlaying)
-        {
-            return;
-        }
+	public void Stop()
+	{
+		if (!IsPlaying)
+		{
+			return;
+		}
 
-        Pause();
-        Seek(0);
-        PlaybackEnded?.Invoke(this, EventArgs.Empty);
-    }
+		Pause();
+		Seek(0);
+		PlaybackEnded?.Invoke(this, EventArgs.Empty);
+	}
 
-    public void Pause()
-    {
-        player.Pause();
-    }
+	public void Pause()
+	{
+		player.Pause();
+	}
 
-    public void Seek(double position)
-    {
-        player.SeekTo((int)(position * 1000D));
-    }
+	public void Seek(double position)
+	{
+		player.SeekTo((int)(position * 1000D));
+	}
 
-    void SetVolume(double volume, double balance)
-    {
-        volume = Math.Clamp(volume, 0, 1);
+	void SetVolume(double volume, double balance)
+	{
+		volume = Math.Clamp(volume, 0, 1);
 
-        balance = Math.Clamp(balance, -1, 1);
+		balance = Math.Clamp(balance, -1, 1);
 
-        // Using the "constant power pan rule." See: http://www.rs-met.com/documents/tutorials/PanRules.pdf
-        var left = Math.Cos((Math.PI * (balance + 1)) / 4) * volume;
-        var right = Math.Sin((Math.PI * (balance + 1)) / 4) * volume;
+		// Using the "constant power pan rule." See: http://www.rs-met.com/documents/tutorials/PanRules.pdf
+		var left = Math.Cos((Math.PI * (balance + 1)) / 4) * volume;
+		var right = Math.Sin((Math.PI * (balance + 1)) / 4) * volume;
 
-        player.SetVolume((float)left, (float)right);
-    }
+		player.SetVolume((float)left, (float)right);
+	}
 
-    void OnPlaybackEnded(object? sender, EventArgs e)
-    {
-        PlaybackEnded?.Invoke(this, e);
+	void OnPlaybackEnded(object? sender, EventArgs e)
+	{
+		PlaybackEnded?.Invoke(this, e);
 
-        //this improves stability on older devices but has minor performance impact
-        // We need to check whether the player is null or not as the user might have dipsosed it in an event handler to PlaybackEnded above.
-        if (Android.OS.Build.VERSION.SdkInt < Android.OS.BuildVersionCodes.M)
-        {
-            player.SeekTo(0);
-            player.Stop();
-            player.Prepare();
-        }
-    }
+		//this improves stability on older devices but has minor performance impact
+		// We need to check whether the player is null or not as the user might have dipsosed it in an event handler to PlaybackEnded above.
+		if (Android.OS.Build.VERSION.SdkInt < Android.OS.BuildVersionCodes.M)
+		{
+			player.SeekTo(0);
+			player.Stop();
+			player.Prepare();
+		}
+	}
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (isDisposed)
-        {
-            return;
-        }
+	protected virtual void Dispose(bool disposing)
+	{
+		if (isDisposed)
+		{
+			return;
+		}
 
-        if (disposing)
-        {
-            player.Completion -= OnPlaybackEnded;
-            player.Release();
-            player.Dispose();
-            DeleteFile(path);
-            path = string.Empty;
-            stream?.Dispose();
-        }
+		if (disposing)
+		{
+			player.Completion -= OnPlaybackEnded;
+			player.Release();
+			player.Dispose();
+			DeleteFile(path);
+			path = string.Empty;
+			stream?.Dispose();
+		}
 
-        isDisposed = true;
-    }
+		isDisposed = true;
+	}
 }

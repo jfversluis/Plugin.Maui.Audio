@@ -30,4 +30,3 @@ public class SecondsToStringConverter : IValueConverter
 		throw new NotSupportedException();
 	}
 }
-

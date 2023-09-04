@@ -1,39 +1,94 @@
-﻿using Plugin.Maui.Audio;
+﻿using System.Diagnostics;
+using Plugin.Maui.Audio;
+using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace AudioPlayerSample.ViewModels;
 
 public class AudioRecorderPageViewModel : BaseViewModel
 {
 	readonly IAudioManager audioManager;
-	IAudioRecorder? audioRecorder;
+	readonly IDispatcher dispatcher;
+	IAudioRecorder audioRecorder;
+	IAudioPlayer audioPlayer;
+	IAudioSource audioSource = null;
+	readonly Stopwatch recordingStopwatch = new Stopwatch();
 
-	public AudioRecorderPageViewModel(
-		IAudioManager audioManager)
+	public double RecordingTime
 	{
-		StartCommand = new Command(Start);
-
-		this.audioManager = audioManager;
+		get => recordingStopwatch.ElapsedMilliseconds / 1000;
 	}
 
-	public Command StartCommand { get; set; }
+	public bool IsRecording
+	{
+		get => audioRecorder?.IsRecording ?? false;
+	}
+
+	public Command PlayCommand { get; }
+	public Command StartCommand { get; }
+	public Command StopCommand { get; }
+
+	public AudioRecorderPageViewModel(
+		IAudioManager audioManager,
+		IDispatcher dispatcher)
+	{
+		StartCommand = new Command(Start, () => !IsRecording);
+		StopCommand = new Command(Stop, () => IsRecording);
+		PlayCommand = new Command(PlayAudio);
+
+		this.audioManager = audioManager;
+		this.dispatcher = dispatcher;
+	}
+
+	public void PlayAudio()
+	{
+		if (audioSource != null)
+		{
+			audioPlayer = this.audioManager.CreatePlayer(((FileAudioSource)audioSource).GetAudioStream());
+
+			audioPlayer.Play();
+		}
+	}
 
 	async void Start()
 	{
-		audioRecorder = audioManager.CreateRecorder();
-
-		try
+		if (await CheckPermissionIsGrantedAsync<Microphone>())
 		{
+			audioRecorder = audioManager.CreateRecorder();
+					
 			await audioRecorder.StartAsync();
-
-			await Task.Delay(5000);
-
-			var audioSource = await audioRecorder.StopAsync();
-
-			this.audioManager.CreatePlayer(((FileAudioSource)audioSource).GetAudioStream()).Play();
 		}
-		catch (Exception ex)
+
+		recordingStopwatch.Restart();
+		UpdateRecordingTime();
+		NotifyPropertyChanged(nameof(IsRecording));
+		StartCommand.ChangeCanExecute();
+		StopCommand.ChangeCanExecute();
+	}
+
+	async void Stop()
+	{
+		audioSource = await audioRecorder.StopAsync();
+
+		recordingStopwatch.Stop();
+		NotifyPropertyChanged(nameof(IsRecording));
+		StartCommand.ChangeCanExecute();
+		StopCommand.ChangeCanExecute();
+	}
+
+	void UpdateRecordingTime()
+	{
+		if (IsRecording is false)
 		{
-
+			return;
 		}
+
+		dispatcher.DispatchDelayed(
+			TimeSpan.FromMilliseconds(16),
+			() =>
+			{
+				NotifyPropertyChanged(nameof(RecordingTime));
+
+				UpdateRecordingTime();
+			});
 	}
 }
