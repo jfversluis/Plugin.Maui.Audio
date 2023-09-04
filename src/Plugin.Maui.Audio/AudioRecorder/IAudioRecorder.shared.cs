@@ -16,18 +16,18 @@ public interface IAudioRecorder
 	bool IsRecording { get; }
 
 	///<Summary>
-	/// Start recording.
+	/// Start recording audio to disk in a randomly generated file.
 	///</Summary>
 	Task StartAsync();
 
 	///<Summary>
-	/// Start recording with the specific <paramref name="filePath"/>.
+	/// Start recording audio to disk in the supplied <paramref name="filePath"/>.
 	///</Summary>
 	///<param name="filePath">The path on disk to store the recording.</param>
 	Task StartAsync(string filePath);
 
 	///<Summary>
-	/// Stop recording and return the AudioRecording instance with the recording data.
+	/// Stop recording and return the <see cref="IAudioSource"/> instance with the recording data.
 	///</Summary>
 	Task<IAudioSource> StopAsync();
 }
