@@ -15,12 +15,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 6.0.x
-    - name: Install .NET MAUI
-      run: dotnet workload install maui
     - name: Restore dependencies
       run: dotnet restore samples\AudioPlayerSample.sln
     - name: Build
