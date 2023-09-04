@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using Android.Content.Res;
 using Android.Media;
 using Stream = System.IO.Stream;
@@ -44,7 +45,9 @@ partial class AudioPlayer : IAudioPlayer
 				var speedValue = Math.Clamp((float)value, 0.0f, 6.0f);
 
 				if (float.IsNaN(speedValue))
+				{
 					speedValue = 1.0f;
+				}
 
 				player.PlaybackParams = player.PlaybackParams.SetSpeed(speedValue) ?? player.PlaybackParams;
 			}
