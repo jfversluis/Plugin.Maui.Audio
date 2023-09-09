@@ -1,6 +1,6 @@
 # Plugin.Maui.Audio
 
-`Plugin.Maui.Audio` provides the ability to play audio inside a .NET MAUI application.
+`Plugin.Maui.Audio` provides the ability to play and record audio inside a .NET MAUI application.
 
 ## Getting Started
 
@@ -8,7 +8,7 @@
 
 ## API Usage
 
-`Plugin.Maui.Audio` provides the `AudioManager` class that allows for the creation of `AudioPlayer`s. The `AudioManager` can be used with or without dependency injection.
+`Plugin.Maui.Audio` provides the `AudioManager` class that allows for the creation of [`AudioPlayer`s](docs/audio-player.md) and [`AudioRecorder`s](docs/audio-recording.md). The `AudioManager` can be used with or without dependency injection.
 
 ### `AudioManager`
 
@@ -57,65 +57,12 @@ public class AudioPlayerViewModel
 }
 ```
 
-### AudioPlayer
+Now that you know how to use the `AudioManager` class, please refer to the following sections:
 
-Once you have created an `AudioPlayer` you can interact with it in the following ways:
+* [Audio playback](docs/audio-player.md)
+* [Record audio](docs/audio-recorder.md)
 
-#### Events
-
-##### `PlaybackEnded`
-
-Raised when audio playback completes successfully.
-
-#### Properties
-
-##### `Balance`
-
-Gets or sets the balance left/right: -1 is 100% left : 0% right, 1 is 100% right : 0% left, 0 is equal volume left/right.
-
-##### `CanSeek`
-
-Gets a value indicating whether the position of the loaded audio file can be updated.
-
-##### `CurrentPosition`
-
-Gets the current position of audio playback in seconds.
-
-##### `Duration`
-
-Gets the length of audio in seconds.
-
-##### `IsPlaying`
-
-Gets a value indicating whether the currently loaded audio file is playing.
-
-##### `Volume`
-
-Gets or sets the playback volume 0 to 1 where 0 is no-sound and 1 is full volume.
-
-##### `Loop`
-
-Gets or sets whether the player will continuously repeat the currently playing sound.
-
-#### Methods
-
-##### `Pause()`
-
-Pause playback if playing (does not resume).
-
-##### `Play()`
-
-Begin playback or resume if paused.
-
-##### `Seek(double position)`
-
-Set the current playback position (in seconds).
-
-##### `Stop()`
-
-Stop playback and set the current position to the beginning.
-
-# Acknowledgements
+## Acknowledgements
 
 This project could not have came to be without these projects and people, thank you! <3
 
