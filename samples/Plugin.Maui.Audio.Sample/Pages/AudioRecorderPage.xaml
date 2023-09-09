@@ -28,6 +28,10 @@
                 Text="Play"
                 Command="{Binding PlayCommand}" />
 
+            <Button
+                Text="StopPlay"
+                Command="{Binding StopPlayCommand}" />
+
             <Label
                 Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
         </VerticalStackLayout>

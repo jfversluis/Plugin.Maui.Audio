@@ -23,12 +23,10 @@ public class AudioManager : IAudioManager
     }
 
 	/// <inheritdoc />
-	public AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream) =>
-		new AsyncAudioPlayer(CreatePlayer(audioStream));
+	public AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream) => new (CreatePlayer(audioStream));
 
 	/// <inheritdoc />
-	public AsyncAudioPlayer CreateAsyncPlayer(string fileName) =>
-        new AsyncAudioPlayer(CreatePlayer(fileName));
+	public AsyncAudioPlayer CreateAsyncPlayer(string fileName) => new (CreatePlayer(fileName));
 
 	/// <inheritdoc />
 	public IAudioRecorder CreateRecorder()
