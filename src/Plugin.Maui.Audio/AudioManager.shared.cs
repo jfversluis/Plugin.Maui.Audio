@@ -19,8 +19,14 @@ public class AudioManager : IAudioManager
 	{
 		ArgumentNullException.ThrowIfNull(fileName);
 
-		return new AudioPlayer(fileName);
-	}
+        return new AudioPlayer(fileName);
+    }
+
+	/// <inheritdoc />
+	public AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream) => new (CreatePlayer(audioStream));
+
+	/// <inheritdoc />
+	public AsyncAudioPlayer CreateAsyncPlayer(string fileName) => new (CreatePlayer(fileName));
 
 	/// <inheritdoc />
 	public IAudioRecorder CreateRecorder()

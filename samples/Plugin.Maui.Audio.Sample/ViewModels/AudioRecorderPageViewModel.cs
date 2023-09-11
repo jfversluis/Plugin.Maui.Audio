@@ -9,13 +9,25 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	readonly IAudioManager audioManager;
 	readonly IDispatcher dispatcher;
 	IAudioRecorder audioRecorder;
-	IAudioPlayer audioPlayer;
+	AsyncAudioPlayer audioPlayer;
 	IAudioSource audioSource = null;
 	readonly Stopwatch recordingStopwatch = new Stopwatch();
+	bool isPlaying;
 
 	public double RecordingTime
 	{
 		get => recordingStopwatch.ElapsedMilliseconds / 1000;
+	}
+
+	public bool IsPlaying
+	{
+		get => isPlaying;
+		set
+		{
+			isPlaying = value;
+			PlayCommand.ChangeCanExecute();
+			StopPlayCommand.ChangeCanExecute();
+		}
 	}
 
 	public bool IsRecording
@@ -26,6 +38,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	public Command PlayCommand { get; }
 	public Command StartCommand { get; }
 	public Command StopCommand { get; }
+	public Command StopPlayCommand { get; }
 
 	public AudioRecorderPageViewModel(
 		IAudioManager audioManager,
@@ -33,20 +46,30 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	{
 		StartCommand = new Command(Start, () => !IsRecording);
 		StopCommand = new Command(Stop, () => IsRecording);
-		PlayCommand = new Command(PlayAudio);
+		PlayCommand = new Command(PlayAudio, () => !IsPlaying);
+		StopPlayCommand = new Command(StopPlay, () => IsPlaying);
 
 		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
 	}
 
-	public void PlayAudio()
+	async void PlayAudio()
 	{
 		if (audioSource != null)
 		{
-			audioPlayer = this.audioManager.CreatePlayer(((FileAudioSource)audioSource).GetAudioStream());
+			audioPlayer = this.audioManager.CreateAsyncPlayer(((FileAudioSource)audioSource).GetAudioStream());
 
-			audioPlayer.Play();
+			IsPlaying = true;
+
+			await audioPlayer.PlayAsync(CancellationToken.None);
+
+			IsPlaying = false;
 		}
+	}
+
+	void StopPlay()
+	{
+		audioPlayer.Stop();
 	}
 
 	async void Start()
