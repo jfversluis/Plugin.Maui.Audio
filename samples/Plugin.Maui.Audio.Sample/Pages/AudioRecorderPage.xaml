@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
+             xmlns:converters="clr-namespace:Plugin.Maui.Audio.Sample.Converters"
+             x:Class="Plugin.Maui.Audio.Sample.Pages.AudioRecorderPage"
+             Title="Audio Recorder"
+             x:DataType="viewmodels:AudioRecorderPageViewModel">
+
+    <ContentPage.Resources>
+        <converters:SecondsToStringConverter x:Key="SecondsToStringConverter" />
+    </ContentPage.Resources>
+
+    <Grid>
+        <VerticalStackLayout
+            HorizontalOptions="Center"
+            VerticalOptions="Center">
+
+            <Button
+                Text="Start"
+                Command="{Binding StartCommand}" />
+
+            <Button
+                Text="Stop"
+                Command="{Binding StopCommand}" />
+
+            <Button
+                Text="Play"
+                Command="{Binding PlayCommand}" />
+
+            <Button
+                Text="StopPlay"
+                Command="{Binding StopPlayCommand}" />
+
+            <Label
+                Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
+        </VerticalStackLayout>
+
+    </Grid>
+    
+</ContentPage>

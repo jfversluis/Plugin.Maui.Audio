@@ -2,23 +2,35 @@
 
 public class AudioManager : IAudioManager
 {
-    static IAudioManager? currentImplementation;
+	static IAudioManager? currentImplementation;
 
-    public static IAudioManager Current => currentImplementation ??= new AudioManager();
+	public static IAudioManager Current => currentImplementation ??= new AudioManager();
 
-    /// <inheritdoc />
-    public IAudioPlayer CreatePlayer(Stream audioStream)
-    {
-        ArgumentNullException.ThrowIfNull(audioStream);
+	/// <inheritdoc />
+	public IAudioPlayer CreatePlayer(Stream audioStream)
+	{
+		ArgumentNullException.ThrowIfNull(audioStream);
 
-        return new AudioPlayer(audioStream);
-    }
+		return new AudioPlayer(audioStream);
+	}
 
-    /// <inheritdoc />
-    public IAudioPlayer CreatePlayer(string fileName)
-    {
-        ArgumentNullException.ThrowIfNull(fileName);
+	/// <inheritdoc />
+	public IAudioPlayer CreatePlayer(string fileName)
+	{
+		ArgumentNullException.ThrowIfNull(fileName);
 
         return new AudioPlayer(fileName);
     }
+
+	/// <inheritdoc />
+	public AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream) => new (CreatePlayer(audioStream));
+
+	/// <inheritdoc />
+	public AsyncAudioPlayer CreateAsyncPlayer(string fileName) => new (CreatePlayer(fileName));
+
+	/// <inheritdoc />
+	public IAudioRecorder CreateRecorder()
+	{
+		return new AudioRecorder();
+	}
 }

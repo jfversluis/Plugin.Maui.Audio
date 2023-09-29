@@ -18,10 +18,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Install .NET MAUI
       run: dotnet workload install maui
     - name: Restore dependencies
-      run: dotnet restore samples\AudioPlayerSample.sln
+      run: dotnet restore samples\Plugin.Maui.Audio.Sample.sln
     - name: Build
-      run: dotnet build samples\AudioPlayerSample.sln -c Release
+      run: dotnet build samples\Plugin.Maui.Audio.Sample.sln -c Release
