@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Plugin.Maui.Audio;
 using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
@@ -113,5 +112,10 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
 				UpdateRecordingTime();
 			});
+	}
+
+	internal void OnNavigatedFrom()
+	{
+		audioPlayer?.Dispose();
 	}
 }

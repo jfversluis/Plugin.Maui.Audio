@@ -3,10 +3,11 @@
 /// <summary>
 /// Provides async/await support by wrapping an <see cref="IAudioPlayer"/>.
 /// </summary>
-public class AsyncAudioPlayer
+public class AsyncAudioPlayer : IAudio
 {
 	readonly IAudioPlayer audioPlayer;
 	CancellationTokenSource? stopCancellationToken;
+	bool isDisposed;
 
 	/// <summary>
 	/// Creates a new instance of <see cref="AsyncAudioPlayer"/>.
@@ -17,6 +18,55 @@ public class AsyncAudioPlayer
 	{
 		this.audioPlayer = audioPlayer;
 	}
+
+	/// <inheritdoc cref="IAudio.Duration" />
+	public double Duration => audioPlayer.Duration;
+
+	/// <inheritdoc cref="IAudio.CurrentPosition" />
+	public double CurrentPosition => audioPlayer.CurrentPosition;
+
+	/// <inheritdoc cref="IAudio.Volume" />
+	public double Volume
+	{
+		get => audioPlayer.Volume;
+		set => audioPlayer.Volume = value;
+	}
+
+	/// <inheritdoc cref="IAudio.Balance" />
+	public double Balance
+	{
+		get => audioPlayer.Balance;
+		set => audioPlayer.Balance = value;
+	}
+
+	/// <inheritdoc cref="IAudio.Speed" />
+	public double Speed
+	{
+		get => audioPlayer.Speed;
+		set => audioPlayer.Speed = value;
+	}
+
+	/// <inheritdoc cref="IAudio.MinimumSpeed" />
+	public double MinimumSpeed => audioPlayer.MinimumSpeed;
+
+	/// <inheritdoc cref="IAudio.MaximumSpeed" />
+	public double MaximumSpeed => audioPlayer.MaximumSpeed;
+
+	/// <inheritdoc cref="IAudio.CanSetSpeed" />
+	public bool CanSetSpeed => audioPlayer.CanSetSpeed;
+
+	/// <inheritdoc cref="IAudio.IsPlaying" />
+	public bool IsPlaying => audioPlayer.IsPlaying;
+
+	/// <inheritdoc cref="IAudio.Loop" />
+	public bool Loop
+	{
+		get => audioPlayer.Loop;
+		set => audioPlayer.Loop = value;
+	}
+
+	/// <inheritdoc cref="IAudio.CanSeek" />
+	public bool CanSeek => audioPlayer.CanSeek;
 
 	/// <summary>
 	/// Begin audio playback asynchronously.
@@ -41,11 +91,38 @@ public class AsyncAudioPlayer
 		audioPlayer.Stop();
 	}
 
+	/// <inheritdoc cref="IAudio.Seek(double)" />
+	public void Seek(double position) => audioPlayer.Seek(position);
+
 	/// <summary>
 	/// Stops the currently playing audio.
 	/// </summary>
 	public void Stop()
 	{
 		stopCancellationToken?.Cancel();
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!isDisposed)
+		{
+			if (disposing)
+			{
+				audioPlayer.Dispose();
+			}
+
+			isDisposed = true;
+		}
+	}
+
+	~AsyncAudioPlayer()
+	{
+		Dispose(disposing: false);
+	}
+
+	public void Dispose()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
 	}
 }
