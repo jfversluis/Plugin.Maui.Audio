@@ -8,4 +8,11 @@ public partial class AudioRecorderPage : ContentPage
 
 		BindingContext = audioRecorderPageViewModel;
 	}
+
+	protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+	{
+		base.OnNavigatedFrom(args);
+
+		((ViewModels.AudioRecorderPageViewModel)BindingContext).OnNavigatedFrom();
+	}
 }
