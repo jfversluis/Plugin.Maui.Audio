@@ -16,7 +16,7 @@ partial class AudioPlayer : IAudioPlayer
 	readonly MemoryStream? stream;
 	bool isDisposed = false;
 
-	public double Duration => player.Duration;
+	public double Duration => player.Duration <= -1 ? -1 : player.Duration / 1000.0;
 
 	public double CurrentPosition => player.CurrentPosition / 1000.0;
 
