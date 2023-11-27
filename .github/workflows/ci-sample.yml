@@ -15,17 +15,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 7.0.x
-    - name: Install .NET MAUI
-      run: dotnet workload install maui
-    - uses: actions/setup-java@v3
-      with:
-        distribution: 'microsoft'
-        java-version: '11'
+
     - name: Restore dependencies
       run: dotnet restore samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj
+      
     - name: Build
       run: dotnet build samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj -c Release
