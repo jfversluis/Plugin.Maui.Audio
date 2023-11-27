@@ -21,7 +21,11 @@ jobs:
         dotnet-version: 7.0.x
     - name: Install .NET MAUI
       run: dotnet workload install maui
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'microsoft'
+        java-version: '11'
     - name: Restore dependencies
-      run: dotnet restore samples\Plugin.Maui.Audio.Sample.sln
+      run: dotnet restore samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj
     - name: Build
-      run: dotnet build samples\Plugin.Maui.Audio.Sample.sln -c Release
+      run: dotnet build samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj -c Release
