@@ -16,8 +16,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
+    - name: Install .NET MAUI
+      run: dotnet workload restore
+
     - name: Restore dependencies
       run: dotnet restore samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj
-      
     - name: Build
       run: dotnet build samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj -c Release
