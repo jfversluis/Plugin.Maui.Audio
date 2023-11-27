@@ -16,13 +16,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: actions/setup-java@v3
-      with:
-        distribution: 'microsoft'
-        java-version: '11'
-
     - name: Restore dependencies
       run: dotnet restore src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj
-      
+
     - name: Build
       run: dotnet build src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release
