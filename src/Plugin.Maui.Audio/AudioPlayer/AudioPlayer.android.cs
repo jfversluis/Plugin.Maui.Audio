@@ -108,8 +108,16 @@ partial class AudioPlayer : IAudioPlayer
 
 	void PreparePlayerLegacy(Stream audioStream)
 	{
+		var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+
+		// It seems that on Android 5 this directory does not exist.
+		if (Directory.Exists(documentsPath) is false)
+		{
+			Directory.CreateDirectory(documentsPath);
+		}
+
 		//cache to the file system
-		path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), $"cache{index++}.wav");
+		path = Path.Combine(documentsPath, $"cache{index++}.wav");
 
 		DeleteFile(path);
 
