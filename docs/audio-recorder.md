@@ -11,15 +11,15 @@ public class AudioRecorderViewModel
     public AudioPlayerViewModel(IAudioManager audioManager)
     {
         this.audioManager = audioManager;
-        this.audioRecorder.CreateRecorder();
+        this.audioRecorder = audioManager.CreateRecorder();
     }
 
-    public async void StartRecording()
+    public async Task StartRecording()
     {
-        this.audioRecorder.StartAsync();
+        await this.audioRecorder.StartAsync();
     }
 
-    public async void StopRecording()
+    public async Task StopRecording()
     {
         IAudioSource audioSource = await this.audioRecorder.StopAsync();
 

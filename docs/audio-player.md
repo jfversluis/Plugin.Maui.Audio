@@ -2,6 +2,25 @@
 
 The `AudioPlayer` class provides you with the ability to play audio files/streams in your .NET MAUI application. In order to create an `AudioPlayer` instance you can make use of the `CreatePlayer` method on the [`AudioManager`](../readme.md#audiomanager) class.
 
+```csharp
+public class AudioPlayerViewModel
+{
+    readonly IAudioManager audioManager;
+
+    public AudioPlayerViewModel(IAudioManager audioManager)
+    {
+        this.audioManager = audioManager;
+    }
+
+    public async void PlayAudio()
+    {
+        var audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
+
+        audioPlayer.Play();
+    }
+}
+```
+
 ## AudioPlayer API
 
 Once you have created an `AudioPlayer` you can interact with it in the following ways:
