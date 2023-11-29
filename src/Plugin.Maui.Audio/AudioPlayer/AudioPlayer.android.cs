@@ -95,7 +95,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	internal AudioPlayer(string fileName)
 	{
-		player = new MediaPlayer() { Looping = Loop };
+		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
 
 		AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
