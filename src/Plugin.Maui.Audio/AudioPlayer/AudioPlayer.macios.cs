@@ -6,6 +6,7 @@ namespace Plugin.Maui.Audio;
 partial class AudioPlayer : IAudioPlayer
 {
 	readonly AVAudioPlayer player;
+	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
 
 	public double CurrentPosition => player.CurrentTime;
@@ -63,20 +64,24 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool CanSeek => true;
 
-	internal AudioPlayer(Stream audioStream)
+	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
 		var data = NSData.FromStream(audioStream)
 		   ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
 		player = AVAudioPlayer.FromData(data)
 		   ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
+		this.audioPlayerOptions = audioPlayerOptions;
+
 		PreparePlayer();
 	}
 
-	internal AudioPlayer(string fileName)
+	internal AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName))
 		   ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from url.");
+
+		this.audioPlayerOptions = audioPlayerOptions;
 
 		PreparePlayer();
 	}
@@ -122,8 +127,29 @@ partial class AudioPlayer : IAudioPlayer
 		PlaybackEnded?.Invoke(this, EventArgs.Empty);
 	}
 
+	void InitAudioSession()
+	{
+		var audioSession = AVAudioSession.SharedInstance();
+
+		var options = audioPlayerOptions;
+		
+		var error = audioSession.SetCategory(options.Category, options.Mode, options.CategoryOptions);
+		if (error is not null)
+		{
+			throw new Exception(error.ToString());
+		}
+
+		error = audioSession.SetActive(true);
+		if (error is not null)
+		{
+			throw new Exception(error.ToString());
+		}
+	}
+
 	bool PreparePlayer()
 	{
+		InitAudioSession();
+		
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.PrepareToPlay();
 

@@ -12,16 +12,22 @@ partial class AudioRecorder : IAudioRecorder
 	AVAudioRecorder? recorder;
 	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
 
-	public AudioRecorder()
+	readonly AudioRecorderOptions audioRecorderOptions;
+
+	public AudioRecorder(AudioRecorderOptions audioRecorderOptions)
 	{
+		this.audioRecorderOptions = audioRecorderOptions;
+
 		InitAudioSession();
 	}
 
-	static void InitAudioSession()
+	void InitAudioSession()
 	{
 		var audioSession = AVAudioSession.SharedInstance();
 
-		var error = audioSession.SetCategory(AVAudioSessionCategory.Record);
+		var options = audioRecorderOptions;
+		
+		var error = audioSession.SetCategory(options.Category, options.Mode, options.CategoryOptions);
 		if (error is not null)
 		{
 			throw new Exception(error.ToString());
@@ -47,6 +53,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new InvalidOperationException("The recorder is already recording.");
 		}
+
+		InitAudioSession();
 
 		var url = NSUrl.FromFilename(filePath);
 		destinationFilePath = filePath;
