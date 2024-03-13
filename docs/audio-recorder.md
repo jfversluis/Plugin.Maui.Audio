@@ -30,7 +30,7 @@ public class AudioRecorderViewModel
 
 > [!NOTE]  
 > You as the developer are responsible for cleaning up the audio files. For instance, when using `StartAsync()` the random file that is generated is _not_ cleaned up automatically.
-> Retrieve the file path which is in the resulting object from `StopAsync()` and use that to remove the file when done.
+> Retrieve the file path which is in the resulting object from `StopAsync()` and use that to remove the file when done. Make sure to cast the resulting `IAudioSource` to the concrete type of `FileAudioSource` to be able to retrieve the file path.
 
 ## AudioRecorder API
 
