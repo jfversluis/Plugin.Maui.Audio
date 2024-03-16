@@ -23,9 +23,20 @@ public class AudioPlayerViewModel
 
 ## Configure the playback options
 
-When calling `CreatePlayer` it is possible to an optional parameter of type `AudioPlayerOptions`, this parameter makes it possible to customize the playback settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
+When calling `CreatePlayer` it is possible to provide an optional parameter of type `AudioPlayerOptions`, this parameter makes it possible to customize the playback settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
 
-For example if you wanted to allow your audio to blend in with existing audio being played on device
+The following example shows how to configure your audio to blend in with existing audio being played on device:
+
+```csharp
+audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if IOS || MACCATALYST
+        CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.MixWithOthers
+#endif
+    });
+```
 
 ## AudioPlayer API
 

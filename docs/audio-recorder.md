@@ -34,7 +34,7 @@ public class AudioRecorderViewModel
 
 ## Configure the recording options
 
-When calling `CreateRecorder` it is possible to an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
+When calling `CreateRecorder` it is possible to provide an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
 
 The following example shows how to enable both recording (input) and playback (output) of audio:
 
