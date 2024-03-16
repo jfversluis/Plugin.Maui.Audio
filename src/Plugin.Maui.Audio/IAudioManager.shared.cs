@@ -1,12 +1,18 @@
 ﻿namespace Plugin.Maui.Audio;
 
 /// <summary>
-/// Provides the ability to create <see cref="IAudioPlayer" /> instances.
+/// Provides the ability to create audio playback and recording instances.
 /// </summary>
 public interface IAudioManager
 {
+	/// <summary>
+	/// Gets or sets the default options to use when creating a new <see cref="IAudioPlayer"/>.
+	/// </summary>
 	AudioPlayerOptions DefaultPlayerOptions { get; set; }
 
+	/// <summary>
+	/// Gets or sets the default options to use when creating a new <see cref="IAudioRecorder"/>.
+	/// </summary>
 	AudioRecorderOptions DefaultRecorderOptions { get; set; }
 
 	/// <summary>
