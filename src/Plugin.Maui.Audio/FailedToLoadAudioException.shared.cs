@@ -15,10 +15,6 @@ public class FailedToLoadAudioException : Exception
 	{
 	}
 
-	protected FailedToLoadAudioException(SerializationInfo info, StreamingContext context) : base(info, context)
-	{
-	}
-
 	/// <summary>
 	/// Triggers a throw of this exception.
 	/// </summary>
