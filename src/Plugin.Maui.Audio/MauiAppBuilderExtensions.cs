@@ -42,8 +42,8 @@ public static class MauiAppBuilderExtensions
     /// <returns>The <paramref name="mauiAppBuilder"/> supplied in order to allow for chaining of method calls.</returns>
     public static MauiAppBuilder AddAudio(
         this MauiAppBuilder mauiAppBuilder,
-        Action<AudioPlayerOptions> configurePlaybackOptions = null,
-        Action<AudioRecorderOptions> configureRecordingOptions = null)
+        Action<AudioPlayerOptions>? configurePlaybackOptions = null,
+        Action<AudioRecorderOptions>? configureRecordingOptions = null)
     {
         var playbackOptions = new AudioPlayerOptions();
         configurePlaybackOptions?.Invoke(playbackOptions);
