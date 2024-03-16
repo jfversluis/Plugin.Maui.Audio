@@ -95,6 +95,8 @@ partial class AudioPlayer : IAudioPlayer
 
 		if (disposing)
 		{
+			ActiveSessionHelper.FinishSession(audioPlayerOptions);
+
 			Stop();
 
 			player.FinishedPlaying -= OnPlayerFinishedPlaying;
@@ -127,28 +129,9 @@ partial class AudioPlayer : IAudioPlayer
 		PlaybackEnded?.Invoke(this, EventArgs.Empty);
 	}
 
-	void InitAudioSession()
-	{
-		var audioSession = AVAudioSession.SharedInstance();
-
-		var options = audioPlayerOptions;
-		
-		var error = audioSession.SetCategory(options.Category, options.Mode, options.CategoryOptions);
-		if (error is not null)
-		{
-			throw new Exception(error.ToString());
-		}
-
-		error = audioSession.SetActive(true);
-		if (error is not null)
-		{
-			throw new Exception(error.ToString());
-		}
-	}
-
 	bool PreparePlayer()
 	{
-		InitAudioSession();
+		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
 		
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.PrepareToPlay();
