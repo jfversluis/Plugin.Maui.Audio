@@ -12,13 +12,18 @@
 
 ### `AudioManager`
 
+There are two different ways in which you can interact with the `AudioManager` implementation provided by this plugin, they are:
+
 #### Dependency Injection
 
-You will first need to register the `AudioManager` with the `MauiAppBuilder` following the same pattern that the .NET MAUI Essentials libraries follow.
+You will first need to register the `AudioManager` with the `MauiAppBuilder` based on the following example:
 
 ```csharp
-builder.Services.AddSingleton(AudioManager.Current);
+builder.AddAudio();
 ```
+
+> [!NOTE]  
+> You can also customize the shared settings for both audio [playback](./docs/audio-player.md#configure-the-playback-options) and [recording](./docs/audio-recorder.md#configure-the-recording-options).
 
 You can then enable your classes to depend on `IAudioManager` as per the following example.
 

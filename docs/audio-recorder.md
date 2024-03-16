@@ -32,6 +32,22 @@ public class AudioRecorderViewModel
 > You as the developer are responsible for cleaning up the audio files. For instance, when using `StartAsync()` the random file that is generated is _not_ cleaned up automatically.
 > Retrieve the file path which is in the resulting object from `StopAsync()` and use that to remove the file when done. Make sure to cast the resulting `IAudioSource` to the concrete type of `FileAudioSource` to be able to retrieve the file path.
 
+## Configure the recording options
+
+When calling `CreateRecorder` it is possible to an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
+
+The following example shows how to enable both recording (input) and playback (output) of audio:
+
+```csharp
+audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+#if IOS || MACCATALYST
+        Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord
+#endif
+    });
+```
+
 ## AudioRecorder API
 
 Once you have created an `AudioRecorder` you can interact with it in the following ways:
