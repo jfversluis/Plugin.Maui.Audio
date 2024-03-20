@@ -14,10 +14,19 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Restore dependencies
       run: dotnet restore src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj
 
     - name: Build
       run: dotnet build src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release
+
+    - name: Pack
+      run: dotnet pack src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -o output -p:PackageVersion=3.0.0-preview2.${{ github.run_id }}${{ github.run_attempt }}
+
+    - name: Add NuGet Source for Push
+      run: dotnet nuget add source https://jfversluis.pkgs.visualstudio.com/Plugin.Maui.Audio/_packaging/Plugin.Maui.Audio/nuget/v3/index.json --name PrivateFeed --username ${{ secrets.PUBLISH_USER }} --password ${{ secrets.PUBLISH_PAT }}
+      
+    - name: Push
+      run: dotnet nuget push "output\*.nupkg" --source PrivateFeed --api-key AzureArtifacts
