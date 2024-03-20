@@ -32,6 +32,7 @@ jobs:
       run: dotnet nuget push "output\*.nupkg" --source PrivateFeed --api-key AzureArtifacts
 
     - name: Create status
+      shell: bash
       run: |
         curl --request POST \
         --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.workflow_run.head_commit.id }} \
