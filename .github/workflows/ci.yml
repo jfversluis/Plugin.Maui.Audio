@@ -21,3 +21,12 @@ jobs:
 
     - name: Build
       run: dotnet build src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release
+
+    - name: Pack
+      run: dotnet pack src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -o output -p:PackageVersion=2.2.0-preview1
+
+    - name: Add NuGet Source for Push
+      run: dotnet nuget add source https://jfversluis.pkgs.visualstudio.com/Plugin.Maui.Audio/_packaging/Plugin.Maui.Audio/nuget/v3/index.json --name PrivateFeed --username ${{ secrets.PUBLISH_USER }} --password ${{ secrets.PUBLISH_PAT }}
+      
+    - name: Push
+      run: dotnet nuget push "output/*.nupkg" --source PrivateFeed --api-key AzureArtifacts
