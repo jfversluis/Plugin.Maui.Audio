@@ -34,9 +34,7 @@ jobs:
     - name: Create status
       shell: bash
       run: |
-        git fetch origin ${{ github.event.inputs.branch }}
-        echo "COMMIT_SHA=$(git rev-parse origin/${{ github.event.inputs.branch }})" >> $GITHUB_ENV
-          
+        COMMIT_SHA=$(git log -n 1 --pretty=format:"%H")
         curl --request POST \
         --url https://api.github.com/repos/${{ github.repository }}/statuses/$COMMIT_SHA \
         --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
