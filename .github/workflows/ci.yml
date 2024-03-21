@@ -44,7 +44,7 @@ jobs:
         --data-binary @- << EOF
         {
           "state": "success",
-          "context": "NuGet Package ${{ env.NuGetVersion }}",
+          "context": "NuGet ${{ env.NuGetVersion }}",
           "description": "Feed: https://jfversluis.pkgs.visualstudio.com/Plugin.Maui.Audio/_packaging/Plugin.Maui.Audio/nuget/v3/index.json",
           "target_url": "https://github.com/jfversluis/Plugin.Maui.Audio/wiki/Preview-Packages",
           "output": {
