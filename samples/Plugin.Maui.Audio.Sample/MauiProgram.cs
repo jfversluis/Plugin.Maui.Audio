@@ -13,6 +13,21 @@ public static class MauiProgram
 		builder
 			.UseMauiApp<App>()
 			.UseSkiaSharp()
+			.AddAudio(
+				playbackOptions =>
+				{
+#if IOS || MACCATALYST
+					playbackOptions.Category = AVFoundation.AVAudioSessionCategory.Playback;
+#endif
+				},
+				recordingOptions =>
+				{
+#if IOS || MACCATALYST
+					recordingOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
+					recordingOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
+					recordingOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.DefaultToSpeaker;
+#endif
+				})
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -24,8 +39,6 @@ public static class MauiProgram
 
 		RegisterPageRoute<AudioRecorderPage, AudioRecorderPageViewModel>(Routes.AudioRecorder.RouteName, builder.Services);
 		RegisterPageRoute<MusicPlayerPage, MusicPlayerPageViewModel>(Routes.MusicPlayer.RouteName, builder.Services);
-
-		builder.Services.AddSingleton(AudioManager.Current);
 
 		return builder.Build();
 	}

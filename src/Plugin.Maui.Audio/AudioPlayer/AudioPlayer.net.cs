@@ -2,9 +2,9 @@
 
 partial class AudioPlayer : IAudioPlayer
 {
-	public AudioPlayer(Stream audioStream) { }
+	public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions) { }
 
-	public AudioPlayer(string fileName) { }
+	public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions) { }
 
 	protected virtual void Dispose(bool disposing) { }
 

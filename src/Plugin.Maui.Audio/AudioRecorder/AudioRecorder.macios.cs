@@ -12,26 +12,13 @@ partial class AudioRecorder : IAudioRecorder
 	AVAudioRecorder? recorder;
 	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
 
-	public AudioRecorder()
+	readonly AudioRecorderOptions audioRecorderOptions;
+
+	public AudioRecorder(AudioRecorderOptions audioRecorderOptions)
 	{
-		InitAudioSession();
-	}
+		this.audioRecorderOptions = audioRecorderOptions;
 
-	static void InitAudioSession()
-	{
-		var audioSession = AVAudioSession.SharedInstance();
-
-		var error = audioSession.SetCategory(AVAudioSessionCategory.Record);
-		if (error is not null)
-		{
-			throw new Exception(error.ToString());
-		}
-
-		error = audioSession.SetActive(true);
-		if (error is not null)
-		{
-			throw new Exception(error.ToString());
-		}
+		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 	}
 
 	static string GetTempFilePath()
@@ -47,6 +34,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new InvalidOperationException("The recorder is already recording.");
 		}
+
+		ActiveSessionHelper.InitializeSession(audioRecorderOptions);
 
 		var url = NSUrl.FromFilename(filePath);
 		destinationFilePath = filePath;
@@ -77,6 +66,8 @@ partial class AudioRecorder : IAudioRecorder
 		await finishedRecordingCompletionSource.Task;
 
 		recorder.FinishedRecording -= Recorder_FinishedRecording;
+
+		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 
 		return new FileAudioSource(destinationFilePath);
 	}

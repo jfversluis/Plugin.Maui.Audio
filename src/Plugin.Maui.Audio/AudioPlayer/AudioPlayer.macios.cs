@@ -6,6 +6,7 @@ namespace Plugin.Maui.Audio;
 partial class AudioPlayer : IAudioPlayer
 {
 	readonly AVAudioPlayer player;
+	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
 
 	public double CurrentPosition => player.CurrentTime;
@@ -63,20 +64,24 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool CanSeek => true;
 
-	internal AudioPlayer(Stream audioStream)
+	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
 		var data = NSData.FromStream(audioStream)
 		   ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
 		player = AVAudioPlayer.FromData(data)
 		   ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
+		this.audioPlayerOptions = audioPlayerOptions;
+
 		PreparePlayer();
 	}
 
-	internal AudioPlayer(string fileName)
+	internal AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(fileName))
 		   ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from url.");
+
+		this.audioPlayerOptions = audioPlayerOptions;
 
 		PreparePlayer();
 	}
@@ -90,6 +95,8 @@ partial class AudioPlayer : IAudioPlayer
 
 		if (disposing)
 		{
+			ActiveSessionHelper.FinishSession(audioPlayerOptions);
+
 			Stop();
 
 			player.FinishedPlaying -= OnPlayerFinishedPlaying;
@@ -124,6 +131,8 @@ partial class AudioPlayer : IAudioPlayer
 
 	bool PreparePlayer()
 	{
+		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
+		
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.PrepareToPlay();
 
