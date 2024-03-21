@@ -33,7 +33,7 @@ jobs:
       run: dotnet nuget push "output\*.nupkg" --source PrivateFeed --api-key AzureArtifacts
 
     - name: Create status
-      if: success()
+      if: success() && github.event_name == 'pull_request'
       shell: bash
       run: |
         curl --request POST \
