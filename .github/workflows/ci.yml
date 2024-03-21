@@ -40,7 +40,8 @@ jobs:
         --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }} \
         --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
         --header 'content-type: application/json' \
-        --data '{
+        --data-binary @- << EOF
+        {
           "state": "success",
           "context": "NuGet Package ${{ env.NuGetVersion }}",
           "output": {
@@ -54,5 +55,6 @@ jobs:
             
             Detailed instructions on how to add a NuGet feed to your Visual Studio can be found on [Microsoft Learn](https://learn.microsoft.com/azure/devops/artifacts/nuget/consume)."
           }
-          }' \
+        }
+        EOF
         --fail
