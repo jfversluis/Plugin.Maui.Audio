@@ -1,4 +1,6 @@
-﻿using AVFoundation;
+﻿using System.Diagnostics;
+using AudioToolbox;
+using AVFoundation;
 using Foundation;
 
 namespace Plugin.Maui.Audio;
@@ -36,7 +38,9 @@ partial class AudioPlayer : IAudioPlayer
 				var speedValue = Math.Clamp((float)value, 0.5f, 2.0f);
 
 				if (float.IsNaN(speedValue))
+				{
 					speedValue = 1.0f;
+				}
 
 				player.Rate = speedValue;
 			}
@@ -81,6 +85,31 @@ partial class AudioPlayer : IAudioPlayer
 		PreparePlayer();
 	}
 
+	static void InitAudioSession()
+	{
+		var audioSession = AVAudioSession.SharedInstance();
+
+		// AVAudioSessionCategoryOptions.DefaultToSpeaker ensures no other audio is playing
+		var error = audioSession.SetCategory(AVAudioSessionCategory.Playback, AVAudioSessionCategoryOptions.DefaultToSpeaker);
+		if (error is not null)
+		{
+			Trace.TraceWarning(error.ToString());
+			//throw new FailedToPlayAudioException(error.ToString());
+		}
+
+		error = audioSession.SetActive(true, AVAudioSessionSetActiveOptions.NotifyOthersOnDeactivation);
+		if (error is not null)
+		{
+			Trace.TraceWarning(error.ToString());
+			//throw new FailedToPlayAudioException(error.ToString());
+		}
+	}
+
+	static void EndAudioSession()
+	{
+		AVAudioSession.SharedInstance().SetActive(false);
+	}
+
 	protected virtual void Dispose(bool disposing)
 	{
 		if (isDisposed)
@@ -109,6 +138,7 @@ partial class AudioPlayer : IAudioPlayer
 		}
 		else
 		{
+			InitAudioSession();
 			player.Play();
 		}
 	}
@@ -125,6 +155,8 @@ partial class AudioPlayer : IAudioPlayer
 	bool PreparePlayer()
 	{
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
+		player.EnableRate = true;
+
 		player.PrepareToPlay();
 
 		return true;
@@ -132,6 +164,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
 	{
+		EndAudioSession();
 		PlaybackEnded?.Invoke(this, e);
 	}
 }

@@ -4,8 +4,8 @@ namespace Plugin.Maui.Audio.Sample.ViewModels;
 
 public class MyLibraryPageViewModel : BaseViewModel
 {
-	MusicItemViewModel selectedMusicItem;
 	public Command AddRecordingCommand { get; }
+	public Command OpenMusicCommand { get; }
 	public ObservableCollection<MusicItemViewModel> Music { get; }
 
 
@@ -16,33 +16,23 @@ public class MyLibraryPageViewModel : BaseViewModel
 			new MusicItemViewModel("The Happy Ukelele Song", "Stanislav Fomin", "ukelele.mp3")
 		};
 
-		AddRecordingCommand = new Command(AddRecording);
+		AddRecordingCommand = new Command(async () => await AddRecording());
+		OpenMusicCommand = new Command(async (object item) => await OnMusicItemSelected((MusicItemViewModel)item));
 	}
 
-	public MusicItemViewModel SelectedMusicItem
-	{
-		get => selectedMusicItem;
-		set
-		{
-			selectedMusicItem = value;
-			NotifyPropertyChanged();
 
-			OnMusicItemSelected();
-		}
-	}
-
-	async void AddRecording()
+	async Task AddRecording()
 	{
 		await Shell.Current.GoToAsync(Routes.AudioRecorder.RouteName);
 	}
 
-	async void OnMusicItemSelected()
+	async Task OnMusicItemSelected(MusicItemViewModel musicItem)
 	{
 		await Shell.Current.GoToAsync(
 			Routes.MusicPlayer.RouteName,
 			new Dictionary<string, object>
 			{
-				[Routes.MusicPlayer.Arguments.Music] = SelectedMusicItem
+				[Routes.MusicPlayer.Arguments.Music] = musicItem
 			});
 	}
 }

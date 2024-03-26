@@ -98,10 +98,16 @@ partial class AudioPlayer : IAudioPlayer
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
 
-		AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
-			?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
-
-		player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+		if (File.Exists(fileName))
+		{
+			player.SetDataSource(fileName);
+		}
+		else
+		{
+			AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
+				?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
+			player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+		}
 
 		player.Prepare();
 	}
