@@ -1,8 +1,4 @@
-﻿using System.ComponentModel;
-using Microsoft.Maui.Dispatching;
-using Plugin.Maui.Audio;
-
-namespace Plugin.Maui.Audio.Sample.ViewModels;
+﻿namespace Plugin.Maui.Audio.Sample.ViewModels;
 
 public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisposable
 {
@@ -170,12 +166,15 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 
 	void Stop()
 	{
-		if (audioPlayer.IsPlaying)
+		bool wasPlaying = audioPlayer.IsPlaying;
+		audioPlayer.Stop();
+		AnimationProgress = TimeSpan.Zero;
+		CurrentPosition = 0;
+
+		NotifyPropertyChanged(nameof(CurrentPosition));
+
+		if (wasPlaying)
 		{
-			audioPlayer.Stop();
-
-			AnimationProgress = TimeSpan.Zero;
-
 			NotifyPropertyChanged(nameof(IsPlaying));
 		}
 	}
