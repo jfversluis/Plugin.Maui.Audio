@@ -12,7 +12,11 @@ partial class AudioRecorder : IAudioRecorder
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
 
-	public async Task StartAsync()
+
+	public Task StartAsync() => StartAsync(DefaultAudioRecordingOptions.DefaultOptions);
+	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
+
+	public async Task StartAsync(AudioRecordingOptions options)
 	{
 		var localFolder = ApplicationData.Current.LocalFolder;
 		var fileName = Path.GetRandomFileName();
@@ -22,7 +26,7 @@ partial class AudioRecorder : IAudioRecorder
 		await StartAsync(fileOnDisk.Path);
 	}
 
-	public async Task StartAsync(string filePath)
+	public async Task StartAsync(string filePath, AudioRecordingOptions options)
 	{
 		if (mediaCapture is not null)
 		{
@@ -65,76 +69,76 @@ partial class AudioRecorder : IAudioRecorder
 		audioFilePath = fileOnDisk.Path;
 	}
 
-    async Task InitMediaCapture(MediaCaptureInitializationSettings settings)
-    {
-        mediaCapture = new MediaCapture();
+	async Task InitMediaCapture(MediaCaptureInitializationSettings settings)
+	{
+		mediaCapture = new MediaCapture();
 
-        await mediaCapture.InitializeAsync(settings);
+		await mediaCapture.InitializeAsync(settings);
 
-        mediaCapture.RecordLimitationExceeded += (MediaCapture sender) =>
-        {
-            CanRecordAudio = false;
-            DeleteMediaCapture();
-            throw new Exception("Record Limitation Exceeded");
-        };
+		mediaCapture.RecordLimitationExceeded += (MediaCapture sender) =>
+		{
+			CanRecordAudio = false;
+			DeleteMediaCapture();
+			throw new Exception("Record Limitation Exceeded");
+		};
 
-        mediaCapture.Failed += (MediaCapture sender, MediaCaptureFailedEventArgs errorEventArgs) =>
-        {
-            CanRecordAudio = false;
-            DeleteMediaCapture();
-            throw new Exception(string.Format("Code: {0}. {1}", errorEventArgs.Code, errorEventArgs.Message));
-        };
-    }
+		mediaCapture.Failed += (MediaCapture sender, MediaCaptureFailedEventArgs errorEventArgs) =>
+		{
+			CanRecordAudio = false;
+			DeleteMediaCapture();
+			throw new Exception(string.Format("Code: {0}. {1}", errorEventArgs.Code, errorEventArgs.Message));
+		};
+	}
 
-    public async Task<IAudioSource> StopAsync()
-    {
-        if (mediaCapture == null)
-        {
-            throw new InvalidOperationException("No recording in progress");
-        }
+	public async Task<IAudioSource> StopAsync()
+	{
+		if (mediaCapture == null)
+		{
+			throw new InvalidOperationException("No recording in progress");
+		}
 
-        await mediaCapture.StopRecordAsync();
+		await mediaCapture.StopRecordAsync();
 
-        mediaCapture.Dispose();
-        mediaCapture = null;
+		mediaCapture.Dispose();
+		mediaCapture = null;
 
-        return GetRecording();
-    }
+		return GetRecording();
+	}
 
-    IAudioSource GetRecording()
-    {
-        if (File.Exists(audioFilePath))
-        {
-            return new FileAudioSource(audioFilePath);
-        }
+	IAudioSource GetRecording()
+	{
+		if (File.Exists(audioFilePath))
+		{
+			return new FileAudioSource(audioFilePath);
+		}
 
-        return new EmptyAudioSource();
-    }
+		return new EmptyAudioSource();
+	}
 
-    void DeleteMediaCapture()
-    {
-        try
-        {
-            mediaCapture?.Dispose();
-        }
-        catch
-        {
-            //ignore
-        }
+	void DeleteMediaCapture()
+	{
+		try
+		{
+			mediaCapture?.Dispose();
+		}
+		catch
+		{
+			//ignore
+		}
 
-        try
-        {
-            if (!string.IsNullOrWhiteSpace(audioFilePath) && File.Exists(audioFilePath))
-            {
-                File.Delete(audioFilePath);
-            }
-        }
-        catch
-        {
-            //ignore
-        }
+		try
+		{
+			if (!string.IsNullOrWhiteSpace(audioFilePath) && File.Exists(audioFilePath))
+			{
+				File.Delete(audioFilePath);
+			}
+		}
+		catch
+		{
+			//ignore
+		}
 
-        audioFilePath = string.Empty;
-        mediaCapture = null;
-    }
+		audioFilePath = string.Empty;
+		mediaCapture = null;
+	}
 }

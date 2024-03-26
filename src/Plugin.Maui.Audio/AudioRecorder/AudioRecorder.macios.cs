@@ -1,4 +1,5 @@
-﻿using AVFoundation;
+﻿using AudioToolbox;
+using AVFoundation;
 using Foundation;
 
 namespace Plugin.Maui.Audio;
@@ -12,36 +13,41 @@ partial class AudioRecorder : IAudioRecorder
 	AVAudioRecorder? recorder;
 	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
 
-	public AudioRecorder()
-	{
-		InitAudioSession();
-	}
 
 	static void InitAudioSession()
 	{
-		var audioSession = AVAudioSession.SharedInstance();
+		var error = AVAudioSession.SharedInstance().SetCategory(AVAudioSessionCategory.Record, options: AVAudioSessionCategoryOptions.DefaultToSpeaker);
 
-		var error = audioSession.SetCategory(AVAudioSessionCategory.Record);
 		if (error is not null)
 		{
-			throw new Exception(error.ToString());
+			Console.WriteLine(error.ToString());
+			//throw new FailedToStartRecordingException(error.ToString());
 		}
 
-		error = audioSession.SetActive(true);
+		AVAudioSession.SharedInstance().SetActive(true, AVAudioSessionSetActiveOptions.NotifyOthersOnDeactivation, out error);
 		if (error is not null)
 		{
-			throw new Exception(error.ToString());
+			Console.WriteLine(error.ToString());
+			//throw new FailedToStartRecordingException(error.ToString());
 		}
 	}
+	static void EndAudioSession()
+	{
+		var audioSession = AVAudioSession.SharedInstance();
+		audioSession.SetActive(false);
+	}
+
 
 	static string GetTempFilePath()
 	{
 		return Path.GetTempFileName();
 	}
 
-	public Task StartAsync() => StartAsync(AudioRecorder.GetTempFilePath());
+	public Task StartAsync(AudioRecordingOptions options) => StartAsync(GetTempFilePath(), options);
+	public Task StartAsync() => StartAsync(GetTempFilePath(), DefaultAudioRecordingOptions.DefaultOptions);
+	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
 
-	public Task StartAsync(string filePath)
+	public Task StartAsync(string filePath, AudioRecordingOptions options)
 	{
 		if (IsRecording)
 		{
@@ -51,8 +57,21 @@ partial class AudioRecorder : IAudioRecorder
 		var url = NSUrl.FromFilename(filePath);
 		destinationFilePath = filePath;
 
+		options ??= DefaultAudioRecordingOptions.DefaultOptions;
+
+		NSObject[] objects = new NSObject[]
+		{
+			NSNumber.FromInt32 (options.SampleRate), //Sample Rate
+			NSNumber.FromInt32 ((int)SharedEncodingToiOSEncoding(options.Encoding, options.ThrowIfNotSupported)),
+			NSNumber.FromInt32 ((int)options.Channels), //Channels
+			NSNumber.FromInt32 ((int)options.BitDepth), //PCMBitDepth
+			NSNumber.FromBoolean (false), //IsBigEndianKey
+			NSNumber.FromBoolean (false) //IsFloatKey
+		};
+
 		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
+		InitAudioSession();
 		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
 
 		recorder.FinishedRecording += Recorder_FinishedRecording;
@@ -91,18 +110,20 @@ partial class AudioRecorder : IAudioRecorder
 		AVAudioSettings.AVLinearPCMIsFloatKey
 	};
 
-	static readonly NSObject[] objects = new NSObject[]
-	{
-		NSNumber.FromFloat (16000), //Sample Rate
-        NSNumber.FromInt32 ((int)AudioToolbox.AudioFormatType.LinearPCM), //AVFormat
-        NSNumber.FromInt32 (1), //Channels
-        NSNumber.FromInt32 (16), //PCMBitDepth
-        NSNumber.FromBoolean (false), //IsBigEndianKey
-        NSNumber.FromBoolean (false) //IsFloatKey
-	};
 
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
+		EndAudioSession();
 		finishedRecordingCompletionSource?.SetResult(true);
+	}
+
+	static AudioFormatType SharedEncodingToiOSEncoding(Encoding type, bool throwIfNotSupported)
+	{
+		return type switch
+		{
+			Encoding.LinearPCM => AudioFormatType.LinearPCM,
+			Encoding.ULaw => AudioFormatType.ULaw,
+			_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToiOSEncoding(AudioRecordingOptions.DefaultEncoding, true)
+		};
 	}
 }

@@ -1,7 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
+
+
 
 public class AudioRecorderPageViewModel : BaseViewModel
 {
@@ -52,6 +55,84 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		this.dispatcher = dispatcher;
 	}
 
+	ChannelTypesViewModel selectedChannelType;
+	public ChannelTypesViewModel SelectedChannelType
+	{
+		get => selectedChannelType;
+		set
+		{
+			selectedChannelType = value;
+			NotifyPropertyChanged();
+		}
+	}
+	public ObservableCollection<ChannelTypesViewModel> ChannelTypes { get; set; } = new ObservableCollection<ChannelTypesViewModel>(Enum.GetValues(typeof(ChannelType)).Cast<ChannelType>().Select(x => new ChannelTypesViewModel()
+	{
+		ChannelType = x,
+		Name = x.ToString()
+	}).ToList());
+
+	BitDepthViewModel selectedBitDepth;
+	public BitDepthViewModel SelectedBitDepth
+	{
+		get => selectedBitDepth;
+		set
+		{
+			selectedBitDepth = value;
+			NotifyPropertyChanged();
+		}
+	}
+	public ObservableCollection<BitDepthViewModel> BitDepths { get; set; } = new ObservableCollection<BitDepthViewModel>(Enum.GetValues(typeof(BitDepth)).Cast<BitDepth>().Select(x => new BitDepthViewModel()
+	{
+		BitDepth = x,
+		Name = x.ToString()
+	}).ToList());
+
+
+	EncodingViewModel selectedEconding;
+	public EncodingViewModel SelectedEconding
+	{
+		get => selectedEconding;
+		set
+		{
+			selectedEconding = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	public ObservableCollection<EncodingViewModel> EncodingOptions { get; set; } =
+	[
+		new ()
+		{
+			Name = "LinearPCM",
+			Encoding = Encoding.LinearPCM,
+		},
+		new ()
+		{
+			Name = "Ulaw",
+			Encoding = Encoding.ULaw,
+		}
+	];
+
+
+	int selectedSampleRate = -1;
+	public int SelectedSampleRate
+	{
+		get => selectedSampleRate;
+		set
+		{
+			selectedSampleRate = value;
+			NotifyPropertyChanged();
+		}
+	}
+	public ObservableCollection<int> SampleRates { get; set; } =
+	[
+		8000,
+		16000,
+		44100,
+		48000
+	];
+
+
 	async void PlayAudio()
 	{
 		if (audioSource != null)
@@ -76,8 +157,29 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		if (await CheckPermissionIsGrantedAsync<Microphone>())
 		{
 			audioRecorder = audioManager.CreateRecorder();
-					
-			await audioRecorder.StartAsync();
+
+			var options = new AudioRecordingOptions()
+			{
+				SampleRate = SelectedSampleRate == -1 ? AudioRecordingOptions.DefaultSampleRate : SelectedSampleRate,
+				Channels = SelectedChannelType?.ChannelType ?? AudioRecordingOptions.DefaultChannels,
+				BitDepth = SelectedBitDepth?.BitDepth ?? AudioRecordingOptions.DefaultBitDepth,
+				Encoding = SelectedEconding?.Encoding ?? AudioRecordingOptions.DefaultEncoding,
+				ThrowIfNotSupported = true
+			};
+
+			try
+			{
+				await audioRecorder.StartAsync(options);
+			}
+			catch
+			{
+				var res = await AppShell.Current.DisplayActionSheet("Options not supported. Use Default?", "Yes", "No");
+				if (res != "Yes")
+				{
+					return;
+				}
+				await audioRecorder.StartAsync();
+			}
 		}
 
 		recordingStopwatch.Restart();
