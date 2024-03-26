@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using System.Diagnostics;
+using Android.Content;
 using Android.Media;
 using Java.IO;
 
@@ -100,6 +101,19 @@ partial class AudioRecorder : IAudioRecorder
 
 		CopyWaveFile(rawFilePath, audioFilePath);
 
+		try
+		{
+			// lets delete the temp file with the raw data, after we have created the WAVE file
+			if (System.IO.File.Exists(rawFilePath))
+			{
+				System.IO.File.Delete(rawFilePath);
+			}
+		}
+		catch
+		{
+			Trace.TraceWarning("delete raw wav file failed.");
+		}
+
 		return Task.FromResult(GetRecording());
 	}
 
@@ -182,7 +196,10 @@ partial class AudioRecorder : IAudioRecorder
 				outputStream.Close();
 			}
 		}
-		catch { }
+		catch 
+		{ 
+			// this should maybe throw an exception?
+		}
 	}
 
 	static void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)

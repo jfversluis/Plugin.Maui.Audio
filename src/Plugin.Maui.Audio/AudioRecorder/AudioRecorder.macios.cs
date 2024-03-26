@@ -1,4 +1,5 @@
-﻿using AudioToolbox;
+﻿using System.Diagnostics;
+using AudioToolbox;
 using AVFoundation;
 using Foundation;
 
@@ -20,7 +21,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		if (error is not null)
 		{
-			Console.WriteLine(error.ToString());
+			Trace.TraceWarning(error.ToString());
 			//throw new FailedToStartRecordingException(error.ToString());
 		}
 
@@ -61,18 +62,18 @@ partial class AudioRecorder : IAudioRecorder
 
 		NSObject[] objects = new NSObject[]
 		{
-			NSNumber.FromInt32 (options.SampleRate), //Sample Rate
-			NSNumber.FromInt32 ((int)SharedEncodingToiOSEncoding(options.Encoding, options.ThrowIfNotSupported)),
-			NSNumber.FromInt32 ((int)options.Channels), //Channels
-			NSNumber.FromInt32 ((int)options.BitDepth), //PCMBitDepth
-			NSNumber.FromBoolean (false), //IsBigEndianKey
-			NSNumber.FromBoolean (false) //IsFloatKey
+				NSNumber.FromInt32 (options.SampleRate), //Sample Rate
+				NSNumber.FromInt32 ((int)SharedEncodingToiOSEncoding(options.Encoding, options.ThrowIfNotSupported)),
+				NSNumber.FromInt32 ((int)options.Channels), //Channels
+				NSNumber.FromInt32 ((int)options.BitDepth), //PCMBitDepth
+				NSNumber.FromBoolean (false), //IsBigEndianKey
+				NSNumber.FromBoolean (false) //IsFloatKey
 		};
 
 		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
 		InitAudioSession();
-		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
+		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new FailedToStartRecordingException("could not create native AVAudioRecorder");
 
 		recorder.FinishedRecording += Recorder_FinishedRecording;
 		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
