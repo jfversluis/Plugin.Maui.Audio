@@ -40,6 +40,8 @@
             
             <Slider
                 Value="{Binding CurrentPosition}"
+				DragStartedCommand="{Binding SeekStartedCommand}"
+				DragCompletedCommand="{Binding SeekCommand}"
                 Maximum="{Binding Duration}" />
 
             <HorizontalStackLayout Spacing="5" HorizontalOptions="Center">
@@ -87,7 +89,7 @@
 				<Label.FormattedText>
 					<FormattedString>
 						<Span Text="Speed" />
-						<Span Text="{Binding Speed, StringFormat=' ({0:F1}):'}"/>
+						<Span Text="{Binding AudioSpeed, StringFormat=' ({0:F1}):'}"/>
 					</FormattedString>
 				</Label.FormattedText>
 			</Label>
@@ -95,7 +97,8 @@
 				IsVisible="{Binding CanSetSpeed}"
                 Minimum="{Binding MinimumSpeed}"
                 Maximum="{Binding MaximumSpeed}"
-                Value="{Binding Speed}" />
+                Value="{Binding UserSpeed}"
+				DragCompletedCommand="{Binding UpdateSpeedCommand}"/>
 		</VerticalStackLayout>
     </ScrollView>
 
