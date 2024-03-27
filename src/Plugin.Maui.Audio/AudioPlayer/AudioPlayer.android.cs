@@ -11,7 +11,8 @@ partial class AudioPlayer : IAudioPlayer
 	double volume = 0.5;
 	double balance = 0;
 	string cachePath = string.Empty;
-	readonly MemoryStream? stream;
+	byte[]? audioBytes;
+	MemoryStream? stream;
 	bool isDisposed = false;
 	AudioStopwatch stopwatch = new(TimeSpan.Zero, 1.0);
 
@@ -140,12 +141,18 @@ partial class AudioPlayer : IAudioPlayer
 
 	void PrepareAudioSource()
 	{
-		if(string.IsNullOrWhiteSpace(file))
+		if(audioBytes == null && string.IsNullOrWhiteSpace(file))
 		{
 			throw new ArgumentException("audio source is not set");
 		}
 
-		if (File.Exists(file))
+		if(audioBytes != null && OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			stream = new MemoryStream(audioBytes);
+			var mediaSource = new StreamMediaDataSource(stream);
+			player.SetDataSource(mediaSource);
+		}
+		else if (File.Exists(file))
 		{
 			try
 			{
@@ -172,25 +179,36 @@ partial class AudioPlayer : IAudioPlayer
 
 		player.Prepare();
 	}
-
+	
 	internal AudioPlayer(Stream audioStream)
 	{
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
 
-		// we always store the audio in a file in cache, as the audio stream needs to be accessed again in case the speed is changed
-		cachePath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid()}.wav");
 
-		while (File.Exists(cachePath))
+		if (OperatingSystem.IsAndroidVersionAtLeast(23))
 		{
+			using var memoryStream = new MemoryStream();
+			audioStream.CopyTo(memoryStream);
+			audioBytes = memoryStream.ToArray();
+		}
+		else
+		{
+			// we always store the audio in a file in cache, as the audio stream needs to be accessed again in case the speed is changed
 			cachePath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid()}.wav");
+
+			while (File.Exists(cachePath))
+			{
+				cachePath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid()}.wav");
+			}
+
+			var fileStream = File.Create(cachePath);
+			audioStream.CopyTo(fileStream);
+			fileStream.Close();
+
+			file = cachePath;
 		}
 
-		var fileStream = File.Create(cachePath);
-		audioStream.CopyTo(fileStream);
-		fileStream.Close();
-
-		file = cachePath;
 
 		PrepareAudioSource();
 	}
