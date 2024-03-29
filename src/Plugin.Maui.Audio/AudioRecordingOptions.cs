@@ -22,8 +22,8 @@ public class AudioRecordingOptions
 	
 
 	/// <summary>
-	/// Sample rate of the audio recording
-	/// 44100Hz is currently the only rate that is guaranteed to work on all devices on android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">android audio record documentation</see>
+	/// Sample rate of the audio recording.
+	/// 44,100Hz is currently the only rate that is guaranteed to work on all devices on Android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">Android audio record documentation</see>
 	/// </summary>
 	public int SampleRate { get; set; } = DefaultSampleRate;
 
