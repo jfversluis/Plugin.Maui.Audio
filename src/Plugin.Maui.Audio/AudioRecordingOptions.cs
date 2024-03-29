@@ -44,7 +44,7 @@ public class AudioRecordingOptions
 	public Encoding Encoding { get; set; } = DefaultEncoding;
 
 	/// <summary>
-	/// If true, will throw an exception if the recording options are not supported
+	/// Gets or sets whether the functionality will thrown an exception if the configured recording options are not supported.
 	/// </summary>
 	public bool ThrowIfNotSupported { get; set; } = false;
 
