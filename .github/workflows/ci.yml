@@ -22,18 +22,21 @@ jobs:
 
     - name: Build
       run: dotnet build src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release
-
+    
     - name: Pack
+      if: github.repository_owner == 'jfversluis' # Only run when on main repo, secrets are not available to forks
       run: dotnet pack src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -o output -p:PackageVersion=${{ env.NuGetVersion }}
 
     - name: Add NuGet Source for Push
+      if: github.repository_owner == 'jfversluis' # Only run when on main repo, secrets are not available to forks
       run: dotnet nuget add source https://jfversluis.pkgs.visualstudio.com/Plugin.Maui.Audio/_packaging/Plugin.Maui.Audio/nuget/v3/index.json --name PrivateFeed --username ${{ secrets.PUBLISH_USER }} --password ${{ secrets.PUBLISH_PAT }}
       
     - name: Push
+      if: github.repository_owner == 'jfversluis' # Only run when on main repo, secrets are not available to forks
       run: dotnet nuget push "output\*.nupkg" --source PrivateFeed --api-key AzureArtifacts
 
     - name: Create status
-      if: success() && github.event_name == 'pull_request'
+      if: success() && github.event_name == 'pull_request' && github.repository_owner == 'jfversluis' # Only run when on main repo, secrets are not available to forks
       shell: bash
       run: |
         curl --request POST \
