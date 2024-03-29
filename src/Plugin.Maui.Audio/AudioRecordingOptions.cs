@@ -29,7 +29,7 @@ public class AudioRecordingOptions
 
 	/// <summary>
 	/// Channels of the audio recording.
-	/// MONO is guaranteed to work on all devices on android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">android audio record documentation</see>
+	/// Mono is guaranteed to work on all devices on Android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">Android audio record documentation</see>
 	/// </summary>
 	public ChannelType Channels { get; set; } = DefaultChannels;
 
