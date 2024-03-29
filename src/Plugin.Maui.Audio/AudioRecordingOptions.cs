@@ -39,7 +39,7 @@ public class AudioRecordingOptions
 	public BitDepth BitDepth { get; set; } = DefaultBitDepth;
 
 	/// <summary>
-	/// encoding type of the audio recording.
+	/// Encoding type of the audio recording.
 	/// </summary>
 	public Encoding Encoding { get; set; } = DefaultEncoding;
 
