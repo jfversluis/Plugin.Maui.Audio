@@ -34,7 +34,7 @@ public class AudioRecordingOptions
 	public ChannelType Channels { get; set; } = DefaultChannels;
 
 	/// <summary>
-	/// Bit depth of the audio recording
+	/// Bit depth of the audio recording.
 	/// </summary>
 	public BitDepth BitDepth { get; set; } = DefaultBitDepth;
 
