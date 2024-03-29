@@ -100,7 +100,6 @@ partial class AudioPlayer : IAudioPlayer
 		if (error is not null)
 		{
 			Trace.TraceWarning(error.ToString());
-			//throw new FailedToPlayAudioException(error.ToString());
 		}
 	}
 
