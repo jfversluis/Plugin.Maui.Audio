@@ -26,6 +26,8 @@ partial class AudioRecorder : IAudioRecorder
 		await StartAsync(fileOnDisk.Path);
 	}
 
+
+
 	public async Task StartAsync(string filePath, AudioRecordingOptions options)
 	{
 		if (mediaCapture is not null)
@@ -57,7 +59,40 @@ partial class AudioRecorder : IAudioRecorder
 
 		try
 		{
-			await mediaCapture?.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto), fileOnDisk);
+			try
+			{
+				if(options.Encoding != Encoding.LinearPCM)
+				{
+					throw new NotSupportedException("Only LinearPCM encoding is supported on Windows");
+				}
+
+				var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
+
+				uint sampleRate = (uint)options.SampleRate;
+				uint channelCount = (uint)options.Channels;
+				uint bitsPerSample = (uint)options.BitDepth;
+
+				profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
+
+				await mediaCapture?.StartRecordToStorageFileAsync(profile, fileOnDisk);
+			}
+			catch
+			{
+				if(options.ThrowIfNotSupported)
+				{
+					throw;
+				}
+
+				var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
+
+				uint sampleRate =  (uint)DefaultAudioRecordingOptions.DefaultOptions.SampleRate;
+				uint channelCount = (uint)DefaultAudioRecordingOptions.DefaultOptions.Channels;
+				uint bitsPerSample = (uint)DefaultAudioRecordingOptions.DefaultOptions.BitDepth;
+
+				profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
+
+				await mediaCapture?.StartRecordToStorageFileAsync(profile, fileOnDisk);
+			}
 		}
 		catch
 		{
