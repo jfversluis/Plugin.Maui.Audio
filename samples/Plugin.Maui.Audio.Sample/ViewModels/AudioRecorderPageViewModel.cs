@@ -4,8 +4,6 @@ using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
 
-
-
 public class AudioRecorderPageViewModel : BaseViewModel
 {
 	readonly IAudioManager audioManager;
