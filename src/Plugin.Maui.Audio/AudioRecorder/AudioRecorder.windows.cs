@@ -1,4 +1,5 @@
-﻿using Windows.Media.Capture;
+﻿using Microsoft.Maui.Controls.PlatformConfiguration;
+using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
 
@@ -23,7 +24,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		var fileOnDisk = await localFolder.CreateFileAsync(fileName);
 
-		await StartAsync(fileOnDisk.Path);
+		await StartAsync(fileOnDisk.Path, options);
 	}
 
 
@@ -61,19 +62,7 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			try
 			{
-				if(options.Encoding != Encoding.LinearPCM)
-				{
-					throw new NotSupportedException("Only LinearPCM encoding is supported on Windows");
-				}
-
-				var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
-
-				uint sampleRate = (uint)options.SampleRate;
-				uint channelCount = (uint)options.Channels;
-				uint bitsPerSample = (uint)options.BitDepth;
-
-				profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
-
+				var profile = SharedOptionsToWindowsMediaProfile(options);
 				await mediaCapture?.StartRecordToStorageFileAsync(profile, fileOnDisk);
 			}
 			catch
@@ -102,6 +91,31 @@ partial class AudioRecorder : IAudioRecorder
 		}
 
 		audioFilePath = fileOnDisk.Path;
+	}
+
+	static MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecordingOptions options)
+	{
+		uint sampleRate = (uint)options.SampleRate;
+		uint channelCount = (uint)options.Channels;
+		uint bitsPerSample = (uint)options.BitDepth;
+
+		switch (options.Encoding)
+		{
+			case Encoding.LinearPCM:
+				var profilePCM = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
+				profilePCM.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
+				return profilePCM;
+			case Encoding.Flac:
+				var profileFlac = MediaEncodingProfile.CreateFlac(AudioEncodingQuality.Auto);
+				profileFlac.Audio = AudioEncodingProperties.CreateFlac(sampleRate, channelCount, bitsPerSample);
+				return profileFlac;
+			case Encoding.Alac:
+				var profileAlac = MediaEncodingProfile.CreateAlac(AudioEncodingQuality.Auto);
+				profileAlac.Audio = AudioEncodingProperties.CreateAlac(sampleRate, channelCount, bitsPerSample);
+				return profileAlac;
+			default:
+				throw new NotSupportedException("Encoding not supported");
+		}
 	}
 
 	async Task InitMediaCapture(MediaCaptureInitializationSettings settings)

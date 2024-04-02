@@ -97,19 +97,11 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		}
 	}
 
-	public ObservableCollection<EncodingViewModel> EncodingOptions { get; set; } =
-	[
-		new ()
-		{
-			Name = "LinearPCM",
-			Encoding = Encoding.LinearPCM,
-		},
-		new ()
-		{
-			Name = "Ulaw",
-			Encoding = Encoding.ULaw,
-		}
-	];
+	public ObservableCollection<EncodingViewModel> EncodingOptions { get; set; } = new ObservableCollection<EncodingViewModel>(Enum.GetValues(typeof(Encoding)).Cast<Encoding>().Select(x => new EncodingViewModel()
+	{
+		Encoding = x,
+		Name = x.ToString()
+	}).ToList());
 
 
 	int selectedSampleRate = -1;

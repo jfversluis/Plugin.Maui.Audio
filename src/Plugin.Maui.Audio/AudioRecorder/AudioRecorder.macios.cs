@@ -124,6 +124,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			Encoding.LinearPCM => AudioFormatType.LinearPCM,
 			Encoding.ULaw => AudioFormatType.ULaw,
+			Encoding.Flac => AudioFormatType.Flac,
+			Encoding.Alac => AudioFormatType.AppleLossless,
 			_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToiOSEncoding(AudioRecordingOptions.DefaultEncoding, true)
 		};
 	}
