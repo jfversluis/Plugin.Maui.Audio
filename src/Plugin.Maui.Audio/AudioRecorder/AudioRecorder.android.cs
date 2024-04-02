@@ -196,9 +196,11 @@ partial class AudioRecorder : IAudioRecorder
 				outputStream.Close();
 			}
 		}
-		catch 
-		{ 
-			// this should maybe throw an exception?
+		catch (Exception ex)
+		{
+			// Trace the exception
+			Trace.WriteLine($"An error occurred while copying the wave file: {ex.Message}");
+			Trace.WriteLine($"Stack Trace: {ex.StackTrace}");
 		}
 	}
 
