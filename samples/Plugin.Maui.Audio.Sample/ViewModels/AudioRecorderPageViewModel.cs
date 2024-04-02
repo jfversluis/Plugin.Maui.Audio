@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
@@ -63,7 +62,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			NotifyPropertyChanged();
 		}
 	}
-	public ObservableCollection<ChannelTypesViewModel> ChannelTypes { get; set; } = new ObservableCollection<ChannelTypesViewModel>(Enum.GetValues(typeof(ChannelType)).Cast<ChannelType>().Select(x => new ChannelTypesViewModel()
+	public List<ChannelTypesViewModel> ChannelTypes { get; set; } = new List<ChannelTypesViewModel>(Enum.GetValues(typeof(ChannelType)).Cast<ChannelType>().Select(x => new ChannelTypesViewModel()
 	{
 		ChannelType = x,
 		Name = x.ToString()
@@ -79,7 +78,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			NotifyPropertyChanged();
 		}
 	}
-	public ObservableCollection<BitDepthViewModel> BitDepths { get; set; } = new ObservableCollection<BitDepthViewModel>(Enum.GetValues(typeof(BitDepth)).Cast<BitDepth>().Select(x => new BitDepthViewModel()
+	public List<BitDepthViewModel> BitDepths { get; set; } = new List<BitDepthViewModel>(Enum.GetValues(typeof(BitDepth)).Cast<BitDepth>().Select(x => new BitDepthViewModel()
 	{
 		BitDepth = x,
 		Name = x.ToString()
@@ -97,7 +96,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		}
 	}
 
-	public ObservableCollection<EncodingViewModel> EncodingOptions { get; set; } = new ObservableCollection<EncodingViewModel>(Enum.GetValues(typeof(Encoding)).Cast<Encoding>().Select(x => new EncodingViewModel()
+	public List<EncodingViewModel> EncodingOptions { get; set; } = new List<EncodingViewModel>(Enum.GetValues(typeof(Encoding)).Cast<Encoding>().Select(x => new EncodingViewModel()
 	{
 		Encoding = x,
 		Name = x.ToString()
@@ -114,7 +113,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			NotifyPropertyChanged();
 		}
 	}
-	public ObservableCollection<int> SampleRates { get; set; } =
+	public List<int> SampleRates { get; set; } =
 	[
 		8000,
 		16000,
