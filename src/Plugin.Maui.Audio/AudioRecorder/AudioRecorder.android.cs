@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using System.Diagnostics;
+using Android.Content;
 using Android.Media;
 using Java.IO;
 
@@ -15,6 +16,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	int bufferSize;
 	int sampleRate;
+	byte[] audioData;
 
 	public AudioRecorder()
 	{
@@ -42,6 +44,7 @@ partial class AudioRecorder : IAudioRecorder
 			var micSampleRate = int.Parse(rate);
 
 			audioRecord = GetAudioRecord(micSampleRate);
+			audioData = new byte[bufferSize];
 
 			audioRecord.StartRecording();
 			Task.Run(() => WriteAudioDataToFile());
@@ -101,8 +104,6 @@ partial class AudioRecorder : IAudioRecorder
 
 	void WriteAudioDataToFile()
 	{
-		var data = new byte[bufferSize];
-
 		rawFilePath = GetTempFilePath();
 
 		FileOutputStream? outputStream;
@@ -120,9 +121,9 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			while (audioRecord.RecordingState == RecordState.Recording)
 			{
-				audioRecord.Read(data, 0, bufferSize);
+				audioRecord.Read(audioData, 0, bufferSize);
 
-				outputStream.Write(data);
+				outputStream.Write(audioData);
 			}
 
 			outputStream.Close();
@@ -134,7 +135,6 @@ partial class AudioRecorder : IAudioRecorder
 		int channels = 2;
 		long byteRate = 16 * sampleRate * channels / 8;
 
-		var data = new byte[bufferSize];
 
 		try
 		{
@@ -148,9 +148,9 @@ partial class AudioRecorder : IAudioRecorder
 
 				WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
 
-				while (inputStream.Read(data) != -1)
+				while (inputStream.Read(audioData) != -1)
 				{
-					outputStream.Write(data);
+					outputStream.Write(audioData);
 				}
 
 				inputStream.Close();
@@ -210,5 +210,35 @@ partial class AudioRecorder : IAudioRecorder
 		header[43] = (byte)((audioLength >> 24) & 0xff);
 
 		outputStream.Write(header, 0, 44);
+	}
+
+	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration)
+	{
+		lastSoundDetectedTime = default;
+		noiseLevel = 0;
+		readingsComplete = false;
+
+		await Task.Run(() =>
+		{
+			byte[] buffer = new byte[bufferSize];
+			bool readingsComplete = false;
+
+			while (this.IsRecording)
+			{
+				if (!buffer.SequenceEqual(audioData))
+				{
+					for (int i = 0; i < bufferSize; i++)
+					{
+						buffer[i] = audioData[i];
+					}
+					if (DetectSilence(buffer, silenceThreshold, silenceDuration))
+					{
+						return;
+					}
+				}
+			}
+
+			return;
+		});
 	}
 }

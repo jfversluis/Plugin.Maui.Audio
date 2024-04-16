@@ -105,4 +105,9 @@ partial class AudioRecorder : IAudioRecorder
 	{
 		finishedRecordingCompletionSource?.SetResult(true);
 	}
+
+	public Task DetectSilenceAsync(double silenceThreshold, int silenceDuration)
+	{
+		throw new NotImplementedException();
+	}
 }

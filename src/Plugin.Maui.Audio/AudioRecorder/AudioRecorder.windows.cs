@@ -1,13 +1,16 @@
 ﻿using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
+using Windows.Storage.Streams;
 
 namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
 	MediaCapture? mediaCapture;
+	readonly MediaEncodingProfile encodingProfile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
 	string audioFilePath = string.Empty;
+	StorageFile? fileOnDisk;
 
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
@@ -17,7 +20,7 @@ partial class AudioRecorder : IAudioRecorder
 		var localFolder = ApplicationData.Current.LocalFolder;
 		var fileName = Path.GetRandomFileName();
 
-		var fileOnDisk = await localFolder.CreateFileAsync(fileName);
+		fileOnDisk = await localFolder.CreateFileAsync(fileName);
 
 		await StartAsync(fileOnDisk.Path);
 	}
@@ -53,7 +56,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		try
 		{
-			await mediaCapture?.StartRecordToStorageFileAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto), fileOnDisk);
+			await mediaCapture?.StartRecordToStorageFileAsync(encodingProfile, fileOnDisk); 
 		}
 		catch
 		{
@@ -137,4 +140,41 @@ partial class AudioRecorder : IAudioRecorder
         audioFilePath = string.Empty;
         mediaCapture = null;
     }
+
+	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration)
+	{
+		int wavFileHeaderLength = 44;
+		uint bitRate = encodingProfile.Audio.Bitrate;
+		uint bufferSize;
+		int bufferNumber = 1;
+
+		lastSoundDetectedTime = default;
+		noiseLevel = 0;
+		readingsComplete = false;
+
+		bufferSize = bitRate != 0 ? bitRate / 8 / 10 : 192_000 / 10;
+
+		await Task.Run(() =>
+		{
+			byte[] buffer = new byte[bufferSize];
+
+			using FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			while (this.IsRecording)
+			{
+				if (fileStream.Length > (bufferNumber * bufferSize) + wavFileHeaderLength)
+				{
+					fileStream.Seek(-bufferSize, SeekOrigin.End);
+					fileStream.Read(buffer);
+
+					if (DetectSilence(buffer, silenceThreshold, silenceDuration))
+					{
+						return;
+					}
+
+					bufferNumber++;
+				}
+			}
+			return;
+		});
+	}
 }
