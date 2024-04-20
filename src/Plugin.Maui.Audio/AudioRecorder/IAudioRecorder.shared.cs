@@ -15,6 +15,11 @@ public interface IAudioRecorder
 	///</Summary>
 	bool IsRecording { get; }
 
+	/// <Summary>
+	/// Gets whether a sound (other than the ambient) was detected. Works only when DetectSilenceAsync fired.
+	/// </Summary>
+	bool SoundDetected { get; }
+
 	///<Summary>
 	/// Start recording audio to disk in a randomly generated file.
 	///</Summary>
@@ -31,11 +36,11 @@ public interface IAudioRecorder
 	///</Summary>
 	Task<IAudioSource> StopAsync();
 
-	/// <summary>
+	/// <Summary>
 	/// Detects silence that persists for a <paramref name="silenceDuration"/> ms period of time.
 	/// The silence is when audio level is beyond <paramref name="silenceThreshold"/> multiplied by lowest detected audio level.
-	/// </summary>
+	/// </Summary>
 	/// <param name="silenceThreshold"></param>
 	/// <param name="silenceDuration"></param>
-	Task DetectSilenceAsync(double silenceThreshold = 2, int silenceDuration = 1500);
+	Task DetectSilenceAsync(double silenceThreshold = 3, int silenceDuration = 1500);
 }

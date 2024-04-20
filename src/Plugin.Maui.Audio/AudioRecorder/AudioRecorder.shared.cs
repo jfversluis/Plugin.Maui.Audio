@@ -2,14 +2,26 @@
 
 namespace Plugin.Maui.Audio;
 
-partial class AudioRecorder
+partial class AudioRecorder // TODO: add exception treshold < 1
 {
-	DateTime lastSoundDetectedTime = default;
-	double noiseLevel = 0;
 	bool readingsComplete = false;
+	double noiseLevel = 0;
+	DateTime noiseDetectedTime = default;
+	DateTime lastSoundDetectedTime = default;
 
-	public bool DetectSilence(byte[] audioData, double silenceThreshold, int silenceDuration)
+	public bool SoundDetected { get; private set; }
+
+	void InitDetectSilence()
 	{
+		readingsComplete = false;
+		noiseLevel = 0;
+		noiseDetectedTime = default;
+		lastSoundDetectedTime = default;
+	}
+
+	bool DetectSilence(byte[] audioData, double silenceThreshold, int silenceDuration)
+	{
+
 		if (!readingsComplete)
 		{
 			readingsComplete = CheckIfReadingsComplete(audioData);
@@ -17,7 +29,7 @@ partial class AudioRecorder
 		else if (noiseLevel == 0)
 		{
 			noiseLevel = CalculateNormalizedRMS(audioData);
-			//Debug.WriteLine($"Noise level: {noiseLevel}");
+			noiseDetectedTime = DateTime.UtcNow;
 		}
 		else
 		{
@@ -28,21 +40,30 @@ partial class AudioRecorder
 				noiseLevel = audioLevel;
 			}
 
-			if (audioLevel < silenceThreshold * noiseLevel)
+			if (audioLevel <= silenceThreshold * noiseLevel)
 			{
-				if (lastSoundDetectedTime == default)
+				if (lastSoundDetectedTime != default)
 				{
-					lastSoundDetectedTime = DateTime.UtcNow;
+					if ((DateTime.UtcNow - lastSoundDetectedTime).TotalMilliseconds >= silenceDuration)
+					{
+						Debug.WriteLine("Silence detected.");
+
+						return true;
+					}
 				}
-				else if ((DateTime.UtcNow - lastSoundDetectedTime).TotalMilliseconds >= silenceDuration)
+				else if ((DateTime.UtcNow - noiseDetectedTime).TotalMilliseconds >= silenceDuration)
 				{
-					Debug.WriteLine("Silence detected.");
+					Debug.WriteLine("No sound detected.");
+
 					return true;
 				}
+				
 			}
 			else
 			{
-				lastSoundDetectedTime = default;
+				SoundDetected = true; 
+				lastSoundDetectedTime = DateTime.UtcNow;
+				Debug.WriteLine("Sound detected.");
 			}
 		}
 

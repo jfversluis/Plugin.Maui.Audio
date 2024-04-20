@@ -1,7 +1,6 @@
 ﻿using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
-using Windows.Storage.Streams;
 
 namespace Plugin.Maui.Audio;
 
@@ -56,7 +55,8 @@ partial class AudioRecorder : IAudioRecorder
 
 		try
 		{
-			await mediaCapture?.StartRecordToStorageFileAsync(encodingProfile, fileOnDisk); 
+			await mediaCapture?.StartRecordToStorageFileAsync(encodingProfile, fileOnDisk);
+			SoundDetected = false;
 		}
 		catch
 		{
@@ -147,10 +147,8 @@ partial class AudioRecorder : IAudioRecorder
 		uint bitRate = encodingProfile.Audio.Bitrate;
 		uint bufferSize;
 		int bufferNumber = 1;
-
-		lastSoundDetectedTime = default;
-		noiseLevel = 0;
-		readingsComplete = false;
+		
+		InitDetectSilence();
 
 		bufferSize = bitRate != 0 ? bitRate / 8 / 10 : 192_000 / 10;
 
@@ -159,9 +157,16 @@ partial class AudioRecorder : IAudioRecorder
 			byte[] buffer = new byte[bufferSize];
 
 			using FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			long startingFileStreamLength = fileStream.Length;
+
+			if (startingFileStreamLength == 0)
+			{
+				startingFileStreamLength = wavFileHeaderLength;
+			}
+
 			while (this.IsRecording)
 			{
-				if (fileStream.Length > (bufferNumber * bufferSize) + wavFileHeaderLength)
+				if (fileStream.Length > (bufferNumber * bufferSize) + startingFileStreamLength)
 				{
 					fileStream.Seek(-bufferSize, SeekOrigin.End);
 					fileStream.Read(buffer);
@@ -174,7 +179,6 @@ partial class AudioRecorder : IAudioRecorder
 					bufferNumber++;
 				}
 			}
-			return;
 		});
 	}
 }

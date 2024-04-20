@@ -47,6 +47,7 @@ partial class AudioRecorder : IAudioRecorder
 			audioData = new byte[bufferSize];
 
 			audioRecord.StartRecording();
+			SoundDetected = false;
 			Task.Run(() => WriteAudioDataToFile());
 		}
 		return Task.CompletedTask;
@@ -214,14 +215,11 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration)
 	{
-		lastSoundDetectedTime = default;
-		noiseLevel = 0;
-		readingsComplete = false;
+		InitDetectSilence();
 
 		await Task.Run(() =>
 		{
 			byte[] buffer = new byte[bufferSize];
-			bool readingsComplete = false;
 
 			while (this.IsRecording)
 			{
