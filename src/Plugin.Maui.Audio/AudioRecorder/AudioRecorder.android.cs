@@ -18,6 +18,8 @@ partial class AudioRecorder : IAudioRecorder
 	int sampleRate;
 	byte[] audioData;
 
+	byte[]? audioDataChunk;
+
 	public AudioRecorder()
 	{
 		var packageManager = Android.App.Application.Context.PackageManager;
@@ -213,30 +215,21 @@ partial class AudioRecorder : IAudioRecorder
 		outputStream.Write(header, 0, 44);
 	}
 
-	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration)
+	byte[]? GetAudioDataChunk()
 	{
-		InitDetectSilence();
+		byte[] buffer = new byte[bufferSize];
 
-		await Task.Run(() =>
+		audioDataChunk ??= new byte[bufferSize];
+
+		if (!audioDataChunk.SequenceEqual(audioData))
 		{
-			byte[] buffer = new byte[bufferSize];
-
-			while (this.IsRecording)
-			{
-				if (!buffer.SequenceEqual(audioData))
-				{
-					for (int i = 0; i < bufferSize; i++)
-					{
-						buffer[i] = audioData[i];
-					}
-					if (DetectSilence(buffer, silenceThreshold, silenceDuration))
-					{
-						return;
-					}
-				}
-			}
-
-			return;
-		});
+			Array.Copy(audioData, buffer, bufferSize);
+			audioDataChunk = buffer;
+			return buffer;
+		}
+		else
+		{
+			return null;
+		}
 	}
 }

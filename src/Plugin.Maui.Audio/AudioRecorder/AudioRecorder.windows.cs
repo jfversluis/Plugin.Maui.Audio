@@ -1,4 +1,5 @@
-﻿using Windows.Media.Capture;
+﻿using System.Diagnostics;
+using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
 
@@ -10,6 +11,10 @@ partial class AudioRecorder : IAudioRecorder
 	readonly MediaEncodingProfile encodingProfile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
 	string audioFilePath = string.Empty;
 	StorageFile? fileOnDisk;
+
+	long startingFileStreamLength;
+	int audioChunkNumber;
+	FileStream? fileStream;
 
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
@@ -141,44 +146,41 @@ partial class AudioRecorder : IAudioRecorder
         mediaCapture = null;
     }
 
-	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration)
+	FileStream GetFileStream()
 	{
 		int wavFileHeaderLength = 44;
+
+		FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+		startingFileStreamLength = fileStream.Length;
+
+		if (startingFileStreamLength == 0)
+		{
+			startingFileStreamLength = wavFileHeaderLength;
+		}
+
+		return fileStream;
+	}
+
+	byte[]? GetAudioDataChunk()
+	{
 		uint bitRate = encodingProfile.Audio.Bitrate;
 		uint bufferSize;
-		int bufferNumber = 1;
-		
-		InitDetectSilence();
 
-		bufferSize = bitRate != 0 ? bitRate / 8 / 10 : 192_000 / 10;
+		bufferSize = bitRate != 0 ? bitRate / 8 / 10 : 192_000 / 10; // TODO: calculate bitrate and test with headphones
 
-		await Task.Run(() =>
+		byte[] buffer = new byte[bufferSize];
+
+		if (fileStream?.Length > (audioChunkNumber * bufferSize) + startingFileStreamLength)
 		{
-			byte[] buffer = new byte[bufferSize];
+			fileStream.Seek(-bufferSize, SeekOrigin.End);
+			fileStream.Read(buffer);
+			audioChunkNumber++;
 
-			using FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-			long startingFileStreamLength = fileStream.Length;
-
-			if (startingFileStreamLength == 0)
-			{
-				startingFileStreamLength = wavFileHeaderLength;
-			}
-
-			while (this.IsRecording)
-			{
-				if (fileStream.Length > (bufferNumber * bufferSize) + startingFileStreamLength)
-				{
-					fileStream.Seek(-bufferSize, SeekOrigin.End);
-					fileStream.Read(buffer);
-
-					if (DetectSilence(buffer, silenceThreshold, silenceDuration))
-					{
-						return;
-					}
-
-					bufferNumber++;
-				}
-			}
-		});
+			return buffer;
+		}
+		else
+		{
+			return null;
+		}
 	}
 }

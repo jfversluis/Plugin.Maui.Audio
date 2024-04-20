@@ -4,24 +4,59 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder // TODO: add exception treshold < 1
 {
-	bool readingsComplete = false;
-	double noiseLevel = 0;
-	DateTime noiseDetectedTime = default;
-	DateTime lastSoundDetectedTime = default;
+	bool readingsComplete;
+	double noiseLevel;
+	DateTime noiseDetectedTime;
+	DateTime lastSoundDetectedTime;
 
 	public bool SoundDetected { get; private set; }
 
-	void InitDetectSilence()
+	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration, CancellationToken cancellationToken)
 	{
 		readingsComplete = false;
 		noiseLevel = 0;
 		noiseDetectedTime = default;
 		lastSoundDetectedTime = default;
+
+		try
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			await Task.Run(() =>
+			{
+#if WINDOWS
+				fileStream = GetFileStream();
+				audioChunkNumber = 1;
+#endif
+				while (IsRecording)
+				{
+					cancellationToken.ThrowIfCancellationRequested();
+					byte[]? audioDataChunk = GetAudioDataChunk();
+
+					if (audioDataChunk is byte[] audioData)
+					{
+						if (DetectSilence(audioData, silenceThreshold, silenceDuration))
+						{
+							return;
+						}
+					}
+				}
+			}, cancellationToken);
+		}
+		catch(OperationCanceledException)
+		{
+			Debug.WriteLine("Detect silence canceled.");
+			throw;
+		}
+		finally
+		{
+#if WINDOWS
+			fileStream?.Dispose();
+#endif
+		}
 	}
 
 	bool DetectSilence(byte[] audioData, double silenceThreshold, int silenceDuration)
 	{
-
 		if (!readingsComplete)
 		{
 			readingsComplete = CheckIfReadingsComplete(audioData);

@@ -42,5 +42,5 @@ public interface IAudioRecorder
 	/// </Summary>
 	/// <param name="silenceThreshold"></param>
 	/// <param name="silenceDuration"></param>
-	Task DetectSilenceAsync(double silenceThreshold = 3, int silenceDuration = 1500);
+	Task DetectSilenceAsync(double silenceThreshold = 3, int silenceDuration = 1500, CancellationToken cancellationToken = default);
 }
