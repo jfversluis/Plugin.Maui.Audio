@@ -166,7 +166,7 @@ partial class AudioRecorder : IAudioRecorder
 		uint bitRate = encodingProfile.Audio.Bitrate;
 		uint bufferSize;
 
-		bufferSize = bitRate != 0 ? bitRate / 8 / 10 : 192_000 / 10; // TODO: calculate bitrate and test with headphones
+		bufferSize = bitRate != 0 ? bitRate / 8 / 10 : 256_000 / 8 / 10; // MediaCapture do not put data about bit rate in EncodingProfile.Audio.Bitrate when AudioEncodingQuality.Auto
 
 		byte[] buffer = new byte[bufferSize];
 
