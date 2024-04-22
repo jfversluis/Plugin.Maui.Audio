@@ -8,7 +8,7 @@ namespace Plugin.Maui.Audio;
 partial class AudioRecorder : IAudioRecorder
 {
 	MediaCapture? mediaCapture;
-	readonly MediaEncodingProfile encodingProfile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
+	readonly MediaEncodingProfile encodingProfile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Medium);
 	string audioFilePath = string.Empty;
 	StorageFile? fileOnDisk;
 
