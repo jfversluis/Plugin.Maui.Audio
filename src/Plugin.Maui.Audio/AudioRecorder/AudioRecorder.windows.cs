@@ -12,9 +12,9 @@ partial class AudioRecorder : IAudioRecorder
 	string audioFilePath = string.Empty;
 	StorageFile? fileOnDisk;
 
-	long startingFileStreamLength;
+	FileStream? audioFileStream;
+	long startingAudioFileStreamLength;
 	int audioChunkNumber;
-	FileStream? fileStream;
 
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
@@ -151,11 +151,11 @@ partial class AudioRecorder : IAudioRecorder
 		int wavFileHeaderLength = 44;
 
 		FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-		startingFileStreamLength = fileStream.Length;
+		startingAudioFileStreamLength = fileStream.Length;
 
-		if (startingFileStreamLength == 0)
+		if (startingAudioFileStreamLength == 0)
 		{
-			startingFileStreamLength = wavFileHeaderLength;
+			startingAudioFileStreamLength = wavFileHeaderLength;
 		}
 
 		return fileStream;
@@ -167,13 +167,19 @@ partial class AudioRecorder : IAudioRecorder
 		uint bufferSize;
 
 		bufferSize = bitRate != 0 ? bitRate / 8 / 10 : 256_000 / 8 / 10; // MediaCapture do not put data about bit rate in EncodingProfile.Audio.Bitrate when AudioEncodingQuality.Auto
+		
+		//if (fileStream?.Length > 0)
+		//{
+		//	byte[] buffer = new byte[bufferSize];
+		//	fileStream.Seek(0, SeekOrigin.Begin);
+		//	fileStream.Read(buffer);
+		//}
 
-		byte[] buffer = new byte[bufferSize];
-
-		if (fileStream?.Length > (audioChunkNumber * bufferSize) + startingFileStreamLength)
+		if (audioFileStream?.Length > (audioChunkNumber * bufferSize) + startingAudioFileStreamLength)
 		{
-			fileStream.Seek(-bufferSize, SeekOrigin.End);
-			fileStream.Read(buffer);
+			byte[] buffer = new byte[bufferSize];
+			audioFileStream.Seek(-bufferSize, SeekOrigin.End);
+			audioFileStream.Read(buffer);
 			audioChunkNumber++;
 
 			return buffer;

@@ -24,7 +24,7 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 			await Task.Run(() =>
 			{
 #if WINDOWS
-				fileStream = GetFileStream();
+				audioFileStream = GetFileStream();
 				audioChunkNumber = 1;
 #endif
 				while (IsRecording)
@@ -50,7 +50,7 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 		finally
 		{
 #if WINDOWS
-			fileStream?.Dispose();
+			audioFileStream?.Dispose();
 #endif
 		}
 	}
