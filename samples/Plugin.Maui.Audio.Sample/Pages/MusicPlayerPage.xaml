@@ -84,15 +84,24 @@
                 Maximum="1"
                 Value="{Binding Balance}" />
 
+			<Label IsVisible="{Binding CanSetSpeed}">
+				<Label.FormattedText>
+					<FormattedString>
+						<Span Text="Audio Player Speed" />
+						<Span Text="{Binding AudioSpeed, StringFormat=' ({0:F1}):'}" />
+					</FormattedString>
+				</Label.FormattedText>
+			</Label>
 
 			<Label IsVisible="{Binding CanSetSpeed}">
 				<Label.FormattedText>
 					<FormattedString>
-						<Span Text="Speed" />
-						<Span Text="{Binding AudioSpeed, StringFormat=' ({0:F1}):'}"/>
+						<Span Text="Speed setting" />
+						<Span Text="{Binding UserSpeed, StringFormat=' ({0:F1}):'}" />
 					</FormattedString>
 				</Label.FormattedText>
 			</Label>
+
 			<Slider
 				IsVisible="{Binding CanSetSpeed}"
                 Minimum="{Binding MinimumSpeed}"

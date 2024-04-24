@@ -41,6 +41,11 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 			audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
 			audioPlayer.PlaybackEnded += AudioPlayer_PlaybackEnded;
 
+#if WINDOWS
+			// On windows, without this delay, the states are not updated in time
+			// instead of this hack, we should update the windows state machine to be more reactive, or use an event based approach to update the UI
+			Thread.Sleep(50);
+#endif
 			NotifyPropertyChanged(nameof(HasAudioSource));
 			NotifyPropertyChanged(nameof(Duration));
 			NotifyPropertyChanged(nameof(CanSetSpeed));
@@ -194,7 +199,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 
 	void Play()
 	{
-		audioPlayer.SetSpeed(UserSpeed);
+		UpdateSpeed();
 		audioPlayer.Play();
 
 		UpdatePlaybackPosition();
@@ -222,7 +227,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		{
 #if WINDOWS
 			// On windows, without this delay, the playback state is not updated in time
-			// instead of this hack, we should update the windows state machine to be more reactive
+			// instead of this hack, we should update the windows state machine to be more reactive, or use an event based approach to update the UI
 			Thread.Sleep(50);
 #endif
 
