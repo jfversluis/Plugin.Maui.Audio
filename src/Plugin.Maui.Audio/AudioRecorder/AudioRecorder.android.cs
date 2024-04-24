@@ -16,14 +16,16 @@ partial class AudioRecorder : IAudioRecorder
 
 	int bufferSize;
 	int sampleRate;
+	readonly AudioRecorderOptions options;
 	int channels;
 	int bitDepth;
 
-	public AudioRecorder()
+	public AudioRecorder(AudioRecorderOptions options)
 	{
 		var packageManager = Android.App.Application.Context.PackageManager;
 
 		CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
+		this.options = options;
 	}
 
 	public Task StartAsync(AudioRecordingOptions options) => StartAsync(GetTempFilePath(), options);

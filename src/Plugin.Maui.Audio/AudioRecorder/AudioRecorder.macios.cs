@@ -14,28 +14,13 @@ partial class AudioRecorder : IAudioRecorder
 	AVAudioRecorder? recorder;
 	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
 
+	readonly AudioRecorderOptions audioRecorderOptions;
 
-	static void InitAudioSession()
+	public AudioRecorder(AudioRecorderOptions audioRecorderOptions)
 	{
-		var error = AVAudioSession.SharedInstance().SetCategory(AVAudioSessionCategory.Record, options: AVAudioSessionCategoryOptions.DefaultToSpeaker);
+		this.audioRecorderOptions = audioRecorderOptions;
 
-		if (error is not null)
-		{
-			Trace.TraceWarning(error.ToString());
-			//throw new FailedToStartRecordingException(error.ToString());
-		}
-
-		AVAudioSession.SharedInstance().SetActive(true, AVAudioSessionSetActiveOptions.NotifyOthersOnDeactivation, out error);
-		if (error is not null)
-		{
-			Console.WriteLine(error.ToString());
-			//throw new FailedToStartRecordingException(error.ToString());
-		}
-	}
-	static void EndAudioSession()
-	{
-		var audioSession = AVAudioSession.SharedInstance();
-		audioSession.SetActive(false);
+		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 	}
 
 
@@ -54,6 +39,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new InvalidOperationException("The recorder is already recording.");
 		}
+
+		ActiveSessionHelper.InitializeSession(audioRecorderOptions);
 
 		var url = NSUrl.FromFilename(filePath);
 		destinationFilePath = filePath;
@@ -98,6 +85,8 @@ partial class AudioRecorder : IAudioRecorder
 
 		recorder.FinishedRecording -= Recorder_FinishedRecording;
 
+		ActiveSessionHelper.FinishSession(audioRecorderOptions);
+
 		return new FileAudioSource(destinationFilePath);
 	}
 
@@ -114,7 +103,6 @@ partial class AudioRecorder : IAudioRecorder
 
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
-		EndAudioSession();
 		finishedRecordingCompletionSource?.SetResult(true);
 	}
 

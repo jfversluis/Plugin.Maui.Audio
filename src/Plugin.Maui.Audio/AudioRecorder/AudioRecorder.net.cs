@@ -2,7 +2,7 @@
 
 partial class AudioRecorder : IAudioRecorder
 {
-	public AudioRecorder()
+	public AudioRecorder(AudioRecorderOptions options)
 	{
 	}
 

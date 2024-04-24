@@ -61,9 +61,9 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool CanSeek => player.PlaybackSession.CanSeek;
 
-	public AudioPlayer(Stream audioStream)
-	{
-		player = CreatePlayer();
+    public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
+    {
+        player = CreatePlayer();
 
 		if (player is null)
 		{
@@ -74,9 +74,9 @@ partial class AudioPlayer : IAudioPlayer
 		player.MediaEnded += OnPlaybackEnded;
 	}
 
-	public AudioPlayer(string fileName)
-	{
-		player = CreatePlayer();
+    public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
+    {
+        player = CreatePlayer();
 
 		if (player is null)
 		{
