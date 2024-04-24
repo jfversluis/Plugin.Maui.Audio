@@ -13,6 +13,12 @@ partial class AudioRecorder : IAudioRecorder
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
 
+	readonly AudioRecorderOptions options;
+
+	public AudioRecorder(AudioRecorderOptions options)
+	{
+		this.options = options;
+	}
 
 	public Task StartAsync() => StartAsync(DefaultAudioRecordingOptions.DefaultOptions);
 	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);

@@ -12,13 +12,15 @@ internal class ActiveSessionHelper
 		var error = audioSession.SetCategory(options.Category, options.Mode, options.CategoryOptions);
 		if (error is not null)
 		{
-			throw new Exception(error.ToString());
+			Trace.TraceError("failed to set category");
+			Trace.TraceError(error.ToString());
 		}
 
 		error = audioSession.SetActive(true, GetSessionSetActiveOptions(options));
 		if (error is not null)
 		{
-			throw new Exception(error.ToString());
+			Trace.TraceError("failed activate audio session");
+			Trace.TraceError(error.ToString());
 		}
     }
 

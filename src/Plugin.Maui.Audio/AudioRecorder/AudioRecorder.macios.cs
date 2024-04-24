@@ -59,7 +59,6 @@ partial class AudioRecorder : IAudioRecorder
 
 		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
-		InitAudioSession();
 		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new FailedToStartRecordingException("could not create native AVAudioRecorder");
 
 		recorder.FinishedRecording += Recorder_FinishedRecording;
