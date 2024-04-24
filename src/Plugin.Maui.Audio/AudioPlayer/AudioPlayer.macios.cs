@@ -90,29 +90,6 @@ partial class AudioPlayer : IAudioPlayer
 		PreparePlayer();
 	}
 
-	static void InitAudioSession()
-	{
-		var audioSession = AVAudioSession.SharedInstance();
-
-		// AVAudioSessionCategoryOptions.DefaultToSpeaker ensures no other audio is playing
-		var error = audioSession.SetCategory(AVAudioSessionCategory.Playback, AVAudioSessionCategoryOptions.DefaultToSpeaker);
-		if (error is not null)
-		{
-			Trace.TraceWarning(error.ToString());
-		}
-
-		error = audioSession.SetActive(true, AVAudioSessionSetActiveOptions.NotifyOthersOnDeactivation);
-		if (error is not null)
-		{
-			Trace.TraceWarning(error.ToString());
-		}
-	}
-
-	static void EndAudioSession()
-	{
-		AVAudioSession.SharedInstance().SetActive(false);
-	}
-
 	protected virtual void Dispose(bool disposing)
 	{
 		if (isDisposed)
@@ -143,7 +120,6 @@ partial class AudioPlayer : IAudioPlayer
 		}
 		else
 		{
-			InitAudioSession();
 			player.Play();
 		}
 	}
@@ -171,7 +147,6 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
 	{
-		EndAudioSession();
 		PlaybackEnded?.Invoke(this, e);
 	}
 }
