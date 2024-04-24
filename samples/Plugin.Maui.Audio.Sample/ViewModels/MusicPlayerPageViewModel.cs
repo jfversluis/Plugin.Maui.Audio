@@ -238,7 +238,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 			() =>
 			{
 				Console.WriteLine($"{CurrentPosition} with duration of {Duration}");
-				CurrentPosition = audioPlayer.CurrentPosition;
+				CurrentPosition = audioPlayer?.CurrentPosition ?? 0;
 				UpdatePlaybackPosition();
 			});
 	}

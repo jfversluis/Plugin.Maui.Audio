@@ -180,7 +180,7 @@ partial class AudioPlayer : IAudioPlayer
 		player.Prepare();
 	}
 	
-	internal AudioPlayer(Stream audioStream)
+	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
@@ -214,7 +214,7 @@ partial class AudioPlayer : IAudioPlayer
 	}
 
 
-	internal AudioPlayer(string fileName)
+	internal AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;

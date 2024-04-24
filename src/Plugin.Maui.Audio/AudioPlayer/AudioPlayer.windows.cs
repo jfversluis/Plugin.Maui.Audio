@@ -74,7 +74,6 @@ partial class AudioPlayer : IAudioPlayer
         player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
         player.MediaEnded += OnPlaybackEnded;
 		SetSpeed(1.0);
-
 	}
 
     void OnPlaybackEnded(MediaPlayer sender, object args)
