@@ -220,9 +220,11 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 	{
 		if (audioPlayer?.IsPlaying is false)
 		{
+#if WINDOWS
 			// On windows, without this delay, the playback state is not updated in time
 			// instead of this hack, we should update the windows state machine to be more reactive
 			Thread.Sleep(50);
+#endif
 
 			if (audioPlayer?.IsPlaying is false)
 			{
