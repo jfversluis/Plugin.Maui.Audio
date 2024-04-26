@@ -1,4 +1,6 @@
-﻿using AVFoundation;
+﻿using System.Diagnostics;
+using AudioToolbox;
+using AVFoundation;
 using Foundation;
 
 namespace Plugin.Maui.Audio;
@@ -37,7 +39,9 @@ partial class AudioPlayer : IAudioPlayer
 				var speedValue = Math.Clamp((float)value, 0.5f, 2.0f);
 
 				if (float.IsNaN(speedValue))
+				{
 					speedValue = 1.0f;
+				}
 
 				player.Rate = speedValue;
 			}
@@ -134,6 +138,8 @@ partial class AudioPlayer : IAudioPlayer
 		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
 		
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
+		player.EnableRate = true;
+
 		player.PrepareToPlay();
 
 		return true;
