@@ -18,7 +18,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	public double Duration => player.Duration <= -1 ? -1 : player.Duration / 1000.0;
 
-	public double CurrentPosition => player.CurrentPosition / 1000.0;
+	public double CurrentPosition => stopwatch.ElapsedMilliseconds / 1000.0;
 
 	public double Volume
 	{
@@ -32,8 +32,6 @@ partial class AudioPlayer : IAudioPlayer
 		set => SetVolume(Volume, balance = value);
 	}
 
-	bool wasPlaying = false;
-	int previousPosition = 0;
 	bool isChangingSpeed = false;
 
 	/// <summary>
@@ -70,9 +68,8 @@ partial class AudioPlayer : IAudioPlayer
 			// we need to change the speed while the audio is reset, see: https://stackoverflow.com/questions/39442522/setplaybackparams-causes-illegalstateexception
 
 			// store current state before resetting
-
-			previousPosition = player.CurrentPosition;
-			wasPlaying = isPlaying;
+			var previousPosition = stopwatch.ElapsedMilliseconds;
+			var wasPlaying = isPlaying;
 
 			// reset
 			isPlaying = false;
@@ -81,7 +78,7 @@ partial class AudioPlayer : IAudioPlayer
 			// after reset, we need to prepare the audio source again
 			PrepareAudioSource();
 
-			// now we are going to update the speed parameter
+			// now we are going to update the speed parameter of the actual audio player
 
 			// allow defaults ensures that we can play the audio in case the pitch value is not set. When the audioplayer is paused, PlaybackParams may not be what we would like it to be
 			var parms = (player.PlaybackParams.AllowDefaults() ?? new PlaybackParams().AllowDefaults())?.SetSpeed(internalSpeed) ?? throw new ArgumentException("speed value not supported");
@@ -93,17 +90,17 @@ partial class AudioPlayer : IAudioPlayer
 			player.PlaybackParams = parms;
 
 			// we need to update the stopwatch to reflect the new speed
-			stopwatch = new AudioStopwatch(TimeSpan.FromSeconds(previousPosition), speed);
+			stopwatch = new AudioStopwatch(TimeSpan.FromMilliseconds(previousPosition), speed);
 
-			// restore previous state of the audio player
-			player.SeekTo(previousPosition);
-
+			// because we had to reset, we now restore the previous state of the audio player
+			player.SeekTo((int)previousPosition);
 			if (wasPlaying)
 			{
 				isPlaying = true;
 				stopwatch.Start();
 				player.Start();
 			}
+
 			isChangingSpeed = false;
 		}
 		finally
@@ -118,7 +115,7 @@ partial class AudioPlayer : IAudioPlayer
 	double speed = 1.0;
 	public double Speed => speed;
 
-	const float minSpeed = 0.0f;
+	const float minSpeed = 0;
 	const float maxSpeed = 2.5f;
 
 	public double MinimumSpeed => 0;
