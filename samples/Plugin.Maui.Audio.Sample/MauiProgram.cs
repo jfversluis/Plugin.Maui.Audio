@@ -25,7 +25,7 @@ public static class MauiProgram
 #if IOS || MACCATALYST
 					recordingOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
 					recordingOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
-					recordingOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.DefaultToSpeaker;
+					recordingOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
 #endif
 				})
 			.ConfigureFonts(fonts =>
