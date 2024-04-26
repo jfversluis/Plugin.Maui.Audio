@@ -16,54 +16,81 @@ partial class AudioRecorder : IAudioRecorder
 
 	int bufferSize;
 	int sampleRate;
+	readonly AudioRecorderOptions options;
+	int channels;
+	int bitDepth;
 	byte[] audioData;
+    byte[]? audioDataChunk;
 
-	byte[]? audioDataChunk;
-
-	public AudioRecorder()
+    public AudioRecorder(AudioRecorderOptions options)
 	{
 		var packageManager = Android.App.Application.Context.PackageManager;
 
 		CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
+		this.options = options;
 	}
 
-	public Task StartAsync() => StartAsync(GetTempFilePath());
+	public Task StartAsync(AudioRecordingOptions options) => StartAsync(GetTempFilePath(), options);
+	public Task StartAsync() => StartAsync(GetTempFilePath(), DefaultAudioRecordingOptions.DefaultOptions);
+	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
 
-	public Task StartAsync(string filePath)
+
+	public Task StartAsync(string filePath, AudioRecordingOptions options)
 	{
 		if (CanRecordAudio == false || audioRecord?.RecordingState == RecordState.Recording)
 		{
 			return Task.CompletedTask;
 		}
+		options ??= DefaultAudioRecordingOptions.DefaultOptions;
 
 		audioFilePath = filePath;
 
 		var audioManager = Android.App.Application.Context.GetSystemService(Context.AudioService) as Android.Media.AudioManager;
 
-		var rate = audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate);
-		if (rate != null)
-		{
-			var micSampleRate = int.Parse(rate);
+		Android.Media.Encoding encoding = SharedEncodingToAndroidEncoding(options.Encoding, options.BitDepth, options.ThrowIfNotSupported);
+		ChannelIn channelIn = SharedChannelTypesToAndroidChannelTypes(options.Channels, options.ThrowIfNotSupported);
 
-			audioRecord = GetAudioRecord(micSampleRate);
+		int sampleRate = options.SampleRate;
+		int bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
+
+		// If the bufferSize is less than or equal to 0, then this device does not support the provided options
+		if (bufferSize <= 0)
+		{
+			if (options.ThrowIfNotSupported)
+			{
+				throw new FailedToStartRecordingException("Unable to get bufferSize with provided reording options.");
+			}
+			else
+			{
+				sampleRate = AudioRecordingOptions.DefaultSampleRate;
+				bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
+
+				if (bufferSize <= 0)
+				{
+					var rate = (audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate)) ?? throw new FailedToStartRecordingException("Unable to get the sample rate.");
+					sampleRate = int.Parse(rate);
+				}
+			}
+		}
+
+			audioRecord = GetAudioRecord(sampleRate, channelIn, encoding, (int)options.BitDepth);
 			audioData = new byte[bufferSize];
 
 			audioRecord.StartRecording();
 			SoundDetected = false;
-			Task.Run(() => WriteAudioDataToFile());
+			Task.Run(WriteAudioDataToFile);
 		}
 		return Task.CompletedTask;
 	}
 
-	AudioRecord GetAudioRecord(int sampleRate)
+	AudioRecord GetAudioRecord(int sampleRate, ChannelIn channels, Android.Media.Encoding encoding, int bitDepth)
 	{
 		this.sampleRate = sampleRate;
-		var channelConfig = ChannelIn.Mono;
-		var encoding = Encoding.Pcm16bit;
+		this.bitDepth = bitDepth;
+		this.channels = channels == ChannelIn.Mono ? 1 : 2;
+		this.bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channels, encoding) * bitDepth;
 
-		bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelConfig, encoding) * 8;
-
-		return new AudioRecord(AudioSource.Mic, sampleRate, ChannelIn.Stereo, encoding, bufferSize);
+		return new AudioRecord(AudioSource.Mic, sampleRate, channels, encoding, bufferSize);
 	}
 
 	public Task<IAudioSource> StopAsync()
@@ -79,6 +106,19 @@ partial class AudioRecorder : IAudioRecorder
 		}
 
 		CopyWaveFile(rawFilePath, audioFilePath);
+
+		try
+		{
+			// lets delete the temp file with the raw data, after we have created the WAVE file
+			if (System.IO.File.Exists(rawFilePath))
+			{
+				System.IO.File.Delete(rawFilePath);
+			}
+		}
+		catch
+		{
+			Trace.TraceWarning("delete raw wav file failed.");
+		}
 
 		return Task.FromResult(GetRecording());
 	}
@@ -135,8 +175,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	void CopyWaveFile(string? sourcePath, string destinationPath)
 	{
-		int channels = 2;
-		long byteRate = 16 * sampleRate * channels / 8;
+		long byteRate = sampleRate * bitDepth * channels / 8;
 
 
 		try
@@ -160,7 +199,12 @@ partial class AudioRecorder : IAudioRecorder
 				outputStream.Close();
 			}
 		}
-		catch { }
+		catch (Exception ex)
+		{
+			// Trace the exception
+			Trace.WriteLine($"An error occurred while copying the wave file: {ex.Message}");
+			Trace.WriteLine($"Stack Trace: {ex.StackTrace}");
+		}
 	}
 
 	static void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate, int channels, long byteRate)
@@ -213,6 +257,34 @@ partial class AudioRecorder : IAudioRecorder
 		header[43] = (byte)((audioLength >> 24) & 0xff);
 
 		outputStream.Write(header, 0, 44);
+	}
+
+	static Android.Media.Encoding SharedEncodingToAndroidEncoding(Encoding type, BitDepth bitDepth, bool throwIfNotSupported)
+	{
+		return bitDepth switch
+		{
+			BitDepth.Pcm8bit => type switch
+			{
+				Encoding.LinearPCM => Android.Media.Encoding.Pcm8bit,
+				_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToAndroidEncoding(Encoding.LinearPCM, bitDepth, true)
+			},
+			BitDepth.Pcm16bit => type switch
+			{
+				Encoding.LinearPCM => Android.Media.Encoding.Pcm16bit,
+				_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToAndroidEncoding(Encoding.LinearPCM, bitDepth, true)
+			},
+			_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToAndroidEncoding(Encoding.LinearPCM, AudioRecordingOptions.DefaultBitDepth, true)
+		};
+	}
+
+	static ChannelIn SharedChannelTypesToAndroidChannelTypes(ChannelType type, bool throwIfNotSupported)
+	{
+		return type switch
+		{
+			ChannelType.Mono => ChannelIn.Mono,
+			ChannelType.Stereo => ChannelIn.Stereo,
+			_ => throwIfNotSupported ? throw new NotSupportedException("channel type not supported") : SharedChannelTypesToAndroidChannelTypes(AudioRecordingOptions.DefaultChannels, true)
+		};
 	}
 
 	byte[]? GetAudioDataChunk()

@@ -74,7 +74,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool CanSeek => true;
 
-	internal AudioPlayer(Stream audioStream)
+	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
@@ -93,15 +93,21 @@ partial class AudioPlayer : IAudioPlayer
 		}
 	}
 
-	internal AudioPlayer(string fileName)
+	internal AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
 
-		AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
-			?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
-
-		player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+		if (File.Exists(fileName))
+		{
+			player.SetDataSource(fileName);
+		}
+		else
+		{
+			AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(fileName)
+				?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
+			player.SetDataSource(afd.FileDescriptor, afd.StartOffset, afd.Length);
+		}
 
 		player.Prepare();
 	}
