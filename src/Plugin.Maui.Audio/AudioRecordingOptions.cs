@@ -18,9 +18,6 @@ public class AudioRecordingOptions
 	public const ChannelType DefaultChannels = ChannelType.Mono;
 	public const BitDepth DefaultBitDepth = BitDepth.Pcm16bit;
 	public const Encoding DefaultEncoding = Encoding.LinearPCM;
-
-	
-
 	/// <summary>
 	/// Sample rate of the audio recording.
 	/// 44,100Hz is currently the only rate that is guaranteed to work on all devices on Android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">Android audio record documentation</see>
@@ -47,7 +44,4 @@ public class AudioRecordingOptions
 	/// Gets or sets whether the functionality will thrown an exception if the configured recording options are not supported.
 	/// </summary>
 	public bool ThrowIfNotSupported { get; set; } = false;
-
-
-	
 }

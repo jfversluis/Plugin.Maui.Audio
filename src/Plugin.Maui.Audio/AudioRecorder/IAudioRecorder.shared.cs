@@ -39,7 +39,6 @@ public interface IAudioRecorder
 	///<param name="options">The audio recording options.</param>
 	public Task StartAsync(string filePath, AudioRecordingOptions options) => Task.CompletedTask;
 
-
 	///<Summary>
 	/// Stop recording and return the <see cref="IAudioSource"/> instance with the recording data.
 	///</Summary>

@@ -39,6 +39,7 @@ partial class AudioPlayer : IAudioPlayer
 			speedValue = 1.0f;
 		}
 				
+				}
 
 		player.Rate = speedValue;
 	}
