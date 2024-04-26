@@ -6,7 +6,7 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 {
 	bool readingsComplete;
 	double noiseLevel;
-	DateTime noiseDetectedTime;
+	DateTime firstNoiseDetectedTime;
 	DateTime lastSoundDetectedTime;
 
 	public bool SoundDetected { get; private set; }
@@ -15,7 +15,7 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 	{
 		readingsComplete = false;
 		noiseLevel = 0;
-		noiseDetectedTime = default;
+		firstNoiseDetectedTime = default;
 		lastSoundDetectedTime = default;
 
 		try
@@ -64,7 +64,7 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 		else if (noiseLevel == 0)
 		{
 			noiseLevel = CalculateNormalizedRMS(audioData);
-			noiseDetectedTime = DateTime.UtcNow;
+			firstNoiseDetectedTime = DateTime.UtcNow;
 		}
 		else
 		{
@@ -86,7 +86,7 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 						return true;
 					}
 				}
-				else if ((DateTime.UtcNow - noiseDetectedTime).TotalMilliseconds >= silenceDuration)
+				else if ((DateTime.UtcNow - firstNoiseDetectedTime).TotalMilliseconds >= silenceDuration)
 				{
 					Debug.WriteLine("No sound detected.");
 
