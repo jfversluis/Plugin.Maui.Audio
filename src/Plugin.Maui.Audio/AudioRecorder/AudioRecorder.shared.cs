@@ -57,6 +57,8 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 
 	bool DetectSilence(byte[] audioData, double silenceThreshold, int silenceDuration)
 	{
+		double minimumNoiseLevel = 0.01;
+
 		if (!readingsComplete)
 		{
 			readingsComplete = CheckIfReadingsComplete(audioData);
@@ -64,13 +66,19 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 		else if (noiseLevel == 0)
 		{
 			noiseLevel = CalculateNormalizedRMS(audioData);
+
+			if (noiseLevel < minimumNoiseLevel)
+			{
+				noiseLevel = minimumNoiseLevel;
+			}
+
 			firstNoiseDetectedTime = DateTime.UtcNow;
 		}
 		else
 		{
 			double audioLevel = CalculateNormalizedRMS(audioData);
 
-			if (audioLevel < noiseLevel)
+			if (audioLevel < noiseLevel && audioLevel > minimumNoiseLevel)
 			{
 				noiseLevel = audioLevel;
 			}
