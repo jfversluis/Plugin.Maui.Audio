@@ -19,7 +19,7 @@ partial class AudioRecorder : IAudioRecorder
 	readonly AudioRecorderOptions options;
 	int channels;
 	int bitDepth;
-	byte[] audioData;
+	byte[]? audioData;
     byte[]? audioDataChunk;
 
     public AudioRecorder(AudioRecorderOptions options)
@@ -60,26 +60,25 @@ partial class AudioRecorder : IAudioRecorder
 			{
 				throw new FailedToStartRecordingException("Unable to get bufferSize with provided reording options.");
 			}
-			else
-			{
-				sampleRate = AudioRecordingOptions.DefaultSampleRate;
-				bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
-
-				if (bufferSize <= 0)
-				{
-					var rate = (audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate)) ?? throw new FailedToStartRecordingException("Unable to get the sample rate.");
-					sampleRate = int.Parse(rate);
-				}
-			}
 		}
+		else
+		{
+			sampleRate = AudioRecordingOptions.DefaultSampleRate;
+			bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
+
+			if (bufferSize <= 0)
+			{
+				var rate = (audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate)) ?? throw new FailedToStartRecordingException("Unable to get the sample rate.");
+				sampleRate = int.Parse(rate);
+			}
 
 			audioRecord = GetAudioRecord(sampleRate, channelIn, encoding, (int)options.BitDepth);
-			audioData = new byte[bufferSize];
 
 			audioRecord.StartRecording();
 			SoundDetected = false;
 			Task.Run(WriteAudioDataToFile);
 		}
+
 		return Task.CompletedTask;
 	}
 
@@ -88,7 +87,9 @@ partial class AudioRecorder : IAudioRecorder
 		this.sampleRate = sampleRate;
 		this.bitDepth = bitDepth;
 		this.channels = channels == ChannelIn.Mono ? 1 : 2;
-		this.bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channels, encoding) * bitDepth;
+		this.bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channels, encoding);
+
+		audioData = new byte[bufferSize];
 
 		return new AudioRecord(AudioSource.Mic, sampleRate, channels, encoding, bufferSize);
 	}
