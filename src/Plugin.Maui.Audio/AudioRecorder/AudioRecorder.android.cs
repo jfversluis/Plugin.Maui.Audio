@@ -61,24 +61,25 @@ partial class AudioRecorder : IAudioRecorder
 			{
 				throw new FailedToStartRecordingException("Unable to get bufferSize with provided reording options.");
 			}
-		}
-		else
-		{
-			sampleRate = AudioRecordingOptions.DefaultSampleRate;
-			bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
-
-			if (bufferSize <= 0)
+			else
 			{
-				var rate = (audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate)) ?? throw new FailedToStartRecordingException("Unable to get the sample rate.");
-				sampleRate = int.Parse(rate);
+				sampleRate = AudioRecordingOptions.DefaultSampleRate;
+				bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
+
+				if (bufferSize <= 0)
+				{
+					var rate = (audioManager?.GetProperty(Android.Media.AudioManager.PropertyOutputSampleRate)) ?? throw new FailedToStartRecordingException("Unable to get the sample rate.");
+					sampleRate = int.Parse(rate);
+				}
 			}
-
-			audioRecord = GetAudioRecord(sampleRate, channelIn, encoding, (int)options.BitDepth);
-
-			audioRecord.StartRecording();
-			SoundDetected = false;
-			Task.Run(WriteAudioDataToFile);
 		}
+
+		audioRecord = GetAudioRecord(sampleRate, channelIn, encoding, (int)options.BitDepth);
+
+		audioRecord.StartRecording();
+		SoundDetected = false;
+
+		Task.Run(WriteAudioDataToFile);
 
 		return Task.CompletedTask;
 	}
@@ -147,6 +148,8 @@ partial class AudioRecorder : IAudioRecorder
 
 	void WriteAudioDataToFile()
 	{
+		audioData = new byte[bufferSize];
+
 		rawFilePath = GetTempFilePath();
 
 		FileOutputStream? outputStream;
@@ -159,8 +162,6 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new FileLoadException($"unable to create a new file: {ex.Message}");
 		}
-
-		audioData = new byte[bufferSize];
 
 		if (audioRecord is not null && outputStream is not null)
 		{
