@@ -19,6 +19,7 @@ partial class AudioRecorder : IAudioRecorder
 	readonly AudioRecorderOptions options;
 	int channels;
 	int bitDepth;
+
 	byte[]? audioData;
     byte[]? audioDataChunk;
 
@@ -89,8 +90,6 @@ partial class AudioRecorder : IAudioRecorder
 		this.channels = channels == ChannelIn.Mono ? 1 : 2;
 		this.bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channels, encoding);
 
-		audioData = new byte[bufferSize];
-
 		return new AudioRecord(AudioSource.Mic, sampleRate, channels, encoding, bufferSize);
 	}
 
@@ -160,6 +159,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new FileLoadException($"unable to create a new file: {ex.Message}");
 		}
+
+		audioData = new byte[bufferSize];
 
 		if (audioRecord is not null && outputStream is not null)
 		{
@@ -290,15 +291,19 @@ partial class AudioRecorder : IAudioRecorder
 
 	byte[]? GetAudioDataChunk()
 	{
-		byte[] buffer = new byte[bufferSize];
-
 		audioDataChunk ??= new byte[bufferSize];
-
-		if (!audioDataChunk.SequenceEqual(audioData))
+		
+		if (audioData is not null)
 		{
-			Array.Copy(audioData, buffer, bufferSize);
-			audioDataChunk = buffer;
-			return buffer;
+			if (!audioDataChunk.SequenceEqual(audioData))
+			{
+				Array.Copy(audioData, audioDataChunk, bufferSize);
+				return audioDataChunk;
+			}
+			else
+			{
+				return null;
+			}
 		}
 		else
 		{
