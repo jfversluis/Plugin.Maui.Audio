@@ -13,6 +13,9 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 
 	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration, CancellationToken cancellationToken)
 	{
+		ArgumentOutOfRangeException.ThrowIfLessThan(silenceThreshold, 1);
+		ArgumentOutOfRangeException.ThrowIfNegative(silenceDuration);
+
 		readingsComplete = false;
 		noiseLevel = 0;
 		firstNoiseDetectedTime = default;
