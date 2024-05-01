@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using Android.Content.Res;
 using Android.Media;
 using Stream = System.IO.Stream;
@@ -39,7 +40,7 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	bool isPlaying = false;
 
-
+	[SupportedOSPlatform("Android23.9")]
 	public void SetSpeed(double sp)
 	{
 		if (!OperatingSystem.IsAndroidVersionAtLeast(23))
@@ -100,8 +101,6 @@ partial class AudioPlayer : IAudioPlayer
 				stopwatch.Start();
 				player.Start();
 			}
-
-			isChangingSpeed = false;
 		}
 		finally
 		{
