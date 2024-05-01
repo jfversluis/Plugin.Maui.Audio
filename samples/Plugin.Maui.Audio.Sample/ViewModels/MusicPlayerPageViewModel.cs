@@ -44,7 +44,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 #if WINDOWS
 			// On windows, without this delay, the states are not updated in time
 			// instead of this hack, we should update the windows state machine to be more reactive, or use an event based approach to update the UI
-			Thread.Sleep(50);
+			await Task.Delay(50);
 #endif
 			NotifyPropertyChanged(nameof(HasAudioSource));
 			NotifyPropertyChanged(nameof(Duration));
