@@ -43,8 +43,9 @@ public class AsyncAudioPlayer : IAudio
 	public double Speed
 	{
 		get => audioPlayer.Speed;
-		set => audioPlayer.Speed = value;
 	}
+
+	public void SetSpeed(double speed) => audioPlayer.SetSpeed(speed);
 
 	/// <inheritdoc cref="IAudio.MinimumSpeed" />
 	public double MinimumSpeed => audioPlayer.MinimumSpeed;

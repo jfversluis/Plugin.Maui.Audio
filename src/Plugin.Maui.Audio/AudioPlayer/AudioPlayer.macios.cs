@@ -27,29 +27,19 @@ partial class AudioPlayer : IAudioPlayer
 		set => player.Pan = (float)Math.Clamp(value, -1, 1);
 	}
 
-	public double Speed
+	public double Speed => player?.Rate ?? 0;
+
+	public void SetSpeed(double sp)
 	{
-		get => player.Rate;
-		set
+		// Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
+		var speedValue = Math.Clamp((float)sp, 0.5f, 2.0f);
+
+		if (float.IsNaN(speedValue))
 		{
-			// Check if set speed is supported
-			if (CanSetSpeed)
-			{
-				// Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
-				var speedValue = Math.Clamp((float)value, 0.5f, 2.0f);
-
-				if (float.IsNaN(speedValue))
-				{
-					speedValue = 1.0f;
-				}
-
-				player.Rate = speedValue;
-			}
-			else
-			{
-				throw new NotSupportedException("Set playback speed is not supported!");
-			}
+			speedValue = 1.0f;
 		}
+
+		player.Rate = speedValue;
 	}
 
 	public double MinimumSpeed => 0.5;
@@ -116,12 +106,15 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		if (player.Playing)
 		{
+			player.Pause();
 			player.CurrentTime = 0;
 		}
-		else
+		else if (CurrentPosition >= Duration)
 		{
-			player.Play();
+			player.CurrentTime = 0;
 		}
+
+		player.Play();
 	}
 
 	public void Seek(double position) => player.CurrentTime = position;
@@ -139,7 +132,6 @@ partial class AudioPlayer : IAudioPlayer
 		
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.EnableRate = true;
-
 		player.PrepareToPlay();
 
 		return true;
