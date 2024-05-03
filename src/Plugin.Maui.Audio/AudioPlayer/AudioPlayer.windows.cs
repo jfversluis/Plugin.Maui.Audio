@@ -1,5 +1,6 @@
 ﻿using Windows.Media.Core;
 using Windows.Media.Playback;
+using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace Plugin.Maui.Audio;
 
@@ -24,25 +25,11 @@ partial class AudioPlayer : IAudioPlayer
 		set => SetVolume(Volume, value);
 	}
 
-	public double Speed
+	public double Speed => player.PlaybackSession.PlaybackRate;
+
+	public void SetSpeed(double speed)
 	{
-		get => player.PlaybackSession.PlaybackRate;
-		set
-		{
-			// Check if set speed is supported
-			if (CanSetSpeed)
-			{
-				// Windows supports between 0 and 8, but will clamp automatically for us
-				if (player.PlaybackSession.IsSupportedPlaybackRateRange(value, value))
-				{
-					player.PlaybackSession.PlaybackRate = value;
-				}
-			}
-			else
-			{
-				throw new NotSupportedException("Set playback speed is not supported!");
-			}
-		}
+		player.PlaybackSession.PlaybackRate = Math.Clamp(speed, MinimumSpeed, MaximumSpeed);
 	}
 
 	public double MinimumSpeed => 0;
@@ -70,8 +57,9 @@ partial class AudioPlayer : IAudioPlayer
 			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
 		}
 
-		player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
-		player.MediaEnded += OnPlaybackEnded;
+        player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+        player.MediaEnded += OnPlaybackEnded;
+		SetSpeed(1.0);
 	}
 
     public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
@@ -83,13 +71,14 @@ partial class AudioPlayer : IAudioPlayer
 			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
 		}
 
-		player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
-		player.MediaEnded += OnPlaybackEnded;
+        player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
+        player.MediaEnded += OnPlaybackEnded;
+		SetSpeed(1.0);
 	}
 
-	void OnPlaybackEnded(MediaPlayer sender, object args)
-	{
-		PlaybackEnded?.Invoke(sender, EventArgs.Empty);
+    void OnPlaybackEnded(MediaPlayer sender, object args)
+    {
+        PlaybackEnded?.Invoke(sender, EventArgs.Empty);
 	}
 
 	public void Play()
