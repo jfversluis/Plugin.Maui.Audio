@@ -285,6 +285,10 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		player.SeekTo((int)(position * 1000D));
 		stopwatch = new AudioStopwatch(TimeSpan.FromSeconds(position), Speed);
+        if (IsPlaying)
+        {
+            stopwatch.Start();
+        }
 	}
 
 	void SetVolume(double volume, double balance)
