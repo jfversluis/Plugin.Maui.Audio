@@ -19,7 +19,9 @@ jobs:
 
       - name: Get version information from tag
         id: get_version
-        uses: battila7/get-version-action@v2
+        run: |
+          $version="${{github.ref_name}}".TrimStart("v")
+          "version-without-v=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Restore dependencies
         run: dotnet restore src\Plugin.Maui.Audio.sln
