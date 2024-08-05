@@ -304,6 +304,11 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		PlaybackEnded?.Invoke(this, e);
 
+		if (isDisposed)
+		{
+			return;
+		}
+
 		isPlaying = player.IsPlaying;
 
 		//this improves stability on older devices but has minor performance impact
@@ -326,6 +331,7 @@ partial class AudioPlayer : IAudioPlayer
 		if (disposing)
 		{
 			player.Completion -= OnPlaybackEnded;
+			player.Reset();
 			player.Release();
 			player.Dispose();
 			DeleteFile(cachePath);
