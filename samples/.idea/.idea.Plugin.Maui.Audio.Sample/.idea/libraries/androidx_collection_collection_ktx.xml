@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="androidx.collection.collection-ktx">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.nuget/packages/xamarin.androidx.collection.ktx/1.2.0.9/jar/androidx.collection.collection-ktx.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
