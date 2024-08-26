@@ -302,13 +302,6 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlaybackEnded(object? sender, EventArgs e)
 	{
-		PlaybackEnded?.Invoke(this, e);
-
-		if (isDisposed)
-		{
-			return;
-		}
-
 		isPlaying = player.IsPlaying;
 
 		//this improves stability on older devices but has minor performance impact
@@ -319,6 +312,8 @@ partial class AudioPlayer : IAudioPlayer
 			player.Stop();
 			player.Prepare();
 		}
+
+		PlaybackEnded?.Invoke(this, e);
 	}
 
 	protected virtual void Dispose(bool disposing)
