@@ -2,7 +2,7 @@
 
 namespace Plugin.Maui.Audio;
 
-partial class AudioRecorder // TODO: add exception treshold < 1
+partial class AudioRecorder
 {
 	bool readingsComplete;
 	double noiseLevel;
@@ -60,7 +60,7 @@ partial class AudioRecorder // TODO: add exception treshold < 1
 
 	bool DetectSilence(byte[] audioData, double silenceThreshold, int silenceDuration)
 	{
-		double minimumNoiseLevel = 0.01;
+		double minimumNoiseLevel = 0.005;
 
 		if (!readingsComplete)
 		{
