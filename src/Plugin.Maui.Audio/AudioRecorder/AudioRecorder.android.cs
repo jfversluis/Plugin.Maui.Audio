@@ -162,9 +162,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			while (audioRecord.RecordingState == RecordState.Recording)
 			{
-				audioRecord.Read(data, 0, bufferSize);
-
-				outputStream.Write(data);
+				var read = audioRecord.Read(data, 0, bufferSize);
+				outputStream.Write(data, 0, read);
 			}
 
 			outputStream.Close();
