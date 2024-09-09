@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
+             x:Class="Plugin.Maui.Audio.Sample.Pages.SilenceDetectionPage"
+             Title="SilenceDetectionPage"
+			 x:DataType="viewmodels:SilenceDetectionPageViewModel">
+    <VerticalStackLayout VerticalOptions="Center"
+						 HorizontalOptions="Center"
+						 Spacing="10">
+		<Button Command="{Binding StartStopRecordToggleCommand}">
+			<Button.Triggers>
+				<DataTrigger TargetType="Button" Binding="{Binding IsRecording}" Value="False">
+					<Setter Property="Text" Value="Start recording"/>
+				</DataTrigger>
+				<DataTrigger TargetType="Button" Binding="{Binding IsRecording}" Value="True">
+					<Setter Property="Text" Value="Stop recording"/>
+				</DataTrigger>
+			</Button.Triggers>
+		</Button>
+		<Button Command="{Binding PlayRecordCommand}">
+			<Button.Triggers>
+				<DataTrigger TargetType="Button" Binding="{Binding IsPlaying}" Value="False">
+					<Setter Property="Text" Value="Play record"/>
+				</DataTrigger>
+				<DataTrigger TargetType="Button" Binding="{Binding IsPlaying}" Value="True">
+					<Setter Property="Text" Value="Playing"/>
+				</DataTrigger>
+			</Button.Triggers>
+		</Button>
+	</VerticalStackLayout>
+</ContentPage>
