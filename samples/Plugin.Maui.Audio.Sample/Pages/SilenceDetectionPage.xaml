@@ -1,14 +1,70 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:behaviors="clr-namespace:Plugin.Maui.Audio.Sample.Behaviors"
 			 xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
              x:Class="Plugin.Maui.Audio.Sample.Pages.SilenceDetectionPage"
              Title="SilenceDetectionPage"
 			 x:DataType="viewmodels:SilenceDetectionPageViewModel">
-    <VerticalStackLayout VerticalOptions="Center"
-						 HorizontalOptions="Center"
-						 Spacing="10">
-		<Button Command="{Binding StartStopRecordToggleCommand}">
+
+	<Grid ColumnDefinitions="Auto, Auto, Auto, Auto" 
+		  RowDefinitions="Auto, Auto, Auto, Auto"
+		  VerticalOptions="Center"
+		  HorizontalOptions="Center"
+		  ColumnSpacing="10"
+		  RowSpacing="10"
+		  Margin="10">
+		
+		<Label Grid.Column="0"
+			   Grid.Row="0"
+			   Text="Silence treshold"
+			   VerticalOptions="Center"/>
+		<Slider Grid.Column="1"
+			    Grid.Row="0"
+			    Value="{Binding SilenceTreshold}"
+				MaximumTrackColor="Gray"
+				Minimum="1"
+				Maximum="10"
+				WidthRequest="150"/>
+		<Entry Grid.Column="2"
+			   Grid.Row="0"
+			   Text="{Binding SilenceTreshold, StringFormat='{0:F2}'}"
+			   Keyboard="Numeric">
+			<Entry.Behaviors>
+				<behaviors:NumericInputRangeBehavior MinValue="1" MaxValue="10"/>
+			</Entry.Behaviors>
+		</Entry>
+		
+		<Label Grid.Column="0"
+			   Grid.Row="1"
+			   Text="Silence duration"
+			   VerticalOptions="Center"/>
+		<Slider Grid.Column="1"
+			    Grid.Row="1"
+			    Value="{Binding SilenceDuration}"
+				MaximumTrackColor="Gray"
+				Minimum="0"
+				Maximum="10000"
+				WidthRequest="150"/>
+		<Entry Grid.Column="2"
+			   Grid.Row="1"
+			   Text="{Binding SilenceDuration}"
+			   Keyboard="Numeric">
+			<Entry.Behaviors>
+				<behaviors:IntegerInputBehavior/>
+				<behaviors:NumericInputRangeBehavior MinValue="0" MaxValue="10000"/>
+			</Entry.Behaviors>
+		</Entry>
+		<Label Grid.Column="3"
+			   Grid.Row="1"
+			   Text="ms"
+			   VerticalOptions="Center"/>
+		
+		<Button Grid.ColumnSpan="3"
+				Grid.Row="2"
+				Command="{Binding StartStopRecordToggleCommand}"
+				HorizontalOptions="Center"
+				MinimumWidthRequest="150">
 			<Button.Triggers>
 				<DataTrigger TargetType="Button" Binding="{Binding IsRecording}" Value="False">
 					<Setter Property="Text" Value="Start recording"/>
@@ -18,7 +74,12 @@
 				</DataTrigger>
 			</Button.Triggers>
 		</Button>
-		<Button Command="{Binding PlayRecordCommand}">
+		
+		<Button Grid.ColumnSpan="3"
+				Grid.Row="3" 
+				Command="{Binding PlayRecordCommand}"
+				HorizontalOptions="Center"
+				MinimumWidthRequest="150">
 			<Button.Triggers>
 				<DataTrigger TargetType="Button" Binding="{Binding IsPlaying}" Value="False">
 					<Setter Property="Text" Value="Play record"/>
@@ -28,5 +89,6 @@
 				</DataTrigger>
 			</Button.Triggers>
 		</Button>
-	</VerticalStackLayout>
+		
+	</Grid>
 </ContentPage>

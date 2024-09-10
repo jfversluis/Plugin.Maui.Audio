@@ -9,6 +9,9 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 
 	CancellationTokenSource cancelDetectSilenceTokenSource;
 
+	double silenceTreshold = 2;
+	int silenceDuration = 1000;
+
 	bool isRecording;
 	bool isPlaying;
 
@@ -19,6 +22,26 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 
 		StartStopRecordToggleCommand = new Command(async() => await StartStopRecordToggleAsync(), () => !IsPlaying);
 		PlayRecordCommand = new Command(async () => await PlayRecordAsync(), () => !IsRecording && !IsPlaying && audioSource is not null);
+	}
+	
+	public double SilenceTreshold
+	{
+		get { return silenceTreshold; }
+		set
+		{
+			silenceTreshold = value < 1 ? 1 : value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	public int SilenceDuration
+	{
+		get { return silenceDuration; }
+		set 
+		{
+			silenceDuration = value;
+			NotifyPropertyChanged();
+		}
 	}
 
 	public bool IsRecording
@@ -94,7 +117,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 				}
 
 				await audioRecorder.StartAsync(tempRecordFilePath);
-				await audioRecorder.DetectSilenceAsync(cancellationToken: cancelDetectSilenceTokenSource.Token); // TODO: add params
+				await audioRecorder.DetectSilenceAsync(SilenceTreshold, SilenceDuration, cancelDetectSilenceTokenSource.Token);
 			}
 		}
 		catch (OperationCanceledException)
