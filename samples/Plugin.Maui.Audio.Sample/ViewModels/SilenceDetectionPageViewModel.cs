@@ -17,8 +17,8 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		this.audioManager = audioManager;
 		audioRecorder = audioManager.CreateRecorder();
 
-		StartStopRecordToggleCommand = new Command(StartStopRecordToggle, () => !IsPlaying);
-		PlayRecordCommand = new Command(PlayRecord, () => !IsRecording && !IsPlaying && audioSource is not null);
+		StartStopRecordToggleCommand = new Command(async() => await StartStopRecordToggleAsync(), () => !IsPlaying);
+		PlayRecordCommand = new Command(async () => await PlayRecordAsync(), () => !IsRecording && !IsPlaying && audioSource is not null);
 	}
 
 	public bool IsRecording
@@ -49,19 +49,19 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 
 	public Command PlayRecordCommand { get; }
 
-	void StartStopRecordToggle()
+	async Task StartStopRecordToggleAsync()
 	{
 		if (!IsRecording)
 		{
-			MainThread.BeginInvokeOnMainThread(async () => await StartRecordingAsync());
+			await RecordAsync();
 		}
-		else if (IsRecording)
+		else
 		{
-			MainThread.BeginInvokeOnMainThread(HaltRecording);
+			StopRecording();
 		}
 	}
 
-	async Task StartRecordingAsync()
+	async Task RecordAsync()
 	{
 		IsRecording = true;
 
@@ -72,12 +72,9 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		}
 
 		await RecordUntilSilenceDetectedAsync();
-		await StopRecordingAsync();
-	}
-
-	async Task StopRecordingAsync()
-	{
+		StopRecording();
 		audioSource = await GetRecordingAsync();
+
 		IsRecording = false;
 	}
 
@@ -106,12 +103,10 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		}
 	}
 
-	public void HaltRecording() => cancellationTokenSource?.Cancel();
+	void StopRecording() => cancellationTokenSource?.Cancel();
 
 	public async Task<IAudioSource> GetRecordingAsync()
 	{
-		cancellationTokenSource?.Cancel();
-
 		IAudioSource audioSource = await audioRecorder.StopAsync();
 
 		if (audioRecorder.SoundDetected)
@@ -124,7 +119,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		}
 	}
 
-	async void PlayRecord()
+	async Task PlayRecordAsync()
 	{
 		if (audioSource != null)
 		{
