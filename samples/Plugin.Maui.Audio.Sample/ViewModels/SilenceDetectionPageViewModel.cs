@@ -7,7 +7,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 	IAudioSource audioSource;
 	AsyncAudioPlayer audioPlayer;
 
-	CancellationTokenSource cancellationTokenSource;
+	CancellationTokenSource cancelDetectSilenceTokenSource;
 
 	bool isRecording;
 	bool isPlaying;
@@ -80,7 +80,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 
 	public async Task RecordUntilSilenceDetectedAsync()
 	{
-		cancellationTokenSource = new();
+		cancelDetectSilenceTokenSource = new();
 
 		try
 		{
@@ -94,7 +94,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 				}
 
 				await audioRecorder.StartAsync(tempRecordFilePath);
-				await audioRecorder.DetectSilenceAsync(cancellationToken: cancellationTokenSource.Token); // TODO: add params
+				await audioRecorder.DetectSilenceAsync(cancellationToken: cancelDetectSilenceTokenSource.Token); // TODO: add params
 			}
 		}
 		catch (OperationCanceledException)
@@ -103,7 +103,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		}
 	}
 
-	void StopRecording() => cancellationTokenSource?.Cancel();
+	void StopRecording() => cancelDetectSilenceTokenSource?.Cancel();
 
 	public async Task<IAudioSource> GetRecordingAsync()
 	{
