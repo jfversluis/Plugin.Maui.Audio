@@ -90,7 +90,11 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 			if (!audioRecorder.IsRecording)
 			{
 				string tempRecordFilePath = Path.Combine(FileSystem.CacheDirectory, "rec.tmp");
-				File.Create(tempRecordFilePath).Dispose();
+
+				if (!File.Exists(tempRecordFilePath))
+				{
+					File.Create(tempRecordFilePath).Dispose();
+				}
 
 				await audioRecorder.StartAsync(tempRecordFilePath);
 				await audioRecorder.DetectSilenceAsync(cancellationToken: cancellationTokenSource.Token); // TODO: add params
