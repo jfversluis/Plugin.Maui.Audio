@@ -285,6 +285,10 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		player.SeekTo((int)(position * 1000D));
 		stopwatch = new AudioStopwatch(TimeSpan.FromSeconds(position), Speed);
+        if (IsPlaying)
+        {
+            stopwatch.Start();
+        }
 	}
 
 	void SetVolume(double volume, double balance)
@@ -302,8 +306,6 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlaybackEnded(object? sender, EventArgs e)
 	{
-		PlaybackEnded?.Invoke(this, e);
-
 		isPlaying = player.IsPlaying;
 
 		//this improves stability on older devices but has minor performance impact
@@ -314,6 +316,8 @@ partial class AudioPlayer : IAudioPlayer
 			player.Stop();
 			player.Prepare();
 		}
+
+		PlaybackEnded?.Invoke(this, e);
 	}
 
 	protected virtual void Dispose(bool disposing)
@@ -326,6 +330,7 @@ partial class AudioPlayer : IAudioPlayer
 		if (disposing)
 		{
 			player.Completion -= OnPlaybackEnded;
+			player.Reset();
 			player.Release();
 			player.Dispose();
 			DeleteFile(cachePath);
