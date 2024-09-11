@@ -5,12 +5,17 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:pages="clr-namespace:Plugin.Maui.Audio.Sample.Pages"
     Shell.FlyoutBehavior="Disabled">
+	
 	<TabBar>
+		
 		<ShellContent
 			Title="My Library"
 			ContentTemplate="{DataTemplate pages:MyLibraryPage}" />
+		
 		<ShellContent
 			Title="Silence detection"
 			ContentTemplate="{DataTemplate pages:SilenceDetectionPage}"/>
+		
 	</TabBar>
+	
 </Shell>
