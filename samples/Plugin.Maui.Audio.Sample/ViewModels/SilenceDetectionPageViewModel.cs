@@ -29,7 +29,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		get { return silenceTreshold; }
 		set
 		{
-			silenceTreshold = value < 1 ? 1 : value;
+			silenceTreshold = value;
 			NotifyPropertyChanged();
 		}
 	}
