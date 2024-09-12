@@ -15,16 +15,16 @@ await audioRecorder.StopAsync();
 ```csharp
 public async Task<IAudioSource> GetRecordingAsync()
 {
-	IAudioSource audioSource = await audioRecorder.StopAsync();
+    IAudioSource audioSource = await audioRecorder.StopAsync();
 
-	if (audioRecorder.SoundDetected)
-	{
-		return audioSource;
-	}
-	else
-	{
-		return null;
-	}
+    if (audioRecorder.SoundDetected)
+    {
+        return audioSource;
+    }
+    else
+    {
+        return null;
+    }
 }
 ```
 
@@ -56,47 +56,47 @@ If there will be available another way to stop recording other than `DetectSilen
 ```csharp
 async Task StartStopRecordToggleAsync()
 {
-	if (!IsRecording)
-	{
-		await RecordAsync();
-	}
-	else
-	{
-		StopRecording();
-	}
+    if (!IsRecording)
+    {
+        await RecordAsync();
+    }
+    else
+    {
+        StopRecording();
+    }
 }
 
 async Task RecordAsync()
 {
-	await RecordUntilSilenceDetectedAsync();
-	StopRecording();
-	audioSource = await GetRecordingAsync();
+    await RecordUntilSilenceDetectedAsync();
+    StopRecording();
+    audioSource = await GetRecordingAsync();
 }
 
 public async Task RecordUntilSilenceDetectedAsync()
 {
-	cancelDetectSilenceTokenSource = new();
+    cancelDetectSilenceTokenSource = new();
 	
-	try
-	{
-		if (!audioRecorder.IsRecording)
-		{
-			await audioRecorder.StartAsync(tempRecordFilePath);
-			await audioRecorder.DetectSilenceAsync(SilenceTreshold, SilenceDuration, cancelDetectSilenceTokenSource.Token);
-		}
-	}
-	catch (OperationCanceledException)
-	{
-		return;
-	}
+    try
+    {
+        if (!audioRecorder.IsRecording)
+        {
+            await audioRecorder.StartAsync(tempRecordFilePath);
+            await audioRecorder.DetectSilenceAsync(SilenceTreshold, SilenceDuration, cancelDetectSilenceTokenSource.Token);
+        }
+    }
+    catch (OperationCanceledException)
+    {
+        return;
+    }
 }
 
 void StopRecording() => cancelDetectSilenceTokenSource?.Cancel();
 
 public async Task<IAudioSource> GetRecordingAsync()
 {
-	IAudioSource audioSource = await audioRecorder.StopAsync();
+    IAudioSource audioSource = await audioRecorder.StopAsync();
 		
-	...
+    ...
 }
 ```
