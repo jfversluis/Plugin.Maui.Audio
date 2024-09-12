@@ -15,10 +15,12 @@
 		  RowSpacing="10"
 		  Margin="10">
 		
+		<!--Row 0-->
 		<Label Grid.Column="0"
 			   Grid.Row="0"
 			   Text="Silence treshold"
 			   VerticalOptions="Center"/>
+		
 		<Slider Grid.Column="1"
 			    Grid.Row="0"
 			    Value="{Binding SilenceTreshold}"
@@ -26,6 +28,7 @@
 				Minimum="1"
 				Maximum="10"
 				WidthRequest="150"/>
+		
 		<Entry Grid.Column="2"
 			   Grid.Row="0"
 			   Text="{Binding SilenceTreshold, StringFormat='{0:F2}'}"
@@ -35,10 +38,12 @@
 			</Entry.Behaviors>
 		</Entry>
 		
+		<!--Row 1-->
 		<Label Grid.Column="0"
 			   Grid.Row="1"
 			   Text="Silence duration"
 			   VerticalOptions="Center"/>
+		
 		<Slider Grid.Column="1"
 			    Grid.Row="1"
 			    Value="{Binding SilenceDuration}"
@@ -46,6 +51,7 @@
 				Minimum="0"
 				Maximum="10000"
 				WidthRequest="150"/>
+		
 		<Entry Grid.Column="2"
 			   Grid.Row="1"
 			   Text="{Binding SilenceDuration}"
@@ -55,11 +61,13 @@
 				<behaviors:NumericInputRangeBehavior MinValue="0" MaxValue="10000"/>
 			</Entry.Behaviors>
 		</Entry>
+		
 		<Label Grid.Column="3"
 			   Grid.Row="1"
 			   Text="ms"
 			   VerticalOptions="Center"/>
 		
+		<!--Row 2-->
 		<Button Grid.ColumnSpan="3"
 				Grid.Row="2"
 				Command="{Binding StartStopRecordToggleCommand}"
@@ -75,6 +83,7 @@
 			</Button.Triggers>
 		</Button>
 		
+		<!--Row 3-->
 		<Button Grid.ColumnSpan="3"
 				Grid.Row="3" 
 				Command="{Binding PlayRecordCommand}"
