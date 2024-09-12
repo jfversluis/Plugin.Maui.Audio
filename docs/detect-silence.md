@@ -13,19 +13,19 @@ await audioRecorder.StopAsync();
 `SoundDetected` is true when during actual recording there was a sound detected. It is set to false at start of `DetectSilenceAsync` method. This property can be use to prevent from saving empty recordings.
 
 ```csharp
-	public async Task<IAudioSource> GetRecordingAsync()
-	{
-		IAudioSource audioSource = await audioRecorder.StopAsync();
+public async Task<IAudioSource> GetRecordingAsync()
+{
+	IAudioSource audioSource = await audioRecorder.StopAsync();
 
-		if (audioRecorder.SoundDetected)
-		{
-			return audioSource;
-		}
-		else
-		{
-			return null;
-		}
+	if (audioRecorder.SoundDetected)
+	{
+		return audioSource;
 	}
+	else
+	{
+		return null;
+	}
+}
 ```
 
 ## Methods
