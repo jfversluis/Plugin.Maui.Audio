@@ -116,4 +116,6 @@ partial class AudioRecorder : IAudioRecorder
 			_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToiOSEncoding(AudioRecordingOptions.DefaultEncoding, true)
 		};
 	}
+
+	byte[]? GetAudioDataChunk() => throw new NotImplementedException();
 }
