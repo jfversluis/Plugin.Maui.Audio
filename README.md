@@ -66,6 +66,7 @@ Now that you know how to use the `AudioManager` class, please refer to the follo
 
 * [Audio playback](docs/audio-player.md)
 * [Record audio](docs/audio-recorder.md)
+* [Detect silence](docs/detect-silence.md)
 
 ## Acknowledgements
 
