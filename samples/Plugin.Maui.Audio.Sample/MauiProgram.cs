@@ -40,6 +40,9 @@ public static class MauiProgram
 		RegisterPageRoute<AudioRecorderPage, AudioRecorderPageViewModel>(Routes.AudioRecorder.RouteName, builder.Services);
 		RegisterPageRoute<MusicPlayerPage, MusicPlayerPageViewModel>(Routes.MusicPlayer.RouteName, builder.Services);
 
+		builder.Services.AddTransient<SilenceDetectionPage>();
+		builder.Services.AddTransient<SilenceDetectionPageViewModel>();
+
 		return builder.Build();
 	}
 
