@@ -1,5 +1,4 @@
-﻿using Microsoft.Maui.Controls.PlatformConfiguration;
-using Windows.Media.Capture;
+﻿using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
 
@@ -9,6 +8,15 @@ partial class AudioRecorder : IAudioRecorder
 {
 	MediaCapture? mediaCapture;
 	string audioFilePath = string.Empty;
+	StorageFile? fileOnDisk;
+
+	uint sampleRate;
+	uint channelCount;
+	uint bitsPerSample;
+
+	FileStream? audioFileStream;
+	long startingAudioFileStreamLength;
+	int audioChunkNumber;
 
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
@@ -28,12 +36,10 @@ partial class AudioRecorder : IAudioRecorder
 		var localFolder = ApplicationData.Current.LocalFolder;
 		var fileName = Path.GetRandomFileName();
 
-		var fileOnDisk = await localFolder.CreateFileAsync(fileName);
+		fileOnDisk = await localFolder.CreateFileAsync(fileName);
 
 		await StartAsync(fileOnDisk.Path, options);
 	}
-
-
 
 	public async Task StartAsync(string filePath, AudioRecordingOptions options)
 	{
@@ -70,6 +76,7 @@ partial class AudioRecorder : IAudioRecorder
 			{
 				var profile = SharedOptionsToWindowsMediaProfile(options);
 				await mediaCapture?.StartRecordToStorageFileAsync(profile, fileOnDisk);
+				SoundDetected = false;
 			}
 			catch
 			{
@@ -80,9 +87,9 @@ partial class AudioRecorder : IAudioRecorder
 
 				var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
 
-				uint sampleRate =  (uint)DefaultAudioRecordingOptions.DefaultOptions.SampleRate;
-				uint channelCount = (uint)DefaultAudioRecordingOptions.DefaultOptions.Channels;
-				uint bitsPerSample = (uint)DefaultAudioRecordingOptions.DefaultOptions.BitDepth;
+				sampleRate =  (uint)DefaultAudioRecordingOptions.DefaultOptions.SampleRate;
+				channelCount = (uint)DefaultAudioRecordingOptions.DefaultOptions.Channels;
+				bitsPerSample = (uint)DefaultAudioRecordingOptions.DefaultOptions.BitDepth;
 
 				profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
 
@@ -99,11 +106,11 @@ partial class AudioRecorder : IAudioRecorder
 		audioFilePath = fileOnDisk.Path;
 	}
 
-	static MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecordingOptions options)
+	MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecordingOptions options)
 	{
-		uint sampleRate = (uint)options.SampleRate;
-		uint channelCount = (uint)options.Channels;
-		uint bitsPerSample = (uint)options.BitDepth;
+		sampleRate = (uint)options.SampleRate;
+		channelCount = (uint)options.Channels;
+		bitsPerSample = (uint)options.BitDepth;
 
 		switch (options.Encoding)
 		{
@@ -193,7 +200,44 @@ partial class AudioRecorder : IAudioRecorder
 			//ignore
 		}
 
-		audioFilePath = string.Empty;
-		mediaCapture = null;
+        audioFilePath = string.Empty;
+        mediaCapture = null;
+    }
+
+	FileStream GetFileStream()
+	{
+		int wavFileHeaderLength = 44;
+
+		FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+		startingAudioFileStreamLength = fileStream.Length;
+
+		if (startingAudioFileStreamLength == 0)
+		{
+			startingAudioFileStreamLength = wavFileHeaderLength;
+		}
+
+		return fileStream;
+	}
+
+	byte[]? GetAudioDataChunk()
+	{
+		uint bitRate = sampleRate * bitsPerSample * channelCount;
+		uint bufferSize;
+
+		bufferSize = bitRate != 0 ? bitRate / 8 / 25 : 256_000 / 8 / 25; // MediaCapture do not put data about bit rate in EncodingProfile.Audio.Bitrate when AudioEncodingQuality.Auto
+
+		if (audioFileStream?.Length > (audioChunkNumber * bufferSize) + startingAudioFileStreamLength)
+		{
+			byte[] buffer = new byte[bufferSize];
+			audioFileStream.Seek(-bufferSize, SeekOrigin.End);
+			audioFileStream.Read(buffer);
+			audioChunkNumber++;
+
+			return buffer;
+		}
+		else
+		{
+			return null;
+		}
 	}
 }
