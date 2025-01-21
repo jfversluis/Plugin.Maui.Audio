@@ -93,7 +93,7 @@ Gets or sets the speed of the playback. Note: the maximum and minimum value that
 To determine the supported minimum and maximum speeds at runtime for that platform you can use `MaximumSpeed` and `MinimumSpeed`.
 
 Platform notes:
-- Android: between 0 and 6. Setting the value to 0 will pause playback, playback will not be resumed when incrementing the value again.
+- Android: between 0 and 2.5. Setting the value to 0 will pause playback, playback will not be resumed when incrementing the value again.
 - iOS: between 0.5 and 2.
 - Windows: between 0 and 8. Setting the value to 0 will pause playback, playback will be resumed when incrementing the value again.
 

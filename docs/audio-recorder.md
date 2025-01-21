@@ -2,6 +2,13 @@
 
 The `AudioRecorder` class provides you with the ability to record audio from a microphone in your .NET MAUI application to a file on disk. In order to create an `AudioRecorder` instance you can make use of the `CreateRecorder` method on the [`AudioManager`](../readme.md#audiomanager) class.
 
+> [!NOTE]
+> If you want to record in the background on iOS, you will need to add a key to the `Info.plist` file like show below.
+> `<key>UIBackgroundModes</key>`
+> `<array>`
+> `  <string>audio</string>`
+> `</array>`
+
 ```csharp
 public class AudioRecorderViewModel
 {
