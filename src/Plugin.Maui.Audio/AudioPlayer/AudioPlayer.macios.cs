@@ -68,51 +68,20 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool CanSeek => true;
 
-	private static byte[] GenerateSilentWav(float durationSeconds)
-	{
-		int sampleRate = 44100; // Standard CD-quality sample rate
-		int numChannels = 1; // Mono
-		int bitsPerSample = 16; // 16-bit PCM
-		int byteRate = sampleRate * numChannels * (bitsPerSample / 8);
-		int totalDataBytes = (int)(byteRate * durationSeconds);
+	static NSData _emptySource;
 
-		using (MemoryStream ms = new MemoryStream())
-		using (BinaryWriter writer = new BinaryWriter(ms))
-		{
-			// RIFF header
-			writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
-			writer.Write(36 + totalDataBytes); // Total file size - 8
-			writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
-
-			// Format chunk
-			writer.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
-			writer.Write(16); // Subchunk size (16 for PCM)
-			writer.Write((short)1); // Audio format (1 = PCM)
-			writer.Write((short)numChannels);
-			writer.Write(sampleRate);
-			writer.Write(byteRate);
-			writer.Write((short)(numChannels * (bitsPerSample / 8))); // Block align
-			writer.Write((short)bitsPerSample);
-
-			// Data chunk
-			writer.Write(System.Text.Encoding.ASCII.GetBytes("data"));
-			writer.Write(totalDataBytes);
-
-			// Write silent PCM data (all zeroes)
-			byte[] silence = new byte[totalDataBytes];
-			writer.Write(silence);
-
-			writer.Flush();
-			return ms.ToArray();
-		}
-	}
 	internal AudioPlayer(AudioPlayerOptions audioPlayerOptions)
 	{
-		byte[] silence = GenerateSilentWav(durationSeconds: 0.1f);
-		NSData data = NSData.FromArray(silence);
-		
-		player = AVAudioPlayer.FromData(data)
-		         ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
+		if (_emptySource == null)
+		{
+			byte[] empty = new byte[16];
+			int sampleRate = 44100;
+			var source = new RawAudioSource(empty, sampleRate, 1);
+			_emptySource = NSData.FromArray(source.Bytes);
+		}
+
+		player = AVAudioPlayer.FromData(_emptySource)
+				 ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
 		this.audioPlayerOptions = audioPlayerOptions;
 
