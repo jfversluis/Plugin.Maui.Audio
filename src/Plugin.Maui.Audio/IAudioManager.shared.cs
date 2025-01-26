@@ -16,6 +16,13 @@ public interface IAudioManager
 	AudioRecorderOptions DefaultRecorderOptions { get; set; }
 
 	/// <summary>
+	/// Creates a new <see cref="IAudioPlayer"/> with with an empty source.
+	/// </summary>
+	/// <param name="options"></param>
+	/// <returns></returns>
+	IAudioPlayer CreatePlayer(AudioPlayerOptions? options = default);
+
+	/// <summary>
 	/// Creates a new <see cref="IAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play.
 	/// </summary>
 	/// <param name="audioStream">The <see cref="Stream"/> containing the audio to play.</param>

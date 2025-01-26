@@ -43,8 +43,10 @@ public class AsyncAudioPlayer : IAudio
 	public double Speed
 	{
 		get => audioPlayer.Speed;
+		set => audioPlayer.Speed = value;
 	}
 
+	[Obsolete("Use Speed setter instead")]
 	public void SetSpeed(double speed) => audioPlayer.SetSpeed(speed);
 
 	/// <inheritdoc cref="IAudio.MinimumSpeed" />
@@ -57,7 +59,8 @@ public class AsyncAudioPlayer : IAudio
 	public bool CanSetSpeed => audioPlayer.CanSetSpeed;
 
 	/// <inheritdoc cref="IAudio.IsPlaying" />
-	public bool IsPlaying => audioPlayer.IsPlaying;
+	//public bool IsPlaying => audioPlayer.IsPlaying;
+	public bool IsPlaying { get; protected set; }
 
 	/// <inheritdoc cref="IAudio.Loop" />
 	public bool Loop

@@ -7,7 +7,7 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
-	readonly AVAudioPlayer player;
+	AVAudioPlayer player;
 	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
 
@@ -27,9 +27,19 @@ partial class AudioPlayer : IAudioPlayer
 		set => player.Pan = (float)Math.Clamp(value, -1, 1);
 	}
 
-	public double Speed => player?.Rate ?? 0;
+	public double Speed
+	{
+		get => player?.Rate ?? 0;
+		set => SetSpeedInternal(value);
+	}
 
+	[Obsolete("Use Speed setter instead")]
 	public void SetSpeed(double sp)
+	{
+		SetSpeedInternal(sp);
+	}
+
+	protected void SetSpeedInternal(double sp)
 	{
 		// Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
 		var speedValue = Math.Clamp((float)sp, 0.5f, 2.0f);
@@ -57,6 +67,21 @@ partial class AudioPlayer : IAudioPlayer
 	}
 
 	public bool CanSeek => true;
+
+	internal AudioPlayer(AudioPlayerOptions audioPlayerOptions)
+	{
+		this.audioPlayerOptions = audioPlayerOptions;
+	}
+
+	public void SetSource(Stream audioStream)
+	{
+		var data = NSData.FromStream(audioStream)
+				   ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
+		player = AVAudioPlayer.FromData(data)
+				 ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
+
+		PreparePlayer();
+	}
 
 	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
@@ -129,7 +154,7 @@ partial class AudioPlayer : IAudioPlayer
 	bool PreparePlayer()
 	{
 		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
-		
+
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.EnableRate = true;
 		player.PrepareToPlay();

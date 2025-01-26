@@ -2,9 +2,13 @@
 
 partial class AudioPlayer : IAudioPlayer
 {
+	public AudioPlayer(AudioPlayerOptions audioPlayerOptions) { }
+
 	public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions) { }
 
 	public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions) { }
+
+	public void SetSource(Stream audioStream) { }
 
 	protected virtual void Dispose(bool disposing) { }
 
@@ -32,7 +36,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	public void Seek(double position) { }
 
-	public double Speed { get; }
+	public double Speed { get; set; }
 
 	public double MinimumSpeed { get; }
 
