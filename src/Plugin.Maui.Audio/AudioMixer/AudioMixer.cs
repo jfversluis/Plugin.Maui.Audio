@@ -29,6 +29,7 @@ public class AudioMixer : IDisposable
 	readonly float clipDist;
 	readonly float closeDist;
 	readonly float attenuator;
+	float _mapBalance;
 
 	/// <summary>
 	/// Gets the fast decay factor.
@@ -183,10 +184,20 @@ public class AudioMixer : IDisposable
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
 	public void SetBalance(int channelIndex, float balance)
 	{
+		balance *= _mapBalance;
 		ValidateChannelIndex(channelIndex);
 		balance = Math.Clamp(balance, -1f, 1f);
 		var player = _channels[channelIndex];
 		player.Balance = balance;
+	}
+
+	/// <summary>
+	/// Changes the stereo balance for all channels, might need when device is rotated. 1 means not change. Range -1 to +1.
+	/// </summary>
+	/// <param name="value"></param>
+	public void MapBalance(float value)
+	{
+		_mapBalance = value;
 	}
 
 	/// <summary>
