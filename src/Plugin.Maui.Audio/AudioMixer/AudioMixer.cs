@@ -176,6 +176,13 @@ public class AudioMixer : IDisposable
 		player.SetSource(audioClip.GetAudioStream());
 	}
 
+	public IAudioPlayer GetChannel(int channelIndex)
+	{
+		ValidateChannelIndex(channelIndex);
+		var player = _channels[channelIndex];
+		return player;
+	}
+
 	/// <summary>
 	/// Sets the stereo balance for the specified channel.
 	/// </summary>
