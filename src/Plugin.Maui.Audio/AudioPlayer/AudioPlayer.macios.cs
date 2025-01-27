@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using AudioToolbox;
-using AVFoundation;
+﻿using AVFoundation;
 using Foundation;
 
 namespace Plugin.Maui.Audio;
@@ -90,6 +88,15 @@ partial class AudioPlayer : IAudioPlayer
 
 	public void SetSource(Stream audioStream)
 	{
+
+		if (player != null)
+		{
+			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			ActiveSessionHelper.FinishSession(audioPlayerOptions);
+			Stop();
+			player.Dispose();
+		}
+
 		var data = NSData.FromStream(audioStream)
 				   ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
 		player = AVAudioPlayer.FromData(data)
