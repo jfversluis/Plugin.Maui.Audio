@@ -102,9 +102,7 @@ public class RawAudioSource : IAudioSource
 		short blockAlign = (short)(_nbOfChannels * bytesPerSample);
 		short audioFormat = 1; // PCM
 		short bitsPerSample = (short)_bitsPerSample;
-
 		int fileSize = dataSize + 44 - 8; // Total file size minus "RIFF" and size field itself
-
 		byte[] wavHeader = new byte[44];
 
 		// RIFF header
@@ -112,9 +110,8 @@ public class RawAudioSource : IAudioSource
 		Buffer.BlockCopy(BitConverter.GetBytes(fileSize), 0, wavHeader, 4, 4);
 		Buffer.BlockCopy(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, wavHeader, 8, 4);
 
-		// fmt subchunk
 		Buffer.BlockCopy(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, wavHeader, 12, 4);
-		Buffer.BlockCopy(BitConverter.GetBytes(16), 0, wavHeader, 16, 4); // Subchunk1Size for PCM
+		Buffer.BlockCopy(BitConverter.GetBytes(16), 0, wavHeader, 16, 4);
 		Buffer.BlockCopy(BitConverter.GetBytes(audioFormat), 0, wavHeader, 20, 2);
 		Buffer.BlockCopy(BitConverter.GetBytes((short)_nbOfChannels), 0, wavHeader, 22, 2);
 		Buffer.BlockCopy(BitConverter.GetBytes(_sampleRate), 0, wavHeader, 24, 4);
@@ -122,11 +119,9 @@ public class RawAudioSource : IAudioSource
 		Buffer.BlockCopy(BitConverter.GetBytes(blockAlign), 0, wavHeader, 32, 2);
 		Buffer.BlockCopy(BitConverter.GetBytes(bitsPerSample), 0, wavHeader, 34, 2);
 
-		// data subchunk
 		Buffer.BlockCopy(System.Text.Encoding.ASCII.GetBytes("data"), 0, wavHeader, 36, 4);
 		Buffer.BlockCopy(BitConverter.GetBytes(dataSize), 0, wavHeader, 40, 4);
 
-		// Combine header and sound data
 		byte[] wavSoundData = new byte[wavHeader.Length + dataSize];
 		Buffer.BlockCopy(wavHeader, 0, wavSoundData, 0, wavHeader.Length);
 		Buffer.BlockCopy(_soundData, 0, wavSoundData, wavHeader.Length, dataSize);

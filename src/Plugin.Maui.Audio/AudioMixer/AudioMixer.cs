@@ -21,11 +21,8 @@ public class AudioMixer : IDisposable
 
 	readonly List<IAudioPlayer> _channels;
 	readonly IAudioManager _audioManager;
-
-	// Spatial audio variables
 	readonly float fastDecay;
 	readonly float slowDecay;
-
 	readonly float clipDist;
 	readonly float closeDist;
 	readonly float attenuator;
@@ -66,7 +63,6 @@ public class AudioMixer : IDisposable
 		closeDist = 160f;
 		attenuator = clipDist - closeDist;
 
-		// Initialize audio channels
 		for (int i = 0; i < numberOfChannels; i++)
 		{
 			var player = _audioManager.CreatePlayer();
@@ -241,41 +237,23 @@ public class AudioMixer : IDisposable
 	/// <returns>A tuple containing the adjusted Balance and Volume.</returns>
 	public (float Balance, float Volume) PositionInSpace(Vector3 position, float baseVolume, float baseBalance)
 	{
-		// Define the forward direction vector (same as (0, 0, -1))
 		Vector3 forward = new Vector3(0, 0, -1);
 
-		// Check if the position is approximately the forward direction
 		if (Vector3.Distance(position, forward) < 0.001f)
 		{
-			// Return the original Balance and Volume unchanged
 			return (baseBalance, baseVolume);
 		}
 
-		// Extract X and Z components for horizontal positioning
 		float x = position.X;
 		float z = position.Z;
-
-		// Calculate the angle relative to the listener's forward direction
-		float angle = MathF.Atan2(x, z); // Assuming Y is up and Z is forward
-
-		// Calculate Balance based on the angle
+		float angle = MathF.Atan2(x, z);
 		float balance = MathF.Sin(angle);
-
-		// Calculate distance from listener to sound source
 		float distance = MathF.Sqrt(x * x + z * z);
-
-		// Calculate attenuation based on distance
 		float attenuation = GetDistanceDecay(distance);
-
-		// Adjust Volume based on attenuation
 		float volume = baseVolume * attenuation;
-
-		// Introduce a panning effect modifier based on distance
-		// Farther sounds have a subtler panning effect
 		float panningEffect = Math.Clamp(1f - (distance / clipDist), 0f, 1f);
-		balance *= panningEffect;
 
-		// Clamp balance to ensure it stays within [-1, 1]
+		balance *= panningEffect;
 		balance = Math.Clamp(balance, -1f, 1f);
 
 		return (balance, volume);
@@ -312,9 +290,9 @@ public class AudioMixer : IDisposable
 				player.Stop();
 				player.Dispose();
 			}
-			catch
+			catch(Exception e)
 			{
-				// Handle or log exceptions as necessary
+				Console.WriteLine(e);
 			}
 		}
 
