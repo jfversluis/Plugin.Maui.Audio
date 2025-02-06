@@ -85,7 +85,7 @@ public class AudioMixer : IDisposable
 			throw new ArgumentNullException(nameof(audioClip));
 
 		var player = _channels[channelIndex];
-		player.Stop(); // Stop any existing playback
+		player.Stop(); 
 		player.SetSource(audioClip.GetAudioStream());
 		player.Loop = loop;
 		player.Play();
@@ -168,7 +168,7 @@ public class AudioMixer : IDisposable
 			throw new ArgumentNullException(nameof(audioClip));
 
 		var player = _channels[channelIndex];
-		player.Stop(); // Stop any existing playback
+		player.Stop(); 
 		player.SetSource(audioClip.GetAudioStream());
 	}
 
