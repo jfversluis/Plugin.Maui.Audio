@@ -59,7 +59,6 @@ public class AsyncAudioPlayer : IAudio
 	public bool CanSetSpeed => audioPlayer.CanSetSpeed;
 
 	/// <inheritdoc cref="IAudio.IsPlaying" />
-	//public bool IsPlaying => audioPlayer.IsPlaying;
 	public bool IsPlaying { get; protected set; }
 
 	/// <inheritdoc cref="IAudio.Loop" />
