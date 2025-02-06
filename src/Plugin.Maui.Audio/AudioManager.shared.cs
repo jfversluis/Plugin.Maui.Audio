@@ -18,6 +18,7 @@ public class AudioManager : IAudioManager
 	/// <inheritdoc cref="IAudioManager.DefaultRecorderOptions"/>
 	public AudioRecorderOptions DefaultRecorderOptions { get; set; } = new();
 
+/// <inheritdoc cref="IAudioManager.CreatePlayer(AudioPlayerOptions)" />
 	public IAudioPlayer CreatePlayer(AudioPlayerOptions? options = default)
 	{
 		return new AudioPlayer(options ?? DefaultPlayerOptions);
