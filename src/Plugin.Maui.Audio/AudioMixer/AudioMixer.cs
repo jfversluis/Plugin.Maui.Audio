@@ -17,16 +17,16 @@ public class AudioMixer : IDisposable
 	/// <summary>
 	/// Gets a read-only list of audio channels.
 	/// </summary>
-	public IReadOnlyList<IAudioPlayer> Channels => _channels.AsReadOnly();
+	public IReadOnlyList<IAudioPlayer> Channels => channels.AsReadOnly();
 
-	readonly List<IAudioPlayer> _channels;
-	readonly IAudioManager _audioManager;
+	readonly List<IAudioPlayer> channels;
+	readonly IAudioManager audioManager;
 	readonly float fastDecay;
 	readonly float slowDecay;
 	readonly float clipDist;
 	readonly float closeDist;
 	readonly float attenuator;
-	float _mapBalance;
+	float mapBalance;
 
 	/// <summary>
 	/// Gets the fast decay factor.
@@ -51,9 +51,9 @@ public class AudioMixer : IDisposable
 		if (numberOfChannels <= 0)
 			throw new ArgumentOutOfRangeException(nameof(numberOfChannels), "Number of channels must be positive.");
 
-		_audioManager = audioManager;
+		this.audioManager = audioManager;
 		ChannelCount = numberOfChannels;
-		_channels = new List<IAudioPlayer>(numberOfChannels);
+		channels = new List<IAudioPlayer>(numberOfChannels);
 
 		// Initialize spatial audio variables
 		fastDecay = (float)Math.Pow(0.5, 1.0 / (35.0 / 5.0)); // ≈ 0.9037
@@ -65,8 +65,8 @@ public class AudioMixer : IDisposable
 
 		for (int i = 0; i < numberOfChannels; i++)
 		{
-			var player = _audioManager.CreatePlayer();
-			_channels.Add(player);
+			var player = this.audioManager.CreatePlayer();
+			channels.Add(player);
 		}
 	}
 
@@ -84,7 +84,7 @@ public class AudioMixer : IDisposable
 		if (audioClip == null)
 			throw new ArgumentNullException(nameof(audioClip));
 
-		var player = _channels[channelIndex];
+		var player = channels[channelIndex];
 		player.Stop(); 
 		player.SetSource(audioClip.GetAudioStream());
 		player.Loop = loop;
@@ -99,7 +99,7 @@ public class AudioMixer : IDisposable
 	public void Stop(int channelIndex)
 	{
 		ValidateChannelIndex(channelIndex);
-		var player = _channels[channelIndex];
+		var player = channels[channelIndex];
 		player.Stop();
 	}
 
@@ -108,7 +108,7 @@ public class AudioMixer : IDisposable
 	/// </summary>
 	public void StopAll()
 	{
-		foreach (var player in _channels)
+		foreach (var player in channels)
 		{
 			player.Stop();
 		}
@@ -119,7 +119,7 @@ public class AudioMixer : IDisposable
 	/// </summary>
 	public void PauseAll()
 	{
-		foreach (var player in _channels)
+		foreach (var player in channels)
 		{
 			if (player.IsPlaying)
 			{
@@ -133,7 +133,7 @@ public class AudioMixer : IDisposable
 	/// </summary>
 	public void ResumeAll()
 	{
-		foreach (var player in _channels)
+		foreach (var player in channels)
 		{
 			if (!player.IsPlaying)
 			{
@@ -147,7 +147,7 @@ public class AudioMixer : IDisposable
 	/// </summary>
 	public void PlayAll()
 	{
-		foreach (var player in _channels)
+		foreach (var player in channels)
 		{
 			player.Seek(0);
 			player.Play();
@@ -167,7 +167,7 @@ public class AudioMixer : IDisposable
 		if (audioClip == null)
 			throw new ArgumentNullException(nameof(audioClip));
 
-		var player = _channels[channelIndex];
+		var player = channels[channelIndex];
 		player.Stop(); 
 		player.SetSource(audioClip.GetAudioStream());
 	}
@@ -175,7 +175,7 @@ public class AudioMixer : IDisposable
 	public IAudioPlayer GetChannel(int channelIndex)
 	{
 		ValidateChannelIndex(channelIndex);
-		var player = _channels[channelIndex];
+		var player = channels[channelIndex];
 		return player;
 	}
 
@@ -187,10 +187,10 @@ public class AudioMixer : IDisposable
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
 	public void SetBalance(int channelIndex, float balance)
 	{
-		balance *= _mapBalance;
+		balance *= mapBalance;
 		ValidateChannelIndex(channelIndex);
 		balance = Math.Clamp(balance, -1f, 1f);
-		var player = _channels[channelIndex];
+		var player = channels[channelIndex];
 		player.Balance = balance;
 	}
 
@@ -200,7 +200,7 @@ public class AudioMixer : IDisposable
 	/// <param name="value"></param>
 	public void MapBalance(float value)
 	{
-		_mapBalance = value;
+		mapBalance = value;
 	}
 
 	/// <summary>
@@ -213,7 +213,7 @@ public class AudioMixer : IDisposable
 	{
 		ValidateChannelIndex(channelIndex);
 		volume = Math.Clamp(volume, 0f, 1f);
-		var player = _channels[channelIndex];
+		var player = channels[channelIndex];
 		player.Volume = volume;
 	}
 
@@ -283,7 +283,7 @@ public class AudioMixer : IDisposable
 		if (IsDisposed)
 			return;
 
-		foreach (var player in _channels)
+		foreach (var player in channels)
 		{
 			try
 			{
@@ -296,7 +296,7 @@ public class AudioMixer : IDisposable
 			}
 		}
 
-		_channels.Clear();
+		channels.Clear();
 		IsDisposed = true;
 	}
 

@@ -92,6 +92,7 @@ partial class AudioPlayer : IAudioPlayer
 		if (player != null)
 		{
 			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			player.DecoderError -= OnPlayerError;
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
 			Stop();
 			player.Dispose();
@@ -178,10 +179,17 @@ partial class AudioPlayer : IAudioPlayer
 		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
 
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
+		player.DecoderError += OnPlayerError;
+
 		player.EnableRate = true;
 		player.PrepareToPlay();
 
 		return true;
+	}
+
+	void OnPlayerError(object? sender, AVErrorEventArgs e)
+	{
+		OnError(e);
 	}
 
 	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)

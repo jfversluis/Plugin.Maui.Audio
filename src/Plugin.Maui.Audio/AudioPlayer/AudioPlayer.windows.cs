@@ -86,9 +86,9 @@ partial class AudioPlayer : IAudioPlayer
 		SetSpeed(1.0);
 	}
 
-	void OnError(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+	void OnError(MediaPlayer sender, MediaPlayerFailedEventArgs e)
 	{
-		throw new Exception(args.ErrorMessage);
+		OnError(new MediaPlayerFailedEventArgsWrapper(e));
 	}
 
 	public void SetSource(Stream audioStream)
@@ -230,3 +230,19 @@ partial class AudioPlayer : IAudioPlayer
 		isDisposed = true;
 	}
 }
+
+public class MediaPlayerFailedEventArgsWrapper : EventArgs
+{
+	public MediaPlayerFailedEventArgs Error { get; }
+
+	public int ErrorCode { get; }
+	public string ErrorMessage { get; }
+
+	public MediaPlayerFailedEventArgsWrapper(MediaPlayerFailedEventArgs args)
+	{
+		Error = args ?? throw new ArgumentNullException(nameof(args));
+		ErrorCode = (int)args.Error;
+		ErrorMessage = args.Error.ToString();
+	}
+}
+

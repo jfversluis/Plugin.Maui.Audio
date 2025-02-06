@@ -258,12 +258,12 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
+		player.Error += OnError;
 
 		file = fileName;
 
 		PrepareAudioSource();
 	}
-
 
 	static void DeleteFile(string path)
 	{
@@ -364,6 +364,10 @@ partial class AudioPlayer : IAudioPlayer
 		PlaybackEnded?.Invoke(this, e);
 	}
 
+	void OnError(object? sender, MediaPlayer.ErrorEventArgs e)
+	{
+		OnError(e);
+	}
 
 	protected virtual void Dispose(bool disposing)
 	{
@@ -375,6 +379,7 @@ partial class AudioPlayer : IAudioPlayer
 		if (disposing)
 		{
 			player.Completion -= OnPlaybackEnded;
+			player.Error -= OnError;
 			player.Reset();
 			player.Release();
 			player.Dispose();

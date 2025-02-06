@@ -9,6 +9,15 @@ public class AsyncAudioPlayer : IAudio
 	CancellationTokenSource? stopCancellationToken;
 	bool isDisposed;
 
+#pragma warning disable CS0067
+
+	/// <summary>
+	/// Something bad happened while loading media or playing.
+	/// </summary>
+	public event EventHandler? Error;
+
+#pragma warning restore CS0067
+
 	/// <summary>
 	/// Creates a new instance of <see cref="AsyncAudioPlayer"/>.
 	/// This is particularly useful if you want to customise the audio playback settings before playback.
@@ -17,6 +26,10 @@ public class AsyncAudioPlayer : IAudio
 	public AsyncAudioPlayer(IAudioPlayer audioPlayer)
 	{
 		this.audioPlayer = audioPlayer;
+		if (audioPlayer is AudioPlayer player)
+		{
+			player.Error += OnErrorInternal;
+		}
 	}
 
 	/// <inheritdoc cref="IAudio.Duration" />
@@ -105,17 +118,35 @@ public class AsyncAudioPlayer : IAudio
 		stopCancellationToken?.Cancel();
 	}
 
+	/// <summary>
+	/// Something bad happened while loading media or playing.
+	/// </summary>
+	/// <param name="error">Native platform error</param>
+	protected virtual void OnError(EventArgs error)
+	{
+		Error?.Invoke(this, error);
+	}
+
 	protected virtual void Dispose(bool disposing)
 	{
 		if (!isDisposed)
 		{
 			if (disposing)
 			{
+				if (audioPlayer is AudioPlayer player)
+				{
+					player.Error -= OnErrorInternal;
+				}
 				audioPlayer.Dispose();
 			}
 
 			isDisposed = true;
 		}
+	}
+
+	void OnErrorInternal(object? sender, EventArgs e)
+	{
+		OnError(e);
 	}
 
 	~AsyncAudioPlayer()
