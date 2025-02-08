@@ -10,6 +10,11 @@ public interface IAudioPlayer : IAudio
 	///</Summary>
 	event EventHandler PlaybackEnded;
 
+	/// <summary>
+	/// Something bad happened while loading media or playing.
+	/// </summary>
+	event EventHandler Error;
+
 	///<Summary>
 	/// Begin playback or resume if paused.
 	///</Summary>

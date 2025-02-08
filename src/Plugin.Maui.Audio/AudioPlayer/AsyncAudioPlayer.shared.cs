@@ -26,10 +26,7 @@ public class AsyncAudioPlayer : IAudio
 	public AsyncAudioPlayer(IAudioPlayer audioPlayer)
 	{
 		this.audioPlayer = audioPlayer;
-		if (audioPlayer is AudioPlayer player)
-		{
-			player.Error += OnErrorInternal;
-		}
+		audioPlayer.Error += OnErrorInternal;
 	}
 
 	/// <inheritdoc cref="IAudio.Duration" />
@@ -133,10 +130,7 @@ public class AsyncAudioPlayer : IAudio
 		{
 			if (disposing)
 			{
-				if (audioPlayer is AudioPlayer player)
-				{
-					player.Error -= OnErrorInternal;
-				}
+				audioPlayer.Error -= OnErrorInternal;
 				audioPlayer.Dispose();
 			}
 
