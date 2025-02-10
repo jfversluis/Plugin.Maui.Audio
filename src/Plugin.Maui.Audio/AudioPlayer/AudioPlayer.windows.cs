@@ -25,9 +25,19 @@ partial class AudioPlayer : IAudioPlayer
 		set => SetVolume(Volume, value);
 	}
 
-	public double Speed => player.PlaybackSession.PlaybackRate;
+	public double Speed
+	{
+		get => player.PlaybackSession.PlaybackRate;
+		set => SetSpeedInternal(value);
+	}
 
+	[Obsolete("Use Speed setter instead")]
 	public void SetSpeed(double speed)
+	{
+		SetSpeedInternal(speed);
+	}
+
+	protected void SetSpeedInternal(double speed)
 	{
 		player.PlaybackSession.PlaybackRate = Math.Clamp(speed, MinimumSpeed, MaximumSpeed);
 	}
@@ -48,37 +58,93 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool CanSeek => player.PlaybackSession.CanSeek;
 
-    public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
-    {
-        player = CreatePlayer();
+	public static Windows.Storage.Streams.IRandomAccessStream ConvertToRandomAccessStream(MemoryStream memoryStream)
+	{
+		var randomAccessStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+		using (var outputStream = randomAccessStream.GetOutputStreamAt(0))
+		{
+			using (var dataWriter = new Windows.Storage.Streams.DataWriter(outputStream))
+			{
+				dataWriter.WriteBytes(memoryStream.ToArray());
+				dataWriter.StoreAsync().AsTask().GetAwaiter().GetResult();
+			}
+		}
+		return randomAccessStream;
+	}
+
+	public AudioPlayer(AudioPlayerOptions audioPlayerOptions)
+	{
+		player = CreatePlayer();
 
 		if (player is null)
 		{
 			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
 		}
 
-        player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
-        player.MediaEnded += OnPlaybackEnded;
+		player.MediaFailed += OnError;
+		player.MediaEnded += OnPlaybackEnded;
 		SetSpeed(1.0);
 	}
 
-    public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
-    {
-        player = CreatePlayer();
+	void OnError(MediaPlayer sender, MediaPlayerFailedEventArgs e)
+	{
+		OnError(new MediaPlayerFailedEventArgsWrapper(e));
+	}
+
+	public void SetSource(Stream audioStream)
+	{
+		if (audioStream is System.IO.MemoryStream memoryStream)
+		{
+			var winStream = ConvertToRandomAccessStream(memoryStream);
+			player.Source = MediaSource.CreateFromStream(winStream, string.Empty);
+		}
+		else
+		{
+			player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+		}
+	}
+
+	public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
+	{
+		player = CreatePlayer();
 
 		if (player is null)
 		{
 			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
 		}
 
-        player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
-        player.MediaEnded += OnPlaybackEnded;
+		if (audioStream is System.IO.MemoryStream memoryStream)
+		{
+			var winStream = ConvertToRandomAccessStream(memoryStream);
+			player.Source = MediaSource.CreateFromStream(winStream, string.Empty);
+		}
+		else
+		{
+			player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+		}
+
+
+		player.MediaEnded += OnPlaybackEnded;
 		SetSpeed(1.0);
 	}
 
-    void OnPlaybackEnded(MediaPlayer sender, object args)
-    {
-        PlaybackEnded?.Invoke(sender, EventArgs.Empty);
+	public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
+	{
+		player = CreatePlayer();
+
+		if (player is null)
+		{
+			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
+		}
+
+		player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
+		player.MediaEnded += OnPlaybackEnded;
+		SetSpeed(1.0);
+	}
+
+	void OnPlaybackEnded(MediaPlayer sender, object args)
+	{
+		PlaybackEnded?.Invoke(sender, EventArgs.Empty);
 	}
 
 	public void Play()
@@ -106,7 +172,7 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		Pause();
 		Seek(0);
-		PlaybackEnded?.Invoke(this, EventArgs.Empty);
+		OnPlaybackEnded(player, EventArgs.Empty); //todo check for double invoke?
 	}
 
 	public void Seek(double position)
@@ -116,9 +182,16 @@ partial class AudioPlayer : IAudioPlayer
 			return;
 		}
 
-		if (player.PlaybackSession.CanSeek)
+		try
 		{
-			player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
+			if (player.PlaybackSession.CanSeek)
+			{
+				player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
+			}
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
 		}
 	}
 
@@ -149,6 +222,7 @@ partial class AudioPlayer : IAudioPlayer
 		{
 			Stop();
 
+			player.MediaFailed -= OnError;
 			player.MediaEnded -= OnPlaybackEnded;
 			player.Dispose();
 		}
@@ -156,3 +230,19 @@ partial class AudioPlayer : IAudioPlayer
 		isDisposed = true;
 	}
 }
+
+public class MediaPlayerFailedEventArgsWrapper : EventArgs
+{
+	public MediaPlayerFailedEventArgs Error { get; }
+
+	public int ErrorCode { get; }
+	public string ErrorMessage { get; }
+
+	public MediaPlayerFailedEventArgsWrapper(MediaPlayerFailedEventArgs args)
+	{
+		Error = args ?? throw new ArgumentNullException(nameof(args));
+		ErrorCode = (int)args.Error;
+		ErrorMessage = args.Error.ToString();
+	}
+}
+

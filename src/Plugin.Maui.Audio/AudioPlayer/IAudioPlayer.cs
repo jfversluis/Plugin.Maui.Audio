@@ -10,6 +10,11 @@ public interface IAudioPlayer : IAudio
 	///</Summary>
 	event EventHandler PlaybackEnded;
 
+	/// <summary>
+	/// Something bad happened while loading media or playing.
+	/// </summary>
+	event EventHandler Error;
+
 	///<Summary>
 	/// Begin playback or resume if paused.
 	///</Summary>
@@ -24,4 +29,10 @@ public interface IAudioPlayer : IAudio
 	/// Stop playback and set the current position to the beginning.
 	///</Summary>
 	void Stop();
+
+	/// <summary>
+	/// Change current audio source, reusing the player instance.
+	/// </summary>
+	/// <param name="audioStream"></param>
+	void SetSource(Stream audioStream);
 }
