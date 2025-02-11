@@ -20,7 +20,10 @@ partial class AudioRecorder : IAudioRecorder
 	int channels;
 	int bitDepth;
 
-	public AudioRecorder(AudioRecorderOptions options)
+	byte[]? audioData;
+    byte[]? audioDataChunk;
+
+    public AudioRecorder(AudioRecorderOptions options)
 	{
 		var packageManager = Android.App.Application.Context.PackageManager;
 
@@ -74,6 +77,8 @@ partial class AudioRecorder : IAudioRecorder
 		audioRecord = GetAudioRecord(sampleRate, channelIn, encoding, (int)options.BitDepth);
 
 		audioRecord.StartRecording();
+		SoundDetected = false;
+
 		Task.Run(WriteAudioDataToFile);
 
 		return Task.CompletedTask;
@@ -84,7 +89,7 @@ partial class AudioRecorder : IAudioRecorder
 		this.sampleRate = sampleRate;
 		this.bitDepth = bitDepth;
 		this.channels = channels == ChannelIn.Mono ? 1 : 2;
-		this.bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channels, encoding) * bitDepth;
+		this.bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channels, encoding);
 
 		return new AudioRecord(AudioSource.Mic, sampleRate, channels, encoding, bufferSize);
 	}
@@ -143,7 +148,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	void WriteAudioDataToFile()
 	{
-		var data = new byte[bufferSize];
+		audioData = new byte[bufferSize];
 
 		rawFilePath = GetTempFilePath();
 
@@ -162,8 +167,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			while (audioRecord.RecordingState == RecordState.Recording)
 			{
-				var read = audioRecord.Read(data, 0, bufferSize);
-				outputStream.Write(data, 0, read);
+				var bytesRead = audioRecord.Read(audioData, 0, bufferSize);
+				outputStream.Write(audioData, 0, bytesRead);
 			}
 
 			outputStream.Close();
@@ -174,7 +179,6 @@ partial class AudioRecorder : IAudioRecorder
 	{
 		long byteRate = sampleRate * bitDepth * channels / 8;
 
-		var data = new byte[bufferSize];
 
 		try
 		{
@@ -188,9 +192,9 @@ partial class AudioRecorder : IAudioRecorder
 
 				WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
 
-				while (inputStream.Read(data) != -1)
+				while (inputStream.Read(audioData) != -1)
 				{
-					outputStream.Write(data);
+					outputStream.Write(audioData);
 				}
 
 				inputStream.Close();
@@ -283,5 +287,27 @@ partial class AudioRecorder : IAudioRecorder
 			ChannelType.Stereo => ChannelIn.Stereo,
 			_ => throwIfNotSupported ? throw new NotSupportedException("channel type not supported") : SharedChannelTypesToAndroidChannelTypes(AudioRecordingOptions.DefaultChannels, true)
 		};
+	}
+
+	byte[]? GetAudioDataChunk()
+	{
+		audioDataChunk ??= new byte[bufferSize];
+		
+		if (audioData is not null)
+		{
+			if (!audioDataChunk.SequenceEqual(audioData))
+			{
+				Array.Copy(audioData, audioDataChunk, bufferSize);
+				return audioDataChunk;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		else
+		{
+			return null;
+		}
 	}
 }
