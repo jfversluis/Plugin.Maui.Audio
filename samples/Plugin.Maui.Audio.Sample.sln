@@ -6,6 +6,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plugin.Maui.Audio.Sample", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plugin.Maui.Audio", "..\src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj", "{B60F3174-E978-4F2B-B117-F6F0327594C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddAudioCompressionTest", "AddAudioCompressionTest\AddAudioCompressionTest.csproj", "{E6DA727F-02F7-4A80-8849-468DACFF55F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,6 +24,11 @@ Global
 		{B60F3174-E978-4F2B-B117-F6F0327594C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B60F3174-E978-4F2B-B117-F6F0327594C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B60F3174-E978-4F2B-B117-F6F0327594C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6DA727F-02F7-4A80-8849-468DACFF55F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6DA727F-02F7-4A80-8849-468DACFF55F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6DA727F-02F7-4A80-8849-468DACFF55F3}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{E6DA727F-02F7-4A80-8849-468DACFF55F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6DA727F-02F7-4A80-8849-468DACFF55F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
