@@ -6,7 +6,7 @@
 public class AudioManager : IAudioManager
 {
 	static IAudioManager? currentImplementation;
-	
+
 	/// <summary>
 	/// Gets the current implementation of the audio manager.
 	/// </summary>
@@ -17,6 +17,12 @@ public class AudioManager : IAudioManager
 
 	/// <inheritdoc cref="IAudioManager.DefaultRecorderOptions"/>
 	public AudioRecorderOptions DefaultRecorderOptions { get; set; } = new();
+
+/// <inheritdoc cref="IAudioManager.CreatePlayer(AudioPlayerOptions)" />
+	public IAudioPlayer CreatePlayer(AudioPlayerOptions? options = default)
+	{
+		return new AudioPlayer(options ?? DefaultPlayerOptions);
+	}
 
 	/// <inheritdoc cref="IAudioManager.CreatePlayer(Stream, AudioPlayerOptions)" />
 	public IAudioPlayer CreatePlayer(Stream audioStream, AudioPlayerOptions? options = default)
@@ -31,14 +37,14 @@ public class AudioManager : IAudioManager
 	{
 		ArgumentNullException.ThrowIfNull(fileName);
 
-        return new AudioPlayer(fileName, options ?? DefaultPlayerOptions);
-    }
+		return new AudioPlayer(fileName, options ?? DefaultPlayerOptions);
+	}
 
 	/// <inheritdoc cref="IAudioManager.CreateAsyncPlayer(string, AudioPlayerOptions)" />
-	public AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream, AudioPlayerOptions? options = default) => new (CreatePlayer(audioStream));
+	public AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream, AudioPlayerOptions? options = default) => new(CreatePlayer(audioStream));
 
 	/// <inheritdoc cref="IAudioManager.CreateAsyncPlayer(string, AudioPlayerOptions)" />
-	public AsyncAudioPlayer CreateAsyncPlayer(string fileName, AudioPlayerOptions? options = default) => new (CreatePlayer(fileName));
+	public AsyncAudioPlayer CreateAsyncPlayer(string fileName, AudioPlayerOptions? options = default) => new(CreatePlayer(fileName));
 
 	/// <inheritdoc cref="IAudioManager.CreateRecorder(AudioRecorderOptions)" />
 	public IAudioRecorder CreateRecorder(AudioRecorderOptions? options = default)

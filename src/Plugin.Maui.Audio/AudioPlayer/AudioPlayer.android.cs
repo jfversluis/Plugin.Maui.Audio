@@ -40,8 +40,14 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	bool isPlaying = false;
 
+	[Obsolete("Use Speed setter instead")]
 	[SupportedOSPlatform("Android23.9")]
 	public void SetSpeed(double sp)
+	{
+		SetSpeedInternal(sp);
+	}
+
+	protected void SetSpeedInternal(double sp)
 	{
 		if (!OperatingSystem.IsAndroidVersionAtLeast(23))
 		{
@@ -105,15 +111,17 @@ partial class AudioPlayer : IAudioPlayer
 		finally
 		{
 			isChangingSpeed = false;
-		}		
+		}
 	}
-
-
 
 	float internalSpeed = 1.0f;
 	double speed = 1.0;
-	public double Speed => speed;
 
+	public double Speed
+	{
+		get => speed;
+		set => SetSpeedInternal(value);
+	}
 	const float minSpeed = 0;
 	const float maxSpeed = 2.5f;
 
@@ -137,12 +145,12 @@ partial class AudioPlayer : IAudioPlayer
 
 	void PrepareAudioSource()
 	{
-		if(audioBytes == null && string.IsNullOrWhiteSpace(file))
+		if (audioBytes == null && string.IsNullOrWhiteSpace(file))
 		{
 			throw new ArgumentException("audio source is not set");
 		}
 
-		if(audioBytes != null && OperatingSystem.IsAndroidVersionAtLeast(23))
+		if (audioBytes != null && OperatingSystem.IsAndroidVersionAtLeast(23))
 		{
 			stream = new MemoryStream(audioBytes);
 			var mediaSource = new StreamMediaDataSource(stream);
@@ -175,7 +183,43 @@ partial class AudioPlayer : IAudioPlayer
 
 		player.Prepare();
 	}
-	
+
+	internal AudioPlayer(AudioPlayerOptions audioPlayerOptions)
+	{
+		player = new MediaPlayer();
+		player.Completion += OnPlaybackEnded;
+	}
+
+	public void SetSource(Stream audioStream)
+	{
+		if (OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			using var memoryStream = new MemoryStream();
+			audioStream.CopyTo(memoryStream);
+			audioBytes = memoryStream.ToArray();
+		}
+		else
+		{
+			// we always store the audio in a file in cache, as the audio stream needs to be accessed again in case the speed is changed
+			cachePath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid()}.wav");
+
+			while (File.Exists(cachePath))
+			{
+				cachePath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid()}.wav");
+			}
+
+			var fileStream = File.Create(cachePath);
+			audioStream.CopyTo(fileStream);
+			fileStream.Close();
+
+			file = cachePath;
+		}
+
+		player.Reset();
+
+		PrepareAudioSource();
+	}
+
 	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
@@ -214,12 +258,12 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
+		player.Error += OnError;
 
 		file = fileName;
 
 		PrepareAudioSource();
 	}
-
 
 	static void DeleteFile(string path)
 	{
@@ -245,7 +289,7 @@ partial class AudioPlayer : IAudioPlayer
 			Seek(0);
 			stopwatch.Reset();
 		}
-		else if(CurrentPosition >= Duration)
+		else if (CurrentPosition >= Duration)
 		{
 			Seek(0);
 			stopwatch.Reset();
@@ -266,7 +310,7 @@ partial class AudioPlayer : IAudioPlayer
 
 		Seek(0);
 		stopwatch.Reset();
-		PlaybackEnded?.Invoke(this, EventArgs.Empty);
+		OnPlaybackEnded(player, EventArgs.Empty);
 	}
 
 	public void Pause()
@@ -285,10 +329,10 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		player.SeekTo((int)(position * 1000D));
 		stopwatch = new AudioStopwatch(TimeSpan.FromSeconds(position), Speed);
-        if (IsPlaying)
-        {
-            stopwatch.Start();
-        }
+		if (IsPlaying)
+		{
+			stopwatch.Start();
+		}
 	}
 
 	void SetVolume(double volume, double balance)
@@ -320,6 +364,11 @@ partial class AudioPlayer : IAudioPlayer
 		PlaybackEnded?.Invoke(this, e);
 	}
 
+	void OnError(object? sender, MediaPlayer.ErrorEventArgs e)
+	{
+		OnError(e);
+	}
+
 	protected virtual void Dispose(bool disposing)
 	{
 		if (isDisposed)
@@ -330,6 +379,7 @@ partial class AudioPlayer : IAudioPlayer
 		if (disposing)
 		{
 			player.Completion -= OnPlaybackEnded;
+			player.Error -= OnError;
 			player.Reset();
 			player.Release();
 			player.Dispose();

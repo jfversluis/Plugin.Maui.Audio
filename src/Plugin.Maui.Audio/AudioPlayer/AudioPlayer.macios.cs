@@ -1,13 +1,11 @@
-﻿using System.Diagnostics;
-using AudioToolbox;
-using AVFoundation;
+﻿using AVFoundation;
 using Foundation;
 
 namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
-	readonly AVAudioPlayer player;
+	AVAudioPlayer player;
 	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
 
@@ -27,9 +25,19 @@ partial class AudioPlayer : IAudioPlayer
 		set => player.Pan = (float)Math.Clamp(value, -1, 1);
 	}
 
-	public double Speed => player?.Rate ?? 0;
+	public double Speed
+	{
+		get => player?.Rate ?? 0;
+		set => SetSpeedInternal(value);
+	}
 
+	[Obsolete("Use Speed setter instead")]
 	public void SetSpeed(double sp)
+	{
+		SetSpeedInternal(sp);
+	}
+
+	protected void SetSpeedInternal(double sp)
 	{
 		// Rate property supports values in the range of 0.5 for half-speed playback to 2.0 for double-speed playback.
 		var speedValue = Math.Clamp((float)sp, 0.5f, 2.0f);
@@ -57,6 +65,46 @@ partial class AudioPlayer : IAudioPlayer
 	}
 
 	public bool CanSeek => true;
+
+	static NSData _emptySource;
+
+	internal AudioPlayer(AudioPlayerOptions audioPlayerOptions)
+	{
+		if (_emptySource == null)
+		{
+			byte[] empty = new byte[16];
+			int sampleRate = 44100;
+			var source = new RawAudioSource(empty, sampleRate, 1);
+			_emptySource = NSData.FromArray(source.Bytes);
+		}
+
+		player = AVAudioPlayer.FromData(_emptySource)
+				 ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
+
+		this.audioPlayerOptions = audioPlayerOptions;
+
+		PreparePlayer();
+	}
+
+	public void SetSource(Stream audioStream)
+	{
+
+		if (player != null)
+		{
+			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			player.DecoderError -= OnPlayerError;
+			ActiveSessionHelper.FinishSession(audioPlayerOptions);
+			Stop();
+			player.Dispose();
+		}
+
+		var data = NSData.FromStream(audioStream)
+				   ?? throw new FailedToLoadAudioException("Unable to convert audioStream to NSData.");
+		player = AVAudioPlayer.FromData(data)
+				 ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
+
+		PreparePlayer();
+	}
 
 	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
@@ -129,12 +177,19 @@ partial class AudioPlayer : IAudioPlayer
 	bool PreparePlayer()
 	{
 		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
-		
+
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
+		player.DecoderError += OnPlayerError;
+
 		player.EnableRate = true;
 		player.PrepareToPlay();
 
 		return true;
+	}
+
+	void OnPlayerError(object? sender, AVErrorEventArgs e)
+	{
+		OnError(e);
 	}
 
 	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
