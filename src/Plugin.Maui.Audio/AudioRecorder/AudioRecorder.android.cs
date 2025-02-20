@@ -13,6 +13,7 @@ partial class AudioRecorder : IAudioRecorder
 	AudioRecord? audioRecord;
 	string? audioFilePath;
 
+	const int wavHeaderLength = 44;
 	int bufferSize;
 	int sampleRate;
 	readonly AudioRecorderOptions options;
@@ -145,7 +146,7 @@ partial class AudioRecorder : IAudioRecorder
 		if (audioRecord is not null && outputStream is not null)
 		{
 			var header = GetWaveFileHeader(0, 0, sampleRate, channels, bitDepth);
-			outputStream.Write(header, 0, 44);
+			outputStream.Write(header, 0, wavHeaderLength);
 
 			while (audioRecord.RecordingState == RecordState.Recording)
 			{
@@ -173,7 +174,7 @@ partial class AudioRecorder : IAudioRecorder
 				var header = GetWaveFileHeader(totalAudioLength, totalDataLength, sampleRate, channels, bitDepth);
 
 				randomAccessFile.Seek(0);
-				randomAccessFile.Write(header, 0, 44);
+				randomAccessFile.Write(header, 0, wavHeaderLength);
 
 				randomAccessFile.Close();
 			}
@@ -191,7 +192,7 @@ partial class AudioRecorder : IAudioRecorder
 		int blockAlign = (int)(channels * (bitDepth / 8));
 		long byteRate = sampleRate * blockAlign;
 
-		byte[] header = new byte[44];
+		byte[] header = new byte[wavHeaderLength];
 
 		header[0] = Convert.ToByte('R'); // RIFF/WAVE header
 		header[1] = Convert.ToByte('I'); // (byte)'I'
