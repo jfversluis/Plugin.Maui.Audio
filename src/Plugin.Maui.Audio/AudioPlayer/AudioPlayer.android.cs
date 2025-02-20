@@ -8,7 +8,7 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
-	readonly MediaPlayer player;
+	readonly MediaPlayer player; // For broader format support (FLAC, etc.), consider using ExoPlayer instead in future
 	double volume = 0.5;
 	double balance = 0;
 	string cachePath = string.Empty;

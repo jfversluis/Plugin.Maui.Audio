@@ -11,7 +11,7 @@ partial class AudioRecorder : IAudioRecorder
 	public bool IsRecording => recorder?.Recording ?? false;
 
 	string? destinationFilePath;
-	AVAudioRecorder? recorder;
+	AVAudioRecorder? recorder; //can handle wav pcm or aac compressed
 	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
 
 	readonly AudioRecorderOptions audioRecorderOptions;
@@ -109,10 +109,11 @@ partial class AudioRecorder : IAudioRecorder
 	{
 		return type switch
 		{
-			Encoding.LinearPCM => AudioFormatType.LinearPCM,
+			Encoding.Wav => AudioFormatType.LinearPCM,
 			Encoding.ULaw => AudioFormatType.ULaw,
 			Encoding.Flac => AudioFormatType.Flac,
 			Encoding.Alac => AudioFormatType.AppleLossless,
+			Encoding.Aac => AudioFormatType.MPEG4AAC,
 			_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToiOSEncoding(AudioRecordingOptions.DefaultEncoding, true)
 		};
 	}

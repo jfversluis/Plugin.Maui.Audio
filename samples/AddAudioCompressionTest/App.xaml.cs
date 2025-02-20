@@ -1,4 +1,5 @@
-﻿using Plugin.Maui.Audio;
+﻿using Microsoft.Maui.Controls;
+using Plugin.Maui.Audio;
 using System.Diagnostics;
 
 namespace AddAudioCompressionTest;
@@ -18,7 +19,32 @@ public partial class MyTestPage : ContentPage {
 	IAudioSource recordedAudio;
 
 	AbsoluteLayout absButton;
+	Label statusLabel;
 
+
+	//========================================
+	//=== SET CODEC OR OTHER OPTIONS HERE
+	//========================================
+	string fileName = "audiotemp.m4a"; // saved to cache folder
+	AudioRecordingOptions options = new() {
+		Encoding = Encoding.Aac
+	};
+	//========================================
+	//=== SET PATH TO SAVE FILES TO
+	//========================================
+#if ANDROID
+	string cacheFolder = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDocuments).AbsoluteFile.Path.ToString(); //gives general documents folder
+#elif IOS
+	string cacheFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+#elif WINDOWS
+	string cacheFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+#else
+	string cacheFolder = "";
+#endif
+	//========================================
+
+
+	// Page build
 	public MyTestPage() {
 
 		AbsoluteLayout abs = new();
@@ -28,10 +54,19 @@ public partial class MyTestPage : ContentPage {
 		absButton.BackgroundColor = Colors.AliceBlue;
 		abs.Add(absButton);
 
+		statusLabel = new();
+		statusLabel.Text = "STATUS: CLEARED";
+		statusLabel.BackgroundColor = Colors.WhiteSmoke;
+		statusLabel.HorizontalTextAlignment = TextAlignment.Center;
+		statusLabel.FontSize = 30;
+		abs.Add(statusLabel);
+
 		this.SizeChanged += delegate {
 			if (this.Width > 0) {
 				absButton.WidthRequest = this.Width;
 				absButton.HeightRequest = this.Height;
+				statusLabel.WidthRequest = this.Width;
+				statusLabel.TranslationY = this.Height * 0.5;
 			}
 		};
 
@@ -77,57 +112,29 @@ public partial class MyTestPage : ContentPage {
 		clearLabel.GestureRecognizers.Add(clearTap);
 
 	}
-
-	async Task startRecording() {
-
-		if (await Permissions.RequestAsync<Permissions.Microphone>() != PermissionStatus.Granted) {
-			//popup to instruct how to add permissions
-			Debug.WriteLine("NO MIC PERMISSIONS");
-			return;
-		}
-
-		if (!audioRecorder.IsRecording) {
-			await audioRecorder.StartAsync();
-			absButton.BackgroundColor = Colors.DarkRed;
-			Debug.WriteLine("STARTED RECORDING");
-		}
-	}
-	async Task stopRecording() {
+	//=========================
+	// CLEAR RECORDING
+	//=========================
+	async Task clearRecording() {
 		if (audioRecorder.IsRecording) {
-			absButton.BackgroundColor = Colors.DarkGoldenrod;
-			Debug.WriteLine("STOP RECORDING");
-			recordedAudio = await audioRecorder.StopAsync();
-
-#if ANDROID
-			var stream = recordedAudio.GetAudioStream();
-			//string cacheFolder = Android.App.Application.Context.GetExternalFilesDir(Android.OS.Environment.DirectoryDownloads).AbsoluteFile.Path.ToString(); // gives app package in data structure
-			string cacheFolder = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDocuments).AbsoluteFile.Path.ToString(); //gives general downloads folder
-			cacheFolder = cacheFolder + System.IO.Path.DirectorySeparatorChar;
-
-			string fileNameToSave = cacheFolder + "audiotemp.wav";
-			if (stream != null) {
-
-				Directory.CreateDirectory(Path.GetDirectoryName(fileNameToSave));
-				if (System.IO.File.Exists(fileNameToSave)) {
-					System.IO.File.Delete(fileNameToSave); //must delete first or length not working properly
-				}
-				FileStream fileStream = System.IO.File.Create(fileNameToSave);
-				fileStream.Position = 0;
-				stream.Position = 0;
-				stream.CopyTo(fileStream);
-				fileStream.Close();
-
-				Debug.WriteLine("AUDIO FILE SAVED DONE: " + fileNameToSave);
-			}
-#endif
+			await stopRecording();
 		}
-	}
+		statusLabel.Text = "STATUS: CLEARED";
+		recordedAudio = null;
+		audioPlayer?.Dispose();
+		audioPlayer = null;
+		absButton.BackgroundColor = Colors.AliceBlue;
 
+	}
+	//=========================
+	// START PLAYBACK
+	//=========================
 	async Task startPlaying() {
 		if (recordedAudio != null) {
 			absButton.BackgroundColor = Colors.DarkGreen;
 
 			Debug.WriteLine("START PLAYBACK");
+			statusLabel.Text = "STATUS: PLAYING";
 
 			var audioStream = recordedAudio.GetAudioStream();
 
@@ -135,10 +142,11 @@ public partial class MyTestPage : ContentPage {
 
 				audioPlayer = audioManager.CreatePlayer(audioStream);
 				audioPlayer.PlaybackEnded += delegate {
+					statusLabel.Text = "STATUS: PLAY FINISHED";
 					absButton.BackgroundColor = Colors.DarkGoldenrod;
 				};
-
 			}
+
 			if (!audioPlayer.IsPlaying) {
 				audioPlayer.Play();
 			}
@@ -147,22 +155,82 @@ public partial class MyTestPage : ContentPage {
 			Debug.WriteLine("TRIED TO START BUT NO AUDIO");
 		}
 	}
+	//=========================
+	// PAUSE PLAYBACK
+	//=========================
 	async Task pausePlayback() {
 		if (audioPlayer != null && audioPlayer.IsPlaying) {
 			absButton.BackgroundColor = Colors.DarkGoldenrod;
+			statusLabel.Text = "STATUS: PAUSED";
 			Debug.WriteLine("PAUSE PLAYBACK");
 			audioPlayer.Pause();
 		}
 	}
 
-	async Task clearRecording() {
-		if (audioRecorder.IsRecording) {
-			await stopRecording();
-		}
-		recordedAudio = null;
-		audioPlayer?.Dispose();
-		audioPlayer = null;
-		absButton.BackgroundColor = Colors.AliceBlue;
+	//=========================
+	// START RECORDING
+	//=========================
+	async Task startRecording() {
+		try {
 
+			if (await Permissions.RequestAsync<Permissions.Microphone>() != PermissionStatus.Granted) {
+				//popup to instruct how to add permissions
+				Debug.WriteLine("NO MIC PERMISSIONS");
+				return;
+			}
+
+			if (!audioRecorder.IsRecording) {
+				
+				await audioRecorder.StartAsync(options);
+				absButton.BackgroundColor = Colors.DarkRed;
+				statusLabel.Text = "STATUS: RECORDING";
+				Debug.WriteLine("STARTED RECORDING");
+			}
+		}
+		catch (Exception ex) {
+			//Windows gives me:
+			//Exception thrown: 'System.InvalidOperationException' in WinRT.Runtime.dll
+			//Exception thrown: 'System.InvalidOperationException' in System.Private.CoreLib.dll
+			//EXCEPTION ON START RECORD: Operation is not valid due to the current state of the object.
+			Debug.WriteLine("EXCEPTION ON START RECORD: " + ex.Message);
+		}
 	}
+
+	//=========================
+	// STOP RECORDING
+	//=========================
+	async Task stopRecording() {
+		if (audioRecorder.IsRecording) {
+			absButton.BackgroundColor = Colors.DarkGoldenrod;
+			statusLabel.Text = "STATUS: STOPPED";
+			Debug.WriteLine("STOP RECORDING");
+			recordedAudio = await audioRecorder.StopAsync();
+
+			var stream = recordedAudio.GetAudioStream();
+			//string cacheFolder = Android.App.Application.Context.GetExternalFilesDir(Android.OS.Environment.DirectoryDownloads).AbsoluteFile.Path.ToString(); // gives app package in data structure
+			Debug.WriteLine($"SAVE TO FOLDER: {cacheFolder}");
+
+			//save to file name (change extension as needed for encoding)
+			string fileNameToSave = Path.Combine(cacheFolder, fileName);
+			
+			if (stream != null) {
+
+				Directory.CreateDirectory(Path.GetDirectoryName(fileNameToSave));
+				if (File.Exists(fileNameToSave)) {
+					File.Delete(fileNameToSave); //must delete first or length not working properly
+				}
+				FileStream fileStream = File.Create(fileNameToSave);
+				fileStream.Position = 0;
+				stream.Position = 0;
+				stream.CopyTo(fileStream);
+				fileStream.Close();
+
+				Debug.WriteLine("AUDIO FILE SAVED DONE: " + fileNameToSave);
+			}
+		}
+	}
+
+	
+
+
 }

@@ -66,19 +66,19 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool CanSeek => true;
 
-	static NSData _emptySource;
+	static NSData? emptySource;
 
 	internal AudioPlayer(AudioPlayerOptions audioPlayerOptions)
 	{
-		if (_emptySource == null)
+		if (emptySource == null)
 		{
 			byte[] empty = new byte[16];
 			int sampleRate = 44100;
 			var source = new RawAudioSource(empty, sampleRate, 1);
-			_emptySource = NSData.FromArray(source.Bytes);
+			emptySource = NSData.FromArray(source.Bytes);
 		}
 
-		player = AVAudioPlayer.FromData(_emptySource)
+		player = AVAudioPlayer.FromData(emptySource)
 				 ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
 		this.audioPlayerOptions = audioPlayerOptions;

@@ -7,7 +7,7 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
-	MediaCapture? mediaCapture;
+	MediaCapture? mediaCapture; // can record audio in both AAC (M4A) and WAV formats
 	string audioFilePath = string.Empty;
 
 	public bool CanRecordAudio { get; private set; } = true;
@@ -107,7 +107,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		switch (options.Encoding)
 		{
-			case Encoding.LinearPCM:
+			case Encoding.Wav:
 				var profilePCM = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
 				profilePCM.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
 				return profilePCM;
@@ -119,6 +119,10 @@ partial class AudioRecorder : IAudioRecorder
 				var profileAlac = MediaEncodingProfile.CreateAlac(AudioEncodingQuality.Auto);
 				profileAlac.Audio = AudioEncodingProperties.CreateAlac(sampleRate, channelCount, bitsPerSample);
 				return profileAlac;
+			case Encoding.Aac: // create aac in .m4a file
+				var profileAac = MediaEncodingProfile.CreateM4a(AudioEncodingQuality.Auto);
+				profileAac.Audio = AudioEncodingProperties.CreateAac(sampleRate, channelCount, bitsPerSample);
+				return profileAac;
 			default:
 				throw new NotSupportedException("Encoding not supported");
 		}

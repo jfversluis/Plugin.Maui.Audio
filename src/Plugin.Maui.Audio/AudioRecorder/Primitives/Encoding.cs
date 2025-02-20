@@ -2,15 +2,16 @@
 
 
 /// <summary>
-/// iOS supports: LinearPCM, ULaw, Alac and Flac <para />
-/// Windows supports: LinearPCM, Alac and Flac <para />
-/// Android supports: LinearPCM <para />
+/// iOS supports: Wav, ULaw, Alac, Flac, Aac <para />
+/// Windows supports: Wav, Alac, Flac, Aac <para />
+/// Android supports: Wav, Aac <para />
 /// </summary>
 public enum Encoding
 {
-	LinearPCM,
-	ULaw,
-	Alac,
-	Flac
+	Wav,	// pcm WAV file
+	ULaw,	// telephony compression
+	Alac,	// apple lossless compression
+	Flac,	// lossless compression
+	Aac		// lossy compression (AAC in MP4/M4A container)
 }
 
