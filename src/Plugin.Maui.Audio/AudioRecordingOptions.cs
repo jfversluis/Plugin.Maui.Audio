@@ -2,7 +2,8 @@
 
 static class DefaultAudioRecordingOptions
 {
-	public static AudioRecordingOptions DefaultOptions = new() {
+	public static AudioRecordingOptions DefaultOptions = new()
+	{
 		SampleRate = AudioRecordingOptions.DefaultSampleRate,
 		Channels = AudioRecordingOptions.DefaultChannels,
 		BitDepth = AudioRecordingOptions.DefaultBitDepth,
