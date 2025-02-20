@@ -8,10 +8,10 @@
 /// </summary>
 public enum Encoding
 {
-	Wav,	// pcm WAV file
-	ULaw,	// telephony compression
-	Alac,	// apple lossless compression
-	Flac,	// lossless compression
-	Aac		// lossy compression (AAC in MP4/M4A container)
+	Wav,    // Uncompressed WAV File (PCM)
+	ULaw,   // Telephony Compression
+	Alac,   // Apple Lossless Audio Compression
+	Flac,   // Free Lossless Audio Compression
+	Aac     // Lossy Compression (AAC in MP4/M4A container)
 }
 
