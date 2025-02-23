@@ -40,13 +40,10 @@ partial class AudioRecorder : IAudioRecorder
 		this.audioRecorderOptions = options;
 	}
 
-	// Start Recording Wrapper Functions
-	public Task StartAsync(AudioRecorderOptions? options) => StartAsync(GetTempFilePath(), options);
-	public Task StartAsync() => StartAsync(GetTempFilePath(), this.audioRecorderOptions);
-	public Task StartAsync(string filePath) => StartAsync(filePath, this.audioRecorderOptions);
+	public Task StartAsync(AudioRecorderOptions? options = null) => StartAsync(GetTempFilePath(), options);
 
 	// Start Recording Main Function
-	public Task StartAsync(string filePath, AudioRecorderOptions? recordingOptions)
+	public Task StartAsync(string filePath, AudioRecorderOptions? recordingOptions = null)
 	{
 		// Check if can record or already recording
 		if (CanRecordAudio == false

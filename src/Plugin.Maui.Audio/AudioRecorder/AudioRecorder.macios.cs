@@ -28,11 +28,9 @@ partial class AudioRecorder : IAudioRecorder
 		return Path.GetTempFileName();
 	}
 
-	public Task StartAsync(AudioRecorderOptions? options) => StartAsync(GetTempFilePath(), options);
-	public Task StartAsync() => StartAsync(GetTempFilePath(), null);
-	public Task StartAsync(string filePath) => StartAsync(filePath, null);
+	public Task StartAsync(AudioRecorderOptions? options = null) => StartAsync(GetTempFilePath(), options);
 
-	public Task StartAsync(string filePath, AudioRecorderOptions? options)
+	public Task StartAsync(string filePath, AudioRecorderOptions? options = null)
 	{
 		if (IsRecording)
 		{

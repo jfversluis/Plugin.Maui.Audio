@@ -13,17 +13,15 @@ partial class AudioRecorder : IAudioRecorder
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
 
-	readonly AudioRecorderOptions options;
+	AudioRecorderOptions audioRecorderOptions;
+	static readonly AudioRecorderOptions defaultOptions = new AudioRecorderOptions();
 
 	public AudioRecorder(AudioRecorderOptions options)
 	{
-		this.options = options;
+		this.audioRecorderOptions = options;
 	}
 
-	public Task StartAsync() => StartAsync(DefaultAudioRecordingOptions.DefaultOptions);
-	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
-
-	public async Task StartAsync(AudioRecordingOptions options)
+	public async Task StartAsync(AudioRecorderOptions? options = null)
 	{
 		var localFolder = ApplicationData.Current.LocalFolder;
 		var fileName = Path.GetRandomFileName();
@@ -33,13 +31,16 @@ partial class AudioRecorder : IAudioRecorder
 		await StartAsync(fileOnDisk.Path, options);
 	}
 
-
-
-	public async Task StartAsync(string filePath, AudioRecordingOptions options)
+	public async Task StartAsync(string filePath, AudioRecorderOptions? options = null)
 	{
 		if (mediaCapture is not null)
 		{
 			throw new InvalidOperationException("Recording already in progress");
+		}
+		
+		if (options is not null)
+		{
+			audioRecorderOptions = options;
 		}
 
 		try
@@ -68,21 +69,21 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			try
 			{
-				var profile = SharedOptionsToWindowsMediaProfile(options);
+				var profile = SharedOptionsToWindowsMediaProfile(audioRecorderOptions);
 				await mediaCapture?.StartRecordToStorageFileAsync(profile, fileOnDisk);
 			}
 			catch
 			{
-				if(options.ThrowIfNotSupported)
+				if (audioRecorderOptions.ThrowIfNotSupported)
 				{
 					throw;
 				}
 
 				var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
 
-				uint sampleRate =  (uint)DefaultAudioRecordingOptions.DefaultOptions.SampleRate;
-				uint channelCount = (uint)DefaultAudioRecordingOptions.DefaultOptions.Channels;
-				uint bitsPerSample = (uint)DefaultAudioRecordingOptions.DefaultOptions.BitDepth;
+				uint sampleRate =  (uint)defaultOptions.SampleRate;
+				uint channelCount = (uint)defaultOptions.Channels;
+				uint bitsPerSample = (uint)defaultOptions.BitDepth;
 
 				profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
 
