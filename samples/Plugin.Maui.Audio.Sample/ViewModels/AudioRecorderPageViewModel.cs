@@ -134,14 +134,18 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		{
 			audioRecorder = audioManager.CreateRecorder();
 
-			var options = new AudioRecordingOptions()
+			var options = new AudioRecorderOptions
 			{
-				SampleRate = SelectedSampleRate == -1 ? AudioRecordingOptions.DefaultSampleRate : SelectedSampleRate,
 				Channels = SelectedChannelType,
 				BitDepth = SelectedBitDepth,
 				Encoding = SelectedEncoding,
 				ThrowIfNotSupported = true
 			};
+
+			if (SelectedSampleRate != -1)
+			{
+				options.SampleRate = SelectedSampleRate;
+			}
 
 			try
 			{

@@ -30,14 +30,14 @@ public interface IAudioRecorder
 	/// Start recording audio to disk in a randomly generated file. AudioRecordingOptions are only supported on Android and iOS.
 	///</Summary>
 	///<param name="options">The audio recording options.</param>
-	Task StartAsync(AudioRecordingOptions options) => Task.CompletedTask;
+	Task StartAsync(AudioRecorderOptions? options);
 
 	///<Summary>
 	/// Start recording audio to disk in the supplied <paramref name="filePath"/>.
 	///</Summary>
 	///<param name="filePath">The path on disk to store the recording. AudioRecordingOptions are only supported on Android and iOS. If options are used, read the audio stream and write your own file. The default header might not match your options.</param>
 	///<param name="options">The audio recording options.</param>
-	Task StartAsync(string filePath, AudioRecordingOptions options) => Task.CompletedTask;
+	Task StartAsync(string filePath, AudioRecorderOptions? options);
 
 	///<Summary>
 	/// Stop recording and return the <see cref="IAudioSource"/> instance with the recording data.
