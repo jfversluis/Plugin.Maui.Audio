@@ -28,7 +28,7 @@ public interface IAudio : IDisposable
 	///<Summary>
 	/// Gets the playback speed where 1 is normal speed. <see cref="MinimumSpeed"/> and <see cref="MaximumSpeed"/> can be used to determine the minumum and maximum value for each platform.
 	/// Sets the playback speed where 1 is normal speed. <see cref="MinimumSpeed"/> and <see cref="MaximumSpeed"/> can be used to determine the minumum and maximum value for each platform.
-	/// </summary>
+	///</summary>
 	///<remarks>
 	/// The minimum and maximum speeds that can be set here are different per platform. Setting values ouside of these ranges will not throw an exception, it will clamp to the minimum or maximum value.
 	///<para>- Android: between 0 and 2.5. Setting the value to 0 will pause playback, playback will not be resumed when incrementing the value again.</para>

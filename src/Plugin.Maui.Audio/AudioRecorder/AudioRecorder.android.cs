@@ -127,7 +127,7 @@ partial class AudioRecorder : IAudioRecorder
 			OutputFormat outputFormat = OutputFormat.Default;
 
 			// Parse the RecordingOptions into AudioEncoder & OutputFormat
-			if (recordingOptions.Encoding == Encoding.Aac)
+			if (audioRecorderOptions.Encoding == Encoding.Aac)
 			{
 				audioEncoder = AudioEncoder.Aac;
 				outputFormat = OutputFormat.Mpeg4; //creates mp4 aac file (functionally identical to an M4A) 
