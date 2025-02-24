@@ -18,7 +18,6 @@ partial class AudioRecorder : IAudioRecorder
 
 	bool mediaRecorderIsRecording = false; // Necessary for MediaRecorder as there is no built-in "isRecording" method or property 
 
-	string? rawFilePath;
 	string? audioFilePath;
 	
 	static readonly AudioRecorderOptions defaultOptions = new AudioRecorderOptions();
@@ -94,7 +93,7 @@ partial class AudioRecorder : IAudioRecorder
 				if (audioRecorderOptions.ThrowIfNotSupported)
 				{
 					throw new FailedToStartRecordingException(
-						"Unable to get bufferSize with provided reording options.");
+						"Unable to get bufferSize with provided recording options.");
 				}
 				else
 				{
@@ -179,32 +178,10 @@ partial class AudioRecorder : IAudioRecorder
 			throw new InvalidOperationException("'audioFilePath' is null, this really should not happen.");
 		}
 
-
-		# error "replace this with the Update method"
-		// Check saved RecordingOptions for which recorder method to use
 		if (this.audioRecorderOptions.Encoding == Encoding.Wav)
 		{
-			CopyWaveFile(rawFilePath, audioFilePath);
+			UpdateAudioHeaderToFile();
 		}
-		else
-		{
-			CopyAudioFile(rawFilePath, audioFilePath);
-		}
-
-		try
-		{
-			// lets delete the temp file with the raw data, after we have created the WAVE file
-			if (System.IO.File.Exists(rawFilePath))
-			{
-				System.IO.File.Delete(rawFilePath);
-			}
-		}
-		catch
-		{
-			Trace.TraceWarning("delete raw wav file failed.");
-		}
-
-		UpdateAudioHeaderToFile();
 
 		return Task.FromResult(GetRecording());
 	}
@@ -248,7 +225,7 @@ partial class AudioRecorder : IAudioRecorder
 			throw new FileLoadException($"unable to create a new file: {ex.Message}");
 		}
 
-		if (audioRecord is not null && outputStream is not null)
+		if (audioRecord is not null)
 		{
 			var header = GetWaveFileHeader(0, 0, sampleRate, channels, bitDepth);
 			outputStream.Write(header, 0, wavHeaderLength);
@@ -263,57 +240,21 @@ partial class AudioRecorder : IAudioRecorder
 		}
 	}
 
-	void CopyAudioFile(string? sourcePath, string destinationPath)
-	{
-		var data = new byte[8192]; // arbitrary size for copy processing, 4096 or 8192 perhaps
-
-		try
-		{
-			FileInputStream inputStream = new(sourcePath);
-			FileOutputStream outputStream = new(destinationPath);
-
-			if (inputStream?.Channel is not null)
-			{
-				var totalAudioLength = inputStream.Channel.Size();
-				var totalDataLength = totalAudioLength;
-
-				while (inputStream.Read(data) != -1)
-				{
-					outputStream.Write(data);
-				}
-
-				inputStream.Close();
-				outputStream.Close();
-			}
-		}
-		catch (Exception ex)
-		{
-			// Trace the exception
-			Trace.WriteLine($"An error occurred while copying the wave file: {ex.Message}");
-			Trace.WriteLine($"Stack Trace: {ex.StackTrace}");
-		}
-	}
-
 	void UpdateAudioHeaderToFile()
 	{
-		var data = new byte[bufferSize];
-
 		try
 		{
 			RandomAccessFile randomAccessFile = new(audioFilePath, "rw");
+			
+			var totalAudioLength = randomAccessFile.Length();
+			var totalDataLength = totalAudioLength + 36;
 
-			if (randomAccessFile is not null)
-			{
-				var totalAudioLength = randomAccessFile.Length();
-				var totalDataLength = totalAudioLength + 36;
+			var header = GetWaveFileHeader(totalAudioLength, totalDataLength, sampleRate, channels, bitDepth);
 
-				var header = GetWaveFileHeader(totalAudioLength, totalDataLength, sampleRate, channels, bitDepth);
+			randomAccessFile.Seek(0);
+			randomAccessFile.Write(header, 0, wavHeaderLength);
 
-				randomAccessFile.Seek(0);
-				randomAccessFile.Write(header, 0, wavHeaderLength);
-
-				randomAccessFile.Close();
-			}
+			randomAccessFile.Close();
 		}
 		catch (Exception ex)
 		{
@@ -323,8 +264,6 @@ partial class AudioRecorder : IAudioRecorder
 		}
 	}
 
-	static void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate,
-		int channels, long byteRate)
 	static byte[] GetWaveFileHeader(long audioLength, long dataLength, long sampleRate, int channels, int bitDepth)
 	{
 		int blockAlign = (int)(channels * (bitDepth / 8));
@@ -380,7 +319,7 @@ partial class AudioRecorder : IAudioRecorder
 		return header;
 	}
 
-	Android.Media.Encoding SharedWavEncodingToAndroidEncoding(Encoding type, BitDepth bitDepth,
+	static Android.Media.Encoding SharedWavEncodingToAndroidEncoding(Encoding type, BitDepth bitDepth,
 		bool throwIfNotSupported)
 	{
 		return bitDepth switch
