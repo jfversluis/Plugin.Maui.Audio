@@ -27,6 +27,9 @@ partial class AudioRecorder : IAudioRecorder
 
 	// Recording options that are extracted/solved
 	int bufferSize; // needed for AudioRecord
+
+	const int wavHeaderLength = 44;
+	
 	int sampleRate;
 	int channels;
 	int bitDepth;
@@ -176,6 +179,8 @@ partial class AudioRecorder : IAudioRecorder
 			throw new InvalidOperationException("'audioFilePath' is null, this really should not happen.");
 		}
 
+
+		# error "replace this with the Update method"
 		// Check saved RecordingOptions for which recorder method to use
 		if (this.audioRecorderOptions.Encoding == Encoding.Wav)
 		{
@@ -198,6 +203,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			Trace.TraceWarning("delete raw wav file failed.");
 		}
+
+		UpdateAudioHeaderToFile();
 
 		return Task.FromResult(GetRecording());
 	}
@@ -230,13 +237,11 @@ partial class AudioRecorder : IAudioRecorder
 	{
 		var data = new byte[bufferSize];
 
-		rawFilePath = GetTempFilePath();
-
 		FileOutputStream? outputStream;
 
 		try
 		{
-			outputStream = new FileOutputStream(rawFilePath);
+			outputStream = new FileOutputStream(audioFilePath);
 		}
 		catch (Exception ex)
 		{
@@ -245,6 +250,9 @@ partial class AudioRecorder : IAudioRecorder
 
 		if (audioRecord is not null && outputStream is not null)
 		{
+			var header = GetWaveFileHeader(0, 0, sampleRate, channels, bitDepth);
+			outputStream.Write(header, 0, wavHeaderLength);
+
 			while (audioRecord.RecordingState == RecordState.Recording)
 			{
 				var read = audioRecord.Read(data, 0, bufferSize);
@@ -255,7 +263,6 @@ partial class AudioRecorder : IAudioRecorder
 		}
 	}
 
-	// Copy Function for MediaRecorder Files
 	void CopyAudioFile(string? sourcePath, string destinationPath)
 	{
 		var data = new byte[8192]; // arbitrary size for copy processing, 4096 or 8192 perhaps
@@ -287,46 +294,43 @@ partial class AudioRecorder : IAudioRecorder
 		}
 	}
 
-	// Copy Function for AudioRecord Files (Wav)
-	void CopyWaveFile(string? sourcePath, string destinationPath)
+	void UpdateAudioHeaderToFile()
 	{
-		long byteRate = sampleRate * bitDepth * channels / 8;
-
 		var data = new byte[bufferSize];
 
 		try
 		{
-			FileInputStream inputStream = new(sourcePath);
-			FileOutputStream outputStream = new(destinationPath);
+			RandomAccessFile randomAccessFile = new(audioFilePath, "rw");
 
-			if (inputStream?.Channel is not null)
+			if (randomAccessFile is not null)
 			{
-				var totalAudioLength = inputStream.Channel.Size();
+				var totalAudioLength = randomAccessFile.Length();
 				var totalDataLength = totalAudioLength + 36;
 
-				WriteWaveFileHeader(outputStream, totalAudioLength, totalDataLength, sampleRate, channels, byteRate);
+				var header = GetWaveFileHeader(totalAudioLength, totalDataLength, sampleRate, channels, bitDepth);
 
-				while (inputStream.Read(data) != -1)
-				{
-					outputStream.Write(data);
-				}
+				randomAccessFile.Seek(0);
+				randomAccessFile.Write(header, 0, wavHeaderLength);
 
-				inputStream.Close();
-				outputStream.Close();
+				randomAccessFile.Close();
 			}
 		}
 		catch (Exception ex)
 		{
 			// Trace the exception
-			Trace.WriteLine($"An error occurred while copying the wave file: {ex.Message}");
+			Trace.WriteLine($"An error occurred while updating the wave header: {ex.Message}");
 			Trace.WriteLine($"Stack Trace: {ex.StackTrace}");
 		}
 	}
 
 	static void WriteWaveFileHeader(FileOutputStream outputStream, long audioLength, long dataLength, long sampleRate,
 		int channels, long byteRate)
+	static byte[] GetWaveFileHeader(long audioLength, long dataLength, long sampleRate, int channels, int bitDepth)
 	{
-		byte[] header = new byte[44];
+		int blockAlign = (int)(channels * (bitDepth / 8));
+		long byteRate = sampleRate * blockAlign;
+
+		byte[] header = new byte[wavHeaderLength];
 
 		header[0] = Convert.ToByte('R'); // RIFF/WAVE header
 		header[1] = Convert.ToByte('I'); // (byte)'I'
@@ -360,9 +364,9 @@ partial class AudioRecorder : IAudioRecorder
 		header[29] = (byte)((byteRate >> 8) & 0xff);
 		header[30] = (byte)((byteRate >> 16) & 0xff);
 		header[31] = (byte)((byteRate >> 24) & 0xff);
-		header[32] = (byte)(2 * 16 / 8); // block align
+		header[32] = (byte)(blockAlign); // block align
 		header[33] = 0;
-		header[34] = Convert.ToByte(16); // bits per sample
+		header[34] = Convert.ToByte(bitDepth); // bits per sample
 		header[35] = 0;
 		header[36] = Convert.ToByte('d');
 		header[37] = Convert.ToByte('a');
@@ -373,7 +377,7 @@ partial class AudioRecorder : IAudioRecorder
 		header[42] = (byte)((audioLength >> 16) & 0xff);
 		header[43] = (byte)((audioLength >> 24) & 0xff);
 
-		outputStream.Write(header, 0, 44);
+		return header;
 	}
 
 	Android.Media.Encoding SharedWavEncodingToAndroidEncoding(Encoding type, BitDepth bitDepth,
