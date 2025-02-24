@@ -52,8 +52,8 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		this.dispatcher = dispatcher;
 	}
 
-	ChannelTypesViewModel selectedChannelType;
-	public ChannelTypesViewModel SelectedChannelType
+	ChannelType selectedChannelType;
+	public ChannelType SelectedChannelType
 	{
 		get => selectedChannelType;
 		set
@@ -62,14 +62,10 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			NotifyPropertyChanged();
 		}
 	}
-	public List<ChannelTypesViewModel> ChannelTypes { get; set; } = new List<ChannelTypesViewModel>(Enum.GetValues(typeof(ChannelType)).Cast<ChannelType>().Select(x => new ChannelTypesViewModel()
-	{
-		ChannelType = x,
-		Name = x.ToString()
-	}).ToList());
+	public List<ChannelType> ChannelTypes { get; set; } = Enum.GetValues(typeof(ChannelType)).Cast<ChannelType>().ToList();
 
-	BitDepthViewModel selectedBitDepth;
-	public BitDepthViewModel SelectedBitDepth
+	BitDepth selectedBitDepth;
+	public BitDepth SelectedBitDepth
 	{
 		get => selectedBitDepth;
 		set
@@ -78,30 +74,20 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			NotifyPropertyChanged();
 		}
 	}
-	public List<BitDepthViewModel> BitDepths { get; set; } = new List<BitDepthViewModel>(Enum.GetValues(typeof(BitDepth)).Cast<BitDepth>().Select(x => new BitDepthViewModel()
-	{
-		BitDepth = x,
-		Name = x.ToString()
-	}).ToList());
+	public List<BitDepth> BitDepths { get; set; } = Enum.GetValues(typeof(BitDepth)).Cast<BitDepth>().ToList();
 
-
-	EncodingViewModel selectedEconding;
-	public EncodingViewModel SelectedEconding
+	Encoding selectedEncoding;
+	public Encoding SelectedEncoding
 	{
-		get => selectedEconding;
+		get => selectedEncoding;
 		set
 		{
-			selectedEconding = value;
+			selectedEncoding = value;
 			NotifyPropertyChanged();
 		}
 	}
 
-	public List<EncodingViewModel> EncodingOptions { get; set; } = new List<EncodingViewModel>(Enum.GetValues(typeof(Encoding)).Cast<Encoding>().Select(x => new EncodingViewModel()
-	{
-		Encoding = x,
-		Name = x.ToString()
-	}).ToList());
-
+	public List<Encoding> EncodingOptions { get; set; } = Enum.GetValues(typeof(Encoding)).Cast<Encoding>().ToList();
 
 	int selectedSampleRate = -1;
 	public int SelectedSampleRate
@@ -113,6 +99,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			NotifyPropertyChanged();
 		}
 	}
+	
 	public List<int> SampleRates { get; set; } =
 	[
 		8000,
@@ -147,14 +134,18 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		{
 			audioRecorder = audioManager.CreateRecorder();
 
-			var options = new AudioRecordingOptions()
+			var options = new AudioRecorderOptions
 			{
-				SampleRate = SelectedSampleRate == -1 ? AudioRecordingOptions.DefaultSampleRate : SelectedSampleRate,
-				Channels = SelectedChannelType?.ChannelType ?? AudioRecordingOptions.DefaultChannels,
-				BitDepth = SelectedBitDepth?.BitDepth ?? AudioRecordingOptions.DefaultBitDepth,
-				Encoding = SelectedEconding?.Encoding ?? AudioRecordingOptions.DefaultEncoding,
+				Channels = SelectedChannelType,
+				BitDepth = SelectedBitDepth,
+				Encoding = SelectedEncoding,
 				ThrowIfNotSupported = true
 			};
+
+			if (SelectedSampleRate != -1)
+			{
+				options.SampleRate = SelectedSampleRate;
+			}
 
 			try
 			{
