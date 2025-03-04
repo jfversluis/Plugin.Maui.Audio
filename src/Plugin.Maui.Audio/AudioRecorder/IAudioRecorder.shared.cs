@@ -32,4 +32,9 @@ public interface IAudioRecorder
 	/// Stop recording and return the <see cref="IAudioSource"/> instance with the recording data.
 	///</Summary>
 	Task<IAudioSource> StopAsync();
+
+	/// <summary>
+	/// Streamed audio captured
+	/// </summary>
+	event EventHandler<AudioStreamEventArgs> AudioStreamCaptured;
 }

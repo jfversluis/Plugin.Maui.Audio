@@ -7,22 +7,24 @@ namespace Plugin.Maui.Audio;
 partial class AudioRecorder : IAudioRecorder
 {
 	public bool CanRecordAudio => AVAudioSession.SharedInstance().InputAvailable;
-	public bool IsRecording => recorder?.Recording ?? false;
+	public bool IsRecording => recorder is { Recording: true }
+	                           || audioStream is { Active: true };
 
 	string? destinationFilePath;
-	AVAudioRecorder? recorder; //can handle wav pcm or aac compressed
+	AVAudioRecorder? recorder;
 	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
+	AudioStream? audioStream;
 
 	AudioRecorderOptions audioRecorderOptions;
+
+	public event EventHandler<AudioStreamEventArgs>? AudioStreamCaptured;
 
 	public AudioRecorder(AudioRecorderOptions audioRecorderOptions)
 	{
 		this.audioRecorderOptions = audioRecorderOptions;
-
 		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 	}
-
-
+	
 	static string GetTempFilePath()
 	{
 		return Path.GetTempFileName();
@@ -30,7 +32,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	public Task StartAsync(AudioRecorderOptions? options = null) => StartAsync(GetTempFilePath(), options);
 
-	public Task StartAsync(string filePath, AudioRecorderOptions? options = null)
+	public async Task StartAsync(string filePath, AudioRecorderOptions? options = null)
 	{
 		if (IsRecording)
 		{
@@ -44,49 +46,100 @@ partial class AudioRecorder : IAudioRecorder
 
 		ActiveSessionHelper.InitializeSession(audioRecorderOptions);
 
-		var url = NSUrl.FromFilename(filePath);
-		destinationFilePath = filePath;
+		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
+		recorder = null;
 
-		NSObject[] objects = new NSObject[]
+
+		if (options.CaptureMode == CaptureMode.Bundling)
 		{
+			var url = NSUrl.FromFilename(filePath);
+			destinationFilePath = filePath;
+
+			NSObject[] objects = new NSObject[]
+			{
 				NSNumber.FromInt32 (audioRecorderOptions.SampleRate), //Sample Rate
 				NSNumber.FromInt32 ((int)SharedEncodingToiOSEncoding(audioRecorderOptions.Encoding, audioRecorderOptions.ThrowIfNotSupported)),
 				NSNumber.FromInt32 ((int)audioRecorderOptions.Channels), //Channels
 				NSNumber.FromInt32 ((int)audioRecorderOptions.BitDepth), //PCMBitDepth
 				NSNumber.FromBoolean (false), //IsBigEndianKey
 				NSNumber.FromBoolean (false) //IsFloatKey
-		};
+			};
 
-		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
+			var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
-		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new FailedToStartRecordingException("could not create native AVAudioRecorder");
+			recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) 
+			           ?? throw new FailedToStartRecordingException("could not create native AVAudioRecorder");
 
-		recorder.FinishedRecording += Recorder_FinishedRecording;
-		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
+			recorder.FinishedRecording += Recorder_FinishedRecording;
 
-		recorder.PrepareToRecord();
+			recorder.PrepareToRecord();
 
-		return Task.FromResult(recorder.Record());
+			recorder.Record();
+		}
+		else
+		{
+			if (options.Encoding != Encoding.Wav)
+			{
+				throw new NotSupportedException(
+					$"Encoding '{options.Encoding}' is not supported with '{options.CaptureMode}' mode");
+			}
+
+			if (audioStream == null)
+			{
+				audioStream = new AudioStream(
+					options.SampleRate,
+					(int)options.Channels,
+					(int)options.BitDepth);
+
+				audioStream.OnBroadcast += (sender, bytes) =>
+				{
+					AudioStreamCaptured?.Invoke(this, new AudioStreamEventArgs(bytes));
+				};
+			}
+
+			if (!audioStream.Active)
+			{
+				await audioStream.Start();
+			}
+
+			finishedRecordingCompletionSource?.SetResult(true);
+		}
 	}
 
 	public async Task<IAudioSource> StopAsync()
 	{
-		if (recorder is null ||
-			destinationFilePath is null ||
-			finishedRecordingCompletionSource is null)
+		if (finishedRecordingCompletionSource is null)
 		{
 			throw new InvalidOperationException("The recorder is not recording, call StartAsync first.");
 		}
 
-		recorder.Stop();
+		if (audioRecorderOptions.CaptureMode == CaptureMode.Bundling
+		    && destinationFilePath is null)
+		{
+			throw new InvalidOperationException("The recorder has not started, call StartAsync first.");
+		}
+
+		if (audioStream != null)
+		{
+			await audioStream.Stop();
+		}
+
+		recorder?.Stop();
 
 		await finishedRecordingCompletionSource.Task;
 
-		recorder.FinishedRecording -= Recorder_FinishedRecording;
+		if (recorder != null)
+		{
+			recorder.FinishedRecording -= Recorder_FinishedRecording;
+		}
 
 		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 
-		return new FileAudioSource(destinationFilePath);
+		IAudioSource audioSource = (audioRecorderOptions.CaptureMode == CaptureMode.Bundling)
+			? new FileAudioSource(destinationFilePath)
+			: new EmptyAudioSource();
+
+		return audioSource;
 	}
 
 	static readonly NSObject[] keys = new NSObject[]
@@ -98,8 +151,7 @@ partial class AudioRecorder : IAudioRecorder
 		AVAudioSettings.AVLinearPCMIsBigEndianKey,
 		AVAudioSettings.AVLinearPCMIsFloatKey
 	};
-
-
+	
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
 		finishedRecordingCompletionSource?.SetResult(true);
