@@ -25,7 +25,7 @@ public partial class AudioRecorderOptions : BaseOptions
 	/// <summary>
 	/// Encoding type of the audio recording.
 	/// </summary>
-	public Encoding Encoding { get; set; } = Encoding.Aac;
+	public Encoding Encoding { get; set; } = Encoding.Wav;
 
 	/// <summary>
 	/// Bit rate of the audio recording if using audio compression like AAC
