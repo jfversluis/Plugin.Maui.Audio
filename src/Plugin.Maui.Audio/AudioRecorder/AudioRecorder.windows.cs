@@ -100,7 +100,7 @@ partial class AudioRecorder : IAudioRecorder
 		audioFilePath = fileOnDisk.Path;
 	}
 
-	static MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecordingOptions options)
+	static MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecorderOptions options)
 	{
 		uint sampleRate = (uint)options.SampleRate;
 		uint channelCount = (uint)options.Channels;
