@@ -23,13 +23,16 @@ public enum Encoding
 	/// <summary>
 	/// Telephony Compression.
 	/// </summary>
+	[UnsupportedOSPlatform("Android")]
 	[SupportedOSPlatform("iOS")]
 	[SupportedOSPlatform("MacCatalyst")]
+	[UnsupportedOSPlatform("Windows")]
 	ULaw,
 	
 	/// <summary>
 	/// Apple Lossless Audio Compression.
 	/// </summary>
+	[UnsupportedOSPlatform("Android")]
 	[SupportedOSPlatform("iOS")]
 	[SupportedOSPlatform("MacCatalyst")]
 	[SupportedOSPlatform("Windows")]
@@ -38,6 +41,7 @@ public enum Encoding
 	/// <summary>
 	/// Free Lossless Audio Compression.
 	/// </summary>
+	[UnsupportedOSPlatform("Android")]
 	[SupportedOSPlatform("iOS")]
 	[SupportedOSPlatform("MacCatalyst")]
 	[SupportedOSPlatform("Windows")]
@@ -46,6 +50,10 @@ public enum Encoding
 	/// <summary>
 	/// Lossy Compression (AAC in MP4/M4A container).
 	/// </summary>
+	[SupportedOSPlatform("Android31.0")]
+	[SupportedOSPlatform("iOS")]
+	[SupportedOSPlatform("MacCatalyst")]
+	[SupportedOSPlatform("Windows")]
 	Aac
 }
 

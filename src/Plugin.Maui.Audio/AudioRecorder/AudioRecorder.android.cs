@@ -50,10 +50,8 @@ partial class AudioRecorder : IAudioRecorder
 		// Check if can record or already recording
 		if (CanRecordAudio == false
 		    || audioRecord?.RecordingState == RecordState.Recording // AudioRecord is recording
-		    || mediaRecorderIsRecording)
+		    || mediaRecorderIsRecording) // MediaRecorder is recording
 		{
-			// MediaRecorder is recording
-
 			return Task.CompletedTask;
 		}
 
@@ -71,11 +69,7 @@ partial class AudioRecorder : IAudioRecorder
 		this.bitDepth = (int)audioRecorderOptions.BitDepth;
 		this.channels = channelIn == ChannelIn.Mono ? 1 : 2;
 		int bitRate = audioRecorderOptions.BitRate;
-		int numChannels = 1;
-		if (audioRecorderOptions.Channels == ChannelType.Stereo)
-		{
-			numChannels = 2;
-		}
+		int numChannels = (int)audioRecorderOptions.Channels;
 
 		// Wav: AudioRecord Method
 		if (audioRecorderOptions.Encoding == Encoding.Wav)
@@ -85,7 +79,7 @@ partial class AudioRecorder : IAudioRecorder
 				audioRecorderOptions.BitDepth, audioRecorderOptions.ThrowIfNotSupported);
 
 			// Check buffer size 
-			int bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
+			bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelIn, encoding);
 
 			// If the bufferSize is less than or equal to 0, then this device does not support the provided options
 			if (bufferSize <= 0)
@@ -112,17 +106,11 @@ partial class AudioRecorder : IAudioRecorder
 				}
 			}
 
-			this.bufferSize = bufferSize; //save for later AudioRecord calculations
-
-			// Start Recording
 			audioRecord = new AudioRecord(AudioSource.Mic, sampleRate, channelIn, encoding, bufferSize);
 			audioRecord.StartRecording();
 			Task.Run(WriteAudioDataToFile);
-			return Task.CompletedTask;
 		}
-
-		// Aac: MediaRecorder Method
-		else
+		else if (audioRecorderOptions.Encoding == Encoding.Aac)
 		{
 			// Solve encoding
 			AudioEncoder audioEncoder = AudioEncoder.Default;
@@ -138,7 +126,8 @@ partial class AudioRecorder : IAudioRecorder
 			// Create MediaRecorder
 			mediaRecorder =
 				new MediaRecorder(Platform.CurrentActivity
-					.ApplicationContext); //needs context, obsoleted without context//https://stackoverflow.com/questions/73598179/deprecated-mediarecorder-new-mediarecorder#73598440
+					.ApplicationContext); //needs context, obsoleted without context https://stackoverflow.com/questions/73598179/deprecated-mediarecorder-new-mediarecorder#73598440
+			
 			mediaRecorder.Reset();
 			mediaRecorder.SetAudioSource(AudioSource.Mic);
 			mediaRecorder.SetOutputFormat(outputFormat);
@@ -152,9 +141,13 @@ partial class AudioRecorder : IAudioRecorder
 
 			// Set MediaRecorder "is recording" flag true
 			mediaRecorderIsRecording = true;
-
-			return Task.CompletedTask;
 		}
+		else if (audioRecorderOptions.ThrowIfNotSupported)
+		{
+			throw new FailedToStartRecordingException($"Encoding '{audioRecorderOptions.Encoding}' is not supported.");
+		}
+
+		return Task.CompletedTask;
 	}
 
 	// Stop Recording
