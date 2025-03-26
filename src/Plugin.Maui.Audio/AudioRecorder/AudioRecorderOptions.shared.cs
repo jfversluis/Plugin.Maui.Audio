@@ -34,7 +34,7 @@ public partial class AudioRecorderOptions : BaseOptions
 	public int BitRate { get; set; } = 128000;
 
 	/// <summary>
-	/// Gets or sets whether the functionality will thrown an exception if the configured recording options are not supported.
+	/// Gets or sets whether the functionality will throw an exception if the configured recording options are not supported.
 	/// </summary>
 	public bool ThrowIfNotSupported { get; set; } = false;
 }
