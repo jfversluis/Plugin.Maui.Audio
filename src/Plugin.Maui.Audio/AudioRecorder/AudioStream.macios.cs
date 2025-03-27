@@ -23,13 +23,13 @@ class AudioStream
 		BitsPerSample = bitsPerSample;
 	}
 
-	public event EventHandler<byte[]> OnBroadcast;
-	public event EventHandler<bool> OnActiveChanged;
-	public event EventHandler<Exception> OnException;
+	public event EventHandler<byte[]>? OnBroadcast;
+	public event EventHandler<bool>? OnActiveChanged;
+	public event EventHandler<Exception>? OnException;
 
-	public int SampleRate { get; private set; }
-	public int ChannelCount { get; private set; }
-	public int BitsPerSample { get; private set; }
+	public int SampleRate { get; }
+	public int ChannelCount { get; }
+	public int BitsPerSample { get; }
 
 	public bool Active => audioQueue?.IsRunning ?? false;
 
@@ -107,7 +107,7 @@ class AudioStream
 	/// <param name="bufferFunction">The function that returns AudioQueueStatus.</param>
 	/// <param name="successAction">The Action to run if the result is AudioQueueStatus.Ok.</param>
 	/// <param name="failAction">The Action to run if the result is anything other than AudioQueueStatus.Ok.</param>
-	void BufferOperation(Func<AudioQueueStatus> bufferFunction, Action? successAction = null, Action<AudioQueueStatus?>? failAction = null)
+	static void BufferOperation(Func<AudioQueueStatus> bufferFunction, Action? successAction = null, Action<AudioQueueStatus?>? failAction = null)
 	{
 		AudioQueueStatus? status = null;
 		try

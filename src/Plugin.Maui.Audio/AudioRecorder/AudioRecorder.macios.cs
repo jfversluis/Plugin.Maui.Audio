@@ -50,20 +50,20 @@ partial class AudioRecorder : IAudioRecorder
 		recorder = null;
 
 
-		if (options.CaptureMode == CaptureMode.Bundling)
+		if (audioRecorderOptions.CaptureMode == CaptureMode.Bundling)
 		{
 			var url = NSUrl.FromFilename(filePath);
 			destinationFilePath = filePath;
 
-			NSObject[] objects = new NSObject[]
-			{
+			NSObject[] objects =
+			[
 				NSNumber.FromInt32 (audioRecorderOptions.SampleRate), //Sample Rate
 				NSNumber.FromInt32 ((int)SharedEncodingToiOSEncoding(audioRecorderOptions.Encoding, audioRecorderOptions.ThrowIfNotSupported)),
 				NSNumber.FromInt32 ((int)audioRecorderOptions.Channels), //Channels
 				NSNumber.FromInt32 ((int)audioRecorderOptions.BitDepth), //PCMBitDepth
 				NSNumber.FromBoolean (false), //IsBigEndianKey
 				NSNumber.FromBoolean (false) //IsFloatKey
-			};
+			];
 
 			var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
@@ -78,18 +78,18 @@ partial class AudioRecorder : IAudioRecorder
 		}
 		else
 		{
-			if (options.Encoding != Encoding.Wav)
+			if (audioRecorderOptions.Encoding != Encoding.Wav)
 			{
 				throw new NotSupportedException(
-					$"Encoding '{options.Encoding}' is not supported with '{options.CaptureMode}' mode");
+					$"Encoding '{audioRecorderOptions.Encoding}' is not supported with '{audioRecorderOptions.CaptureMode}' mode");
 			}
 
 			if (audioStream == null)
 			{
 				audioStream = new AudioStream(
-					options.SampleRate,
-					(int)options.Channels,
-					(int)options.BitDepth);
+					audioRecorderOptions.SampleRate,
+					(int)audioRecorderOptions.Channels,
+					(int)audioRecorderOptions.BitDepth);
 
 				audioStream.OnBroadcast += (sender, bytes) =>
 				{
@@ -112,7 +112,7 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new InvalidOperationException("The recorder is not recording, call StartAsync first.");
 		}
-
+		
 		if (audioRecorderOptions.CaptureMode == CaptureMode.Bundling
 		    && destinationFilePath is null)
 		{
@@ -142,15 +142,15 @@ partial class AudioRecorder : IAudioRecorder
 		return audioSource;
 	}
 
-	static readonly NSObject[] keys = new NSObject[]
-	{
+	static readonly NSObject[] keys =
+	[
 		AVAudioSettings.AVSampleRateKey,
 		AVAudioSettings.AVFormatIDKey,
 		AVAudioSettings.AVNumberOfChannelsKey,
 		AVAudioSettings.AVLinearPCMBitDepthKey,
 		AVAudioSettings.AVLinearPCMIsBigEndianKey,
 		AVAudioSettings.AVLinearPCMIsFloatKey
-	};
+	];
 	
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
