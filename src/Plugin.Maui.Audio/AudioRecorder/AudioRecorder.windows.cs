@@ -7,23 +7,21 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder : IAudioRecorder
 {
-	MediaCapture? mediaCapture;
+	MediaCapture? mediaCapture; // can record audio in both AAC (M4A) and WAV formats
 	string audioFilePath = string.Empty;
 
 	public bool CanRecordAudio { get; private set; } = true;
 	public bool IsRecording => mediaCapture != null;
 
-	readonly AudioRecorderOptions options;
+	AudioRecorderOptions audioRecorderOptions;
+	static readonly AudioRecorderOptions defaultOptions = new AudioRecorderOptions();
 
 	public AudioRecorder(AudioRecorderOptions options)
 	{
-		this.options = options;
+		this.audioRecorderOptions = options;
 	}
 
-	public Task StartAsync() => StartAsync(DefaultAudioRecordingOptions.DefaultOptions);
-	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
-
-	public async Task StartAsync(AudioRecordingOptions options)
+	public async Task StartAsync(AudioRecorderOptions? options = null)
 	{
 		var localFolder = ApplicationData.Current.LocalFolder;
 		var fileName = Path.GetRandomFileName();
@@ -33,13 +31,16 @@ partial class AudioRecorder : IAudioRecorder
 		await StartAsync(fileOnDisk.Path, options);
 	}
 
-
-
-	public async Task StartAsync(string filePath, AudioRecordingOptions options)
+	public async Task StartAsync(string filePath, AudioRecorderOptions? options = null)
 	{
 		if (mediaCapture is not null)
 		{
 			throw new InvalidOperationException("Recording already in progress");
+		}
+		
+		if (options is not null)
+		{
+			audioRecorderOptions = options;
 		}
 
 		try
@@ -68,21 +69,21 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			try
 			{
-				var profile = SharedOptionsToWindowsMediaProfile(options);
+				var profile = SharedOptionsToWindowsMediaProfile(audioRecorderOptions);
 				await mediaCapture?.StartRecordToStorageFileAsync(profile, fileOnDisk);
 			}
 			catch
 			{
-				if(options.ThrowIfNotSupported)
+				if (audioRecorderOptions.ThrowIfNotSupported)
 				{
 					throw;
 				}
 
 				var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
 
-				uint sampleRate =  (uint)DefaultAudioRecordingOptions.DefaultOptions.SampleRate;
-				uint channelCount = (uint)DefaultAudioRecordingOptions.DefaultOptions.Channels;
-				uint bitsPerSample = (uint)DefaultAudioRecordingOptions.DefaultOptions.BitDepth;
+				uint sampleRate =  (uint)defaultOptions.SampleRate;
+				uint channelCount = (uint)defaultOptions.Channels;
+				uint bitsPerSample = (uint)defaultOptions.BitDepth;
 
 				profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
 
@@ -99,7 +100,7 @@ partial class AudioRecorder : IAudioRecorder
 		audioFilePath = fileOnDisk.Path;
 	}
 
-	static MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecordingOptions options)
+	static MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecorderOptions options)
 	{
 		uint sampleRate = (uint)options.SampleRate;
 		uint channelCount = (uint)options.Channels;
@@ -107,7 +108,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		switch (options.Encoding)
 		{
-			case Encoding.LinearPCM:
+			case Encoding.Wav:
 				var profilePCM = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Auto);
 				profilePCM.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channelCount, bitsPerSample);
 				return profilePCM;
@@ -119,6 +120,10 @@ partial class AudioRecorder : IAudioRecorder
 				var profileAlac = MediaEncodingProfile.CreateAlac(AudioEncodingQuality.Auto);
 				profileAlac.Audio = AudioEncodingProperties.CreateAlac(sampleRate, channelCount, bitsPerSample);
 				return profileAlac;
+			case Encoding.Aac: // create aac in .m4a file
+				var profileAac = MediaEncodingProfile.CreateM4a(AudioEncodingQuality.Auto);
+				profileAac.Audio = AudioEncodingProperties.CreateAac(sampleRate, channelCount, bitsPerSample);
+				return profileAac;
 			default:
 				throw new NotSupportedException("Encoding not supported");
 		}

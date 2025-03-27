@@ -22,18 +22,15 @@
 
 			<Picker Title="Select Channels"
 					ItemsSource="{Binding ChannelTypes}"
-					SelectedItem="{Binding SelectedChannelType, Mode=TwoWay}"
-					ItemDisplayBinding="{Binding Name}" />
+					SelectedItem="{Binding SelectedChannelType, Mode=TwoWay}" />
 
 			<Picker Title="Select Bit Depth"
 					ItemsSource="{Binding BitDepths}"
-					SelectedItem="{Binding SelectedBitDepth, Mode=TwoWay}"
-					ItemDisplayBinding="{Binding Name}" />
+					SelectedItem="{Binding SelectedBitDepth, Mode=TwoWay}" />
 
 			<Picker Title="Select Encoding"
 					ItemsSource="{Binding EncodingOptions}"
-					SelectedItem="{Binding SelectedEconding, Mode=TwoWay}"
-					ItemDisplayBinding="{Binding Name}" />
+					SelectedItem="{Binding SelectedEncoding, Mode=TwoWay}" />
 
 			<Button Text="Start"
 					Command="{Binding StartCommand}" />
