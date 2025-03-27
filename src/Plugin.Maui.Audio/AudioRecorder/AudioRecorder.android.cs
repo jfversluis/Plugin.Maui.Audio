@@ -24,11 +24,10 @@ partial class AudioRecorder : IAudioRecorder
 
 	AudioRecorderOptions audioRecorderOptions;
 
+	public event EventHandler<AudioStreamEventArgs>? AudioStreamCaptured;
+
 	// Recording options that are extracted/solved
 	int bufferSize; // needed for AudioRecord
-
-	const int wavHeaderLength = 44;
-	
 	int sampleRate;
 	int channels;
 	int bitDepth;
@@ -108,10 +107,28 @@ partial class AudioRecorder : IAudioRecorder
 
 			audioRecord = new AudioRecord(AudioSource.Mic, sampleRate, channelIn, encoding, bufferSize);
 			audioRecord.StartRecording();
-			Task.Run(WriteAudioDataToFile);
+
+			switch (audioRecorderOptions.CaptureMode)
+			{
+				case CaptureMode.Bundling:
+					Task.Run(WriteAudioDataToFile);
+					break;
+				case CaptureMode.Streaming:
+					Task.Run(WriteAudioDataToEvent);
+					break;
+			}
+
+			return Task.CompletedTask;
 		}
-		else if (audioRecorderOptions.Encoding == Encoding.Aac)
+		
+		if (audioRecorderOptions.Encoding == Encoding.Aac)
 		{
+			if (audioRecorderOptions.CaptureMode == CaptureMode.Streaming)
+			{
+				throw new NotSupportedException(
+					$"Encoding '{audioRecorderOptions.Encoding}' is not supported with '{audioRecorderOptions.CaptureMode}' mode");
+			}
+
 			// Solve encoding
 			AudioEncoder audioEncoder = AudioEncoder.Default;
 			OutputFormat outputFormat = OutputFormat.Default;
@@ -165,15 +182,18 @@ partial class AudioRecorder : IAudioRecorder
 			mediaRecorderIsRecording = false;
 			mediaRecorder?.Stop();
 		}
-
-		if (audioFilePath is null)
+		
+		if (audioRecorderOptions.CaptureMode == CaptureMode.Bundling)
 		{
-			throw new InvalidOperationException("'audioFilePath' is null, this really should not happen.");
-		}
+			if (audioFilePath is null)
+			{
+				throw new InvalidOperationException("'audioFilePath' is null, this really should not happen.");
+			}
 
-		if (this.audioRecorderOptions.Encoding == Encoding.Wav)
-		{
-			UpdateAudioHeaderToFile();
+			if (audioRecorderOptions.Encoding == Encoding.Wav)
+			{
+				UpdateAudioHeaderToFile();
+			}
 		}
 
 		return Task.FromResult(GetRecording());
@@ -184,7 +204,8 @@ partial class AudioRecorder : IAudioRecorder
 		if ((audioRecord is null && mediaRecorder is null)
 		    || audioRecord?.RecordingState == RecordState.Recording
 		    || mediaRecorderIsRecording
-		    || System.IO.File.Exists(audioFilePath) == false)
+		    || System.IO.File.Exists(audioFilePath) == false
+		    || audioRecorderOptions.CaptureMode == CaptureMode.Streaming)
 		{
 			return new EmptyAudioSource();
 		}
@@ -220,8 +241,8 @@ partial class AudioRecorder : IAudioRecorder
 
 		if (audioRecord is not null)
 		{
-			var header = GetWaveFileHeader(0, 0, sampleRate, channels, bitDepth);
-			outputStream.Write(header, 0, wavHeaderLength);
+			var header = WaveFileHelper.GetWaveFileHeader(0, 0, sampleRate, channels, bitDepth);
+			outputStream.Write(header, 0, WaveFileHelper.WavHeaderLength);
 
 			while (audioRecord.RecordingState == RecordState.Recording)
 			{
@@ -230,6 +251,27 @@ partial class AudioRecorder : IAudioRecorder
 			}
 
 			outputStream.Close();
+		}
+	}
+
+	void WriteAudioDataToEvent()
+	{
+		if (AudioStreamCaptured == null)
+		{
+			throw new InvalidOperationException("'AudioCaptured' event is empty while CaptureMode is 'Live'.");
+		}
+
+		var data = new byte[bufferSize];
+		
+		if (audioRecord is not null && AudioStreamCaptured is not null)
+		{
+			while (audioRecord.RecordingState == RecordState.Recording)
+			{
+				var read = audioRecord.Read(data, 0, bufferSize);
+				var readData = data.Take(read).ToArray();
+
+				AudioStreamCaptured?.Invoke(this, new AudioStreamEventArgs(readData));
+			}
 		}
 	}
 
@@ -242,10 +284,10 @@ partial class AudioRecorder : IAudioRecorder
 			var totalAudioLength = randomAccessFile.Length();
 			var totalDataLength = totalAudioLength + 36;
 
-			var header = GetWaveFileHeader(totalAudioLength, totalDataLength, sampleRate, channels, bitDepth);
+			var header = WaveFileHelper.GetWaveFileHeader(totalAudioLength, totalDataLength, sampleRate, channels, bitDepth);
 
 			randomAccessFile.Seek(0);
-			randomAccessFile.Write(header, 0, wavHeaderLength);
+			randomAccessFile.Write(header, 0, WaveFileHelper.WavHeaderLength);
 
 			randomAccessFile.Close();
 		}
@@ -255,61 +297,6 @@ partial class AudioRecorder : IAudioRecorder
 			Trace.WriteLine($"An error occurred while updating the wave header: {ex.Message}");
 			Trace.WriteLine($"Stack Trace: {ex.StackTrace}");
 		}
-	}
-
-	static byte[] GetWaveFileHeader(long audioLength, long dataLength, long sampleRate, int channels, int bitDepth)
-	{
-		int blockAlign = (int)(channels * (bitDepth / 8));
-		long byteRate = sampleRate * blockAlign;
-
-		byte[] header = new byte[wavHeaderLength];
-
-		header[0] = Convert.ToByte('R'); // RIFF/WAVE header
-		header[1] = Convert.ToByte('I'); // (byte)'I'
-		header[2] = Convert.ToByte('F');
-		header[3] = Convert.ToByte('F');
-		header[4] = (byte)(dataLength & 0xff);
-		header[5] = (byte)((dataLength >> 8) & 0xff);
-		header[6] = (byte)((dataLength >> 16) & 0xff);
-		header[7] = (byte)((dataLength >> 24) & 0xff);
-		header[8] = Convert.ToByte('W');
-		header[9] = Convert.ToByte('A');
-		header[10] = Convert.ToByte('V');
-		header[11] = Convert.ToByte('E');
-		header[12] = Convert.ToByte('f'); // fmt chunk
-		header[13] = Convert.ToByte('m');
-		header[14] = Convert.ToByte('t');
-		header[15] = (byte)' ';
-		header[16] = 16; // 4 bytes - size of fmt chunk
-		header[17] = 0;
-		header[18] = 0;
-		header[19] = 0;
-		header[20] = 1; // format = 1
-		header[21] = 0;
-		header[22] = Convert.ToByte(channels);
-		header[23] = 0;
-		header[24] = (byte)(sampleRate & 0xff);
-		header[25] = (byte)((sampleRate >> 8) & 0xff);
-		header[26] = (byte)((sampleRate >> 16) & 0xff);
-		header[27] = (byte)((sampleRate >> 24) & 0xff);
-		header[28] = (byte)(byteRate & 0xff);
-		header[29] = (byte)((byteRate >> 8) & 0xff);
-		header[30] = (byte)((byteRate >> 16) & 0xff);
-		header[31] = (byte)((byteRate >> 24) & 0xff);
-		header[32] = (byte)(blockAlign); // block align
-		header[33] = 0;
-		header[34] = Convert.ToByte(bitDepth); // bits per sample
-		header[35] = 0;
-		header[36] = Convert.ToByte('d');
-		header[37] = Convert.ToByte('a');
-		header[38] = Convert.ToByte('t');
-		header[39] = Convert.ToByte('a');
-		header[40] = (byte)(audioLength & 0xff);
-		header[41] = (byte)((audioLength >> 8) & 0xff);
-		header[42] = (byte)((audioLength >> 16) & 0xff);
-		header[43] = (byte)((audioLength >> 24) & 0xff);
-
-		return header;
 	}
 
 	static Android.Media.Encoding SharedWavEncodingToAndroidEncoding(Encoding type, BitDepth bitDepth,

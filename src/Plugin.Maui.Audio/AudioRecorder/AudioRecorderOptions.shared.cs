@@ -37,4 +37,10 @@ public partial class AudioRecorderOptions : BaseOptions
 	/// Gets or sets whether the functionality will throw an exception if the configured recording options are not supported.
 	/// </summary>
 	public bool ThrowIfNotSupported { get; set; } = false;
+	
+	/// <summary>
+	/// Mode when captured audio is broadcasted 
+	/// </summary>
+	public CaptureMode CaptureMode { get; set; } = CaptureMode.Bundling;
+
 }

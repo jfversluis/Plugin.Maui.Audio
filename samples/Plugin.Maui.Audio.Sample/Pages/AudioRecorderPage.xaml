@@ -17,6 +17,10 @@
 							 VerticalOptions="Center">
 
 			<Picker Title="Select Sample Rate"
+			        ItemsSource="{Binding CaptureModes}"
+			        SelectedItem="{Binding SelectedCaptureMode, Mode=TwoWay}" />
+
+			<Picker Title="Select Sample Rate"
 					ItemsSource="{Binding SampleRates}"
 					SelectedItem="{Binding SelectedSampleRate, Mode=TwoWay}" />
 

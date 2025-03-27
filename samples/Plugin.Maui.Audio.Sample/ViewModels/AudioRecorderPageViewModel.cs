@@ -12,6 +12,8 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	IAudioSource audioSource = null;
 	readonly Stopwatch recordingStopwatch = new Stopwatch();
 	bool isPlaying;
+	AudioRecorderOptions options;
+	MemoryStream capturedAudioStream;
 
 	public double RecordingTime
 	{
@@ -108,10 +110,36 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		48000
 	];
 
+	public List<CaptureMode> CaptureModes { get; set; } =
+	[
+		CaptureMode.Bundling,
+		CaptureMode.Streaming
+	];
+
+	CaptureMode selectedCaptureMode;
+	public CaptureMode SelectedCaptureMode
+	{
+		get => selectedCaptureMode;
+		set
+		{
+			selectedCaptureMode = value;
+			NotifyPropertyChanged();
+			
+			if (selectedCaptureMode == CaptureMode.Streaming)
+			{
+				// pre-select good streaming values
+				SelectedSampleRate = 44100;
+				SelectedBitDepth = BitDepth.Pcm16bit;
+				SelectedChannelType = ChannelType.Mono;
+				SelectedEncoding = Encoding.Wav;
+			}
+		}
+	}
 
 	async void PlayAudio()
 	{
-		if (audioSource != null)
+		if (audioSource != null
+		    && audioSource is not EmptyAudioSource)
 		{
 			audioPlayer = this.audioManager.CreateAsyncPlayer(((FileAudioSource)audioSource).GetAudioStream());
 
@@ -134,17 +162,27 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		{
 			audioRecorder = audioManager.CreateRecorder();
 
-			var options = new AudioRecorderOptions
+			options = new AudioRecorderOptions
 			{
 				Channels = SelectedChannelType,
 				BitDepth = SelectedBitDepth,
 				Encoding = SelectedEncoding,
+				CaptureMode = SelectedCaptureMode,
 				ThrowIfNotSupported = true
 			};
 
 			if (SelectedSampleRate != -1)
 			{
 				options.SampleRate = SelectedSampleRate;
+			}
+
+			if (options.CaptureMode == CaptureMode.Streaming)
+			{
+				capturedAudioStream = new MemoryStream();
+				audioRecorder.AudioStreamCaptured += (sender, args) =>
+				{
+					capturedAudioStream.Write(args.Data);
+				};
 			}
 
 			try
@@ -177,6 +215,35 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		NotifyPropertyChanged(nameof(IsRecording));
 		StartCommand.ChangeCanExecute();
 		StopCommand.ChangeCanExecute();
+
+		WriteStreamedAudioToAudioSource();
+	}
+
+	void WriteStreamedAudioToAudioSource()
+	{
+		if (options.CaptureMode != CaptureMode.Streaming)
+		{
+			return;
+		}
+
+		var tempWavFile = Path.Combine(FileSystem.CacheDirectory, Path.GetTempFileName());
+		var fileAudioSource = new FileAudioSource(tempWavFile);
+		audioSource = fileAudioSource;
+
+		var audioFilePath = fileAudioSource.GetFilePath();
+		var audioFileStream = File.OpenWrite(audioFilePath);
+
+		var totalAudioLength = capturedAudioStream.Length;
+
+		var header = WaveFileHelper.GetWaveFileHeader(totalAudioLength,
+			totalAudioLength + 36,
+			options.SampleRate,
+			(int)options.Channels,
+			(int)options.BitDepth);
+
+		audioFileStream.Write(header);
+		audioFileStream.Write(capturedAudioStream.ToArray());
+		audioFileStream.Close();
 	}
 
 	void UpdateRecordingTime()

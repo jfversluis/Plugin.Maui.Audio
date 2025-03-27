@@ -15,4 +15,6 @@ partial class AudioRecorder : IAudioRecorder
 	public Task StartAsync(string filePath, AudioRecorderOptions? options = null) => Task.CompletedTask;
 
 	public Task<IAudioSource> StopAsync() => Task.FromResult<IAudioSource>(new EmptyAudioSource());
+
+	public event EventHandler<AudioStreamEventArgs>? AudioStreamCaptured;
 }
