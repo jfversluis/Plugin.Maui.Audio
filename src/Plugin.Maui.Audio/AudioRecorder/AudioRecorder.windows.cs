@@ -23,12 +23,14 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task StartAsync(AudioRecorderOptions? options = null)
 	{
-		var localFolder = ApplicationData.Current.LocalFolder;
+		//var localFolder = ApplicationData.Current.LocalFolder throws an exception when consumed by some users
+		//See - https://github.com/jfversluis/Plugin.Maui.Audio/issues/145
+		var localFolder = FileSystem.AppDataDirectory;
 		var fileName = Path.GetRandomFileName();
+		var filePath = Path.Combine(localFolder, fileName);
+		File.Create(filePath).Dispose();
 
-		var fileOnDisk = await localFolder.CreateFileAsync(fileName);
-
-		await StartAsync(fileOnDisk.Path, options);
+		await StartAsync(filePath, options);
 	}
 
 	public async Task StartAsync(string filePath, AudioRecorderOptions? options = null)
