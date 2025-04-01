@@ -43,7 +43,8 @@ public static class MauiAppBuilderExtensions
     public static MauiAppBuilder AddAudio(
         this MauiAppBuilder mauiAppBuilder,
         Action<AudioPlayerOptions>? configurePlaybackOptions = null,
-        Action<AudioRecorderOptions>? configureRecordingOptions = null)
+        Action<AudioRecorderOptions>? configureRecordingOptions = null,
+        Action<AudioStreamOptions>? configureStreamerOptions = null)
     {
         var playbackOptions = new AudioPlayerOptions();
         configurePlaybackOptions?.Invoke(playbackOptions);
@@ -53,7 +54,11 @@ public static class MauiAppBuilderExtensions
         configureRecordingOptions?.Invoke(recordingOptions);
         AudioManager.Current.DefaultRecorderOptions = recordingOptions;
 
-        mauiAppBuilder.Services.AddSingleton(AudioManager.Current);
+        var streamerOptions = new AudioStreamOptions();
+        configureStreamerOptions?.Invoke(streamerOptions);
+        AudioManager.Current.DefaultStreamerOptions = streamerOptions;
+
+		mauiAppBuilder.Services.AddSingleton(AudioManager.Current);
 
         return mauiAppBuilder;
     }

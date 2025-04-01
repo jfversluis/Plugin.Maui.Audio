@@ -27,6 +27,14 @@ public static class MauiProgram
 					recordingOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
 					recordingOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
 #endif
+				},
+				streamerOptions =>
+				{
+#if IOS || MACCATALYST
+					streamerOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
+					streamerOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
+					streamerOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
+#endif
 				})
 			.ConfigureFonts(fonts =>
 			{
@@ -38,6 +46,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<MyLibraryPageViewModel>();
 
 		RegisterPageRoute<AudioRecorderPage, AudioRecorderPageViewModel>(Routes.AudioRecorder.RouteName, builder.Services);
+		RegisterPageRoute<AudioStreamerPage, AudioStreamerPageViewModel>(Routes.AudioStreamer.RouteName, builder.Services);
 		RegisterPageRoute<MusicPlayerPage, MusicPlayerPageViewModel>(Routes.MusicPlayer.RouteName, builder.Services);
 
 		return builder.Build();
