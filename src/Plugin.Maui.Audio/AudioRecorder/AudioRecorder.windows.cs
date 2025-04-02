@@ -23,12 +23,12 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task StartAsync(AudioRecorderOptions? options = null)
 	{
-		var localFolder = ApplicationData.Current.LocalFolder;
+		var localFolder = FileSystem.AppDataDirectory;
 		var fileName = Path.GetRandomFileName();
+		var filePath = Path.Combine(localFolder, fileName);
+		File.Create(filePath).Dispose();
 
-		var fileOnDisk = await localFolder.CreateFileAsync(fileName);
-
-		await StartAsync(fileOnDisk.Path, options);
+		await StartAsync(filePath, options);
 	}
 
 	public async Task StartAsync(string filePath, AudioRecorderOptions? options = null)
