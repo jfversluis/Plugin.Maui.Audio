@@ -23,7 +23,6 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task StartAsync(AudioRecorderOptions? options = null)
 	{
-		//See - https://github.com/jfversluis/Plugin.Maui.Audio/issues/145
 		var localFolder = FileSystem.AppDataDirectory;
 		var fileName = Path.GetRandomFileName();
 		var filePath = Path.Combine(localFolder, fileName);
