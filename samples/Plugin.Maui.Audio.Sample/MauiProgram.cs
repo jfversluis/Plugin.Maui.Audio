@@ -19,6 +19,10 @@ public static class MauiProgram
 #if IOS || MACCATALYST
 					playbackOptions.Category = AVFoundation.AVAudioSessionCategory.Playback;
 #endif
+#if ANDROID
+					playbackOptions.AudioContentType = Android.Media.AudioContentType.Music;
+					playbackOptions.AudioUsageKind = Android.Media.AudioUsageKind.Media;
+#endif
 				},
 				recordingOptions =>
 				{
