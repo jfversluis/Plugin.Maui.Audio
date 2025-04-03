@@ -309,7 +309,7 @@ partial class AudioPlayer : IAudioPlayer
 		}
 
 		Seek(0);
-		stopwatch.Reset();
+		
 		OnPlaybackEnded(player, EventArgs.Empty);
 	}
 
@@ -361,6 +361,7 @@ partial class AudioPlayer : IAudioPlayer
 			player.Prepare();
 		}
 
+		stopwatch.Reset();
 		PlaybackEnded?.Invoke(this, e);
 	}
 
