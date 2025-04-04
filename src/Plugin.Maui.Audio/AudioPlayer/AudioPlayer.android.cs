@@ -187,6 +187,44 @@ partial class AudioPlayer : IAudioPlayer
 	internal AudioPlayer(AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
+
+		if (OperatingSystem.IsAndroidVersionAtLeast(26))
+		{
+			var audioAttributes = new AudioAttributes.Builder()?
+				.SetContentType(audioPlayerOptions.AudioContentType)?
+				.SetUsage(audioPlayerOptions.AudioUsageKind)?
+				.Build();
+
+			if (audioAttributes is not null)
+			{
+				player.SetAudioAttributes(audioAttributes);
+			}
+		}
+		else
+		{
+			Android.Media.Stream streamType = Android.Media.Stream.System;
+
+			switch (audioPlayerOptions.AudioUsageKind)
+			{
+				case AudioUsageKind.Media:
+					streamType = Android.Media.Stream.Music;
+					break;
+				case AudioUsageKind.Alarm:
+					streamType = Android.Media.Stream.Alarm;
+					break;
+				case AudioUsageKind.Notification:
+					streamType = Android.Media.Stream.Notification;
+					break;
+				case AudioUsageKind.VoiceCommunication:
+					streamType = Android.Media.Stream.VoiceCall;
+					break;
+				case AudioUsageKind.Unknown:
+					break;
+			}
+
+			player.SetAudioStreamType(streamType);
+		}
+			
 		player.Completion += OnPlaybackEnded;
 	}
 
