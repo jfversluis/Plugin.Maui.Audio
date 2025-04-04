@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace Plugin.Maui.Audio;
+﻿namespace Plugin.Maui.Audio;
 
 /// <summary>
 /// When the recording fails to start this exception is thrown with details about the cause.
@@ -12,10 +10,6 @@ public class FailedToStartRecordingException : Exception
 	/// </summary>
 	/// <param name="message">Message which describes the cause of the exception.</param>
 	public FailedToStartRecordingException(string message) : base(message)
-	{
-	}
-
-	protected FailedToStartRecordingException(SerializationInfo info, StreamingContext context) : base(info, context)
 	{
 	}
 
