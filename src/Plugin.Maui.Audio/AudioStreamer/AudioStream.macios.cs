@@ -75,7 +75,7 @@ class AudioStream : IDisposable
 
 	public Task Stop()
 	{
-		if (audioQueue == null)
+		if (audioQueue is null)
 		{
 			return Task.CompletedTask;
 		}
@@ -119,7 +119,7 @@ class AudioStream : IDisposable
 		}
 		else
 		{
-			if (failAction != null)
+			if (failAction is not null)
 			{
 				failAction(status);
 			}

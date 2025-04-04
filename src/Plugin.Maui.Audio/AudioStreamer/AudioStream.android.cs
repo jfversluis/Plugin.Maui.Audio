@@ -78,7 +78,7 @@ class AudioStream : IDisposable
 
 		try
 		{
-			if (audioRecord == null)
+			if (audioRecord is null)
 			{
 				throw new NullReferenceException("AudioRecord has not been set");
 			}

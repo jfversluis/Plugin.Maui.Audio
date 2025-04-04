@@ -128,14 +128,14 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	{
 		if (await CheckPermissionIsGrantedAsync<Permissions.Microphone>())
 		{
-			if (capturedAudioStream != null)
+			if (capturedAudioStream is not null)
 			{
 				capturedAudioStream.Dispose();
 			}
 			capturedAudioStream = new MemoryStream();
 			capturedAudioWavFile = string.Empty;
 
-			if (audioStreamer == null)
+			if (audioStreamer is null)
 			{
 				audioStreamer = audioManager.CreateStreamer();
 				audioStreamer.OnAudioCaptured += OnAudioStreamerCapturedData;

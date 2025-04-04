@@ -22,7 +22,7 @@ public partial class AudioStreamer : IAudioStreamer
 
 	public async Task StartAsync()
 	{
-		if (CanStreamAudio == false)
+		if (!CanStreamAudio)
 		{
 			Trace.WriteLine("AudioStreamer is not supported");
 			return;
@@ -34,7 +34,7 @@ public partial class AudioStreamer : IAudioStreamer
 			return;
 		}
 
-		if (audioStream != null
+		if (audioStream is not null
 		    && !Options.Equals(audioStream.Options))
 		{
 			audioStream.OnBroadcast -= OnAudioStreamBroadcast;
@@ -42,7 +42,7 @@ public partial class AudioStreamer : IAudioStreamer
 			audioStream = null;
 		}
 
-		if (audioStream == null)
+		if (audioStream is null)
 		{
 			audioStream = new AudioStream(Options);
 			audioStream.OnBroadcast += OnAudioStreamBroadcast;
@@ -53,7 +53,7 @@ public partial class AudioStreamer : IAudioStreamer
 
 	public async Task StopAsync()
 	{
-		if (audioStream != null)
+		if (audioStream is not null)
 		{
 			await audioStream.Stop();
 		}

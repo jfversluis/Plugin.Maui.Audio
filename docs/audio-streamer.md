@@ -1,9 +1,9 @@
 # Stream audio
 
-The `AudioStreamer` class provides you with the ability to stream audio from a microphone in your .NET MAUI application through an eventhandler. The `AudioStreamer` works pretty much the same as the recorder `AudioRecorder`, except that it provides raw audio data instead of a file. In order to create an `AudioStreamer` instance you can make use of the `CreateStreamer` method on the [`AudioManager`](../readme.md#audiomanager) class.
+The `AudioStreamer` class provides you with the ability to stream audio from a microphone in your .NET MAUI application through an event handler. The `AudioStreamer` works pretty much the same as the recorder `AudioRecorder`, except that it provides raw audio data instead of a file. In order to create an `AudioStreamer` instance you can make use of the `CreateStreamer` method on the [`AudioManager`](../readme.md#audiomanager) class.
 
 > [!NOTE]
-> If you want to stream in the background on iOS, you will need to add a key to the `Info.plist` file like show below.
+> If you want to stream in the background on iOS, you will need to add a key to the `Info.plist` file like shown below.
 > `<key>UIBackgroundModes</key>`
 > `<array>`
 > `  <string>audio</string>`
@@ -24,12 +24,12 @@ public class AudioStreamerViewModel
 
     public async Task StartStreaming()
     {
-        await this.sudioStreamer.StartAsync();
+        await audioStreamer.StartAsync();
     }
 
     public async Task StopStreaming()
     {
-        await this.AudioStreamer.StopAsync();
+        await audioStreamer.StopAsync();
     }
 
     private void OnAudioStreamerCapturedData(object sender, AudioStreamEventArgs args)
@@ -70,13 +70,12 @@ builder.UseMauiApp<App>()
              streamerOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
              streamerOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
              streamerOptions.CategoryOptions = VFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
-
 #endif
          })....
 ```
 
 > [!NOTE]  
-> Currently iOS and macOS have extra options to be customized
+> Currently only iOS and macOS have extra options that can be customized
 
 ## AudioStreamer API
 

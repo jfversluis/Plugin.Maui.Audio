@@ -133,7 +133,7 @@ class AudioStream : IDisposable
 		outputNode?.Dispose();
 		outputNode = null;
 
-		if (audioGraph != null)
+		if (audioGraph is not null)
 		{
 			audioGraph.QuantumStarted -= Graph_QuantumStarted;
 			audioGraph.UnrecoverableErrorOccurred -= Graph_UnrecoverableErrorOccurred;
@@ -158,7 +158,7 @@ class AudioStream : IDisposable
 	unsafe void Graph_QuantumStarted(AudioGraph sender, object args)
 	{
 		// we'll only broadcast if we're actively monitoring audio packets
-		if (!Active || outputNode == null)
+		if (!Active || outputNode is null)
 		{
 			return;
 		}
@@ -179,7 +179,7 @@ class AudioStream : IDisposable
 
 			float* dataInFloat = (float*)dataInBytes;
 
-			if (audioBytes == null)
+			if (audioBytes is null)
 			{
 				audioBytes = new byte[buffer.Length * broadcastSize / 2]; // buffer length * # of frames we want to accrue / 2 (because we're transforming float audio to Int 16)
 			}
@@ -222,7 +222,7 @@ class AudioStream : IDisposable
 
 	public void Flush()
 	{
-		if (audioBytes == null)
+		if (audioBytes is null)
 		{
 			return;
 		}

@@ -23,7 +23,7 @@ public partial class AudioStreamer : IAudioStreamer
 			return;
 		}
 
-		if (audioStream != null
+		if (audioStream is not null
 		    && !Options.Equals(audioStream.Options))
 		{
 			audioStream.OnBroadcast -= OnAudioStreamBroadcast;
@@ -33,7 +33,7 @@ public partial class AudioStreamer : IAudioStreamer
 
 		ActiveSessionHelper.InitializeSession(Options);
 
-		if (audioStream == null)
+		if (audioStream is null)
 		{
 			audioStream = new AudioStream(Options);
 			audioStream.OnBroadcast += OnAudioStreamBroadcast;
@@ -44,7 +44,7 @@ public partial class AudioStreamer : IAudioStreamer
 
 	public async Task StopAsync()
 	{
-		if (audioStream != null)
+		if (audioStream is not null)
 		{
 			await audioStream.Stop();
 		}

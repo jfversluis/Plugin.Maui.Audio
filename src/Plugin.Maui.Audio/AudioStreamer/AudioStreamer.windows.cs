@@ -22,7 +22,7 @@ public partial class AudioStreamer : IAudioStreamer
 			return;
 		}
 
-		if (audioStream != null
+		if (audioStream is not null
 		    && !Options.Equals(audioStream.Options))
 		{
 			audioStream.OnBroadcast -= OnAudioStreamBroadcast;
@@ -35,7 +35,7 @@ public partial class AudioStreamer : IAudioStreamer
 			throw new NotSupportedException($"Windows only supports BitDepth {BitDepth.Pcm16bit}");
 		}
 
-		if (audioStream == null)
+		if (audioStream is null)
 		{
 			audioStream = new AudioStream(Options);
 			audioStream.OnBroadcast += OnAudioStreamBroadcast;
@@ -46,7 +46,7 @@ public partial class AudioStreamer : IAudioStreamer
 
 	public async Task StopAsync()
 	{
-		if (audioStream != null)
+		if (audioStream is not null)
 		{
 			await audioStream.Stop();
 			audioStream.Flush();
