@@ -71,10 +71,10 @@ public class AudioMixer : IDisposable
 	}
 
 	/// <summary>
-	/// Play already prepared channel
+	/// Play an already prepared channel.
 	/// </summary>
-	/// <param name="channelIndex"></param>
-	/// <param name="loop"></param>
+	/// <param name="channelIndex">The index of the channel to play the sound on.</param>
+	/// <param name="loop">Indicates whether the audio should loop.</param>
 	public void Play(int channelIndex, bool loop = false)
 	{
 		ValidateChannelIndex(channelIndex);
