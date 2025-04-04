@@ -7,6 +7,11 @@ public static class Routes
 		public const string RouteName = "audio-recorder";
 	}
 
+	public static class AudioStreamer
+	{
+		public const string RouteName = "audio-streamer";
+	}
+
 	public static class MusicPlayer
 	{
 		public const string RouteName = "music-player";
