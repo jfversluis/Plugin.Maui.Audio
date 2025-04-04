@@ -43,11 +43,13 @@ public static class MauiAppBuilderExtensions
 	///			});
 	/// </code>
 	/// </param>
+  /// <param name="configureStreamerOptions">Configures options for streaming much alike the playback and recording options.</param>
 	/// <returns>The <paramref name="mauiAppBuilder"/> supplied in order to allow for chaining of method calls.</returns>
 	public static MauiAppBuilder AddAudio(
 		this MauiAppBuilder mauiAppBuilder,
 		Action<AudioPlayerOptions>? configurePlaybackOptions = null,
-		Action<AudioRecorderOptions>? configureRecordingOptions = null)
+		Action<AudioRecorderOptions>? configureRecordingOptions = null,
+		Action<AudioStreamOptions>? configureStreamerOptions = null)
 	{
 		var playbackOptions = new AudioPlayerOptions();
 		configurePlaybackOptions?.Invoke(playbackOptions);
@@ -56,6 +58,10 @@ public static class MauiAppBuilderExtensions
 		var recordingOptions = new AudioRecorderOptions();
 		configureRecordingOptions?.Invoke(recordingOptions);
 		AudioManager.Current.DefaultRecorderOptions = recordingOptions;
+
+		var streamerOptions = new AudioStreamOptions();
+		configureStreamerOptions?.Invoke(streamerOptions);
+		AudioManager.Current.DefaultStreamerOptions = streamerOptions;
 
 		mauiAppBuilder.Services.AddSingleton(AudioManager.Current);
 

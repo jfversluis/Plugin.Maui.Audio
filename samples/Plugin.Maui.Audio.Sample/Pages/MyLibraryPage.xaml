@@ -25,13 +25,22 @@
 
 	<Grid RowDefinitions="60,*">
 
-		<Button Text="Create Recording"
-				HorizontalOptions="End"
-				Margin="10"
-				Command="{Binding AddRecordingCommand}" />
+		<HorizontalStackLayout 
+			Grid.Row="0"
+			HorizontalOptions="End">
+			<Button Text="Create Recording"
+			        HorizontalOptions="End"
+			        Margin="10"
+			        Command="{Binding AddRecordingCommand}" />
+			<Button Text="Stream Audio"
+			        HorizontalOptions="End"
+			        Margin="10"
+			        Command="{Binding AddStreamerCommand}" />
+		</HorizontalStackLayout>
+
 
 		<CollectionView ItemsSource="{Binding Music}"
-						Grid.Row="1"
+						Grid.Row="2"
 						SelectionMode="Single">
 			<CollectionView.ItemTemplate>
 				<DataTemplate x:DataType="viewmodels:MusicItemViewModel">

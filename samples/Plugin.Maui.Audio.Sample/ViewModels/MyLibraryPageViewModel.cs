@@ -5,6 +5,7 @@ namespace Plugin.Maui.Audio.Sample.ViewModels;
 public class MyLibraryPageViewModel : BaseViewModel
 {
 	public Command AddRecordingCommand { get; }
+	public Command AddStreamerCommand { get; }
 	public Command OpenMusicCommand { get; }
 	public ObservableCollection<MusicItemViewModel> Music { get; }
 
@@ -17,13 +18,18 @@ public class MyLibraryPageViewModel : BaseViewModel
 		};
 
 		AddRecordingCommand = new Command(async () => await AddRecording());
+		AddStreamerCommand = new Command(async () => await AddStreaming());
 		OpenMusicCommand = new Command(async (object item) => await OnMusicItemSelected((MusicItemViewModel)item));
 	}
-
-
+	
 	async Task AddRecording()
 	{
 		await Shell.Current.GoToAsync(Routes.AudioRecorder.RouteName);
+	}
+
+	async Task AddStreaming()
+	{
+		await Shell.Current.GoToAsync(Routes.AudioStreamer.RouteName);
 	}
 
 	async Task OnMusicItemSelected(MusicItemViewModel musicItem)
