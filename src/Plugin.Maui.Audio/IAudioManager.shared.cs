@@ -16,6 +16,11 @@ public interface IAudioManager
 	AudioRecorderOptions DefaultRecorderOptions { get; set; }
 
 	/// <summary>
+	/// Gets or sets the default options to use when creating a new <see cref="IAudioStreamer"/>.
+	/// </summary>
+	AudioStreamOptions DefaultStreamerOptions { get; set; }
+
+	/// <summary>
 	/// Creates a new <see cref="IAudioPlayer"/> with with an empty source.
 	/// </summary>
 	/// <param name="options"></param>
@@ -55,4 +60,10 @@ public interface IAudioManager
 	/// </summary>
 	/// <returns>A new <see cref="IAudioRecorder"/> ready to begin recording.</returns>
 	IAudioRecorder CreateRecorder(AudioRecorderOptions? options = default);
+
+	/// <summary>
+	/// Creates a new <see cref="IAudioStreamer"/> ready to begin streaming audio from the current device.
+	/// </summary>
+	/// <returns>A new <see cref="IAudioRecorder"/> ready to begin streaming.</returns>
+	IAudioStreamer CreateStreamer();
 }
