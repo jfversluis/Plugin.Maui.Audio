@@ -60,6 +60,9 @@ partial class AudioStream : IDisposable
 		{
 			audioRecord?.Stop();
 			OnActiveChanged?.Invoke(this, false);
+
+			audioRecord?.Dispose();
+			audioRecord = null;
 		}
 
 		return Task.CompletedTask;

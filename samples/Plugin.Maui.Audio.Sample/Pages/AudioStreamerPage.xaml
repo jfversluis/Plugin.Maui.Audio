@@ -42,7 +42,25 @@
 					Command="{Binding StopPlayCommand}" />
 
 			<Label Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
-			<Label Text="{Binding MeasuredDecibels, Converter={StaticResource DecibelToStringConverter}}" />
+			<Label Text="{Binding MeasuredDecibel, Converter={StaticResource DecibelToStringConverter}}" />
+
+			<Label>
+				<Label.FormattedText>
+					<FormattedString>
+						<Span Text="Rms: " />
+						<Span Text="{Binding MeasuredRms, StringFormat='{0:F8}'}" />
+					</FormattedString>
+				</Label.FormattedText>
+			</Label>
+
+			<Label>
+				<Label.FormattedText>
+					<FormattedString>
+						<Span Text="IsSilent: " />
+						<Span Text="{Binding IsSilent}" FontAttributes="Italic" />
+					</FormattedString>
+				</Label.FormattedText>
+			</Label>
 
 		</VerticalStackLayout>
 
