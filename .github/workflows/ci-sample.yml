@@ -24,8 +24,8 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Install .NET MAUI Workload
-      run: dotnet workload restore samples\Plugin.Maui.Audio.Sample.sln
+    - name: Restore dependencies
+      run: dotnet restore samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj
       
     - name: Build
       run: dotnet build samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj -c Release
