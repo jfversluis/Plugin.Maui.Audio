@@ -1,6 +1,6 @@
 ﻿namespace Plugin.Maui.Audio;
 
-public partial class AudioStreamOptions : BaseOptions, IEquatable<AudioStreamOptions>
+public partial class AudioStreamOptions : BaseOptions
 {
 	/// <summary>
 	/// Sample rate of the audio recording.
@@ -18,46 +18,4 @@ public partial class AudioStreamOptions : BaseOptions, IEquatable<AudioStreamOpt
 	/// Bit depth of the audio recording.
 	/// </summary>
 	public BitDepth BitDepth { get; set; } = BitDepth.Pcm16bit;
-
-	public bool Equals(AudioStreamOptions? other)
-	{
-		if (other is null)
-		{
-			return false;
-		}
-
-		if (ReferenceEquals(this, other))
-		{
-			return true;
-		}
-
-		return SampleRate == other.SampleRate 
-		       && Channels == other.Channels 
-		       && BitDepth == other.BitDepth;
-	}
-
-	public override bool Equals(object? obj)
-	{
-		if (obj is null)
-		{
-			return false;
-		}
-
-		if (ReferenceEquals(this, obj))
-		{
-			return true;
-		}
-
-		if (obj.GetType() != GetType())
-		{
-			return false;
-		}
-
-		return Equals((AudioStreamOptions)obj);
-	}
-
-	public override int GetHashCode()
-	{
-		return HashCode.Combine(SampleRate, (int)Channels, (int)BitDepth);
-	}
 }
