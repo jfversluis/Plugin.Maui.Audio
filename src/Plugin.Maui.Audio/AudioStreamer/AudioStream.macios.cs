@@ -4,7 +4,7 @@ using AudioToolbox;
 
 namespace Plugin.Maui.Audio;
 
-class AudioStream : IDisposable
+partial class AudioStream : IDisposable
 {
 	//
 	// inspired by source https://github.com/NateRickard/Plugin.AudioRecorder/blob/master/Plugin.AudioRecorder.iOS/AudioStream.cs
@@ -15,13 +15,6 @@ class AudioStream : IDisposable
 	const float targetMeasurementTime = 100F; // milliseconds
 
 	InputAudioQueue? audioQueue;
-
-	public AudioStream(AudioStreamOptions options)
-	{
-		Options = options;
-	}
-
-	public AudioStreamOptions Options { get; }
 
 	public event EventHandler<byte[]>? OnBroadcast;
 	public event EventHandler<bool>? OnActiveChanged;
@@ -38,13 +31,13 @@ class AudioStream : IDisposable
 
 		try
 		{
-			var audioFormat = AudioStreamBasicDescription.CreateLinearPCM(Options.SampleRate, (uint)Options.Channels, (uint)Options.BitDepth);
+			var audioFormat = AudioStreamBasicDescription.CreateLinearPCM(SampleRate, (uint)Channels, (uint)BitDepth);
 
 			audioQueue = new InputAudioQueue(audioFormat);
 			audioQueue.InputCompleted += QueueInputCompleted;
 
 			// calculate our buffer size and make sure it's not too big
-			var bufferByteSize = (int)(targetMeasurementTime / 1000F /*ms to sec*/ * Options.SampleRate * audioFormat.BytesPerPacket);
+			var bufferByteSize = (int)(targetMeasurementTime / 1000F /*ms to sec*/ * SampleRate * audioFormat.BytesPerPacket);
 			bufferByteSize = bufferByteSize < maxBufferSize ? bufferByteSize : maxBufferSize;
 
 			for (var index = 0; index < countAudioBuffers; index++)

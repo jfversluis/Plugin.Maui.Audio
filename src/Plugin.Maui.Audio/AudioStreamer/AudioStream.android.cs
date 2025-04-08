@@ -3,16 +3,9 @@ using Android.Media;
 
 namespace Plugin.Maui.Audio;
 
-class AudioStream : IDisposable
+partial class AudioStream : IDisposable
 {
 	AudioRecord? audioRecord;
-
-	public AudioStream(AudioStreamOptions options)
-	{
-		Options = options;
-	}
-
-	public AudioStreamOptions Options { get; }
 
 	public event EventHandler<byte[]>? OnBroadcast;
 	public event EventHandler<bool>? OnActiveChanged;
@@ -22,13 +15,13 @@ class AudioStream : IDisposable
 
 	public Task Start()
 	{
-		var channelIn = Options.Channels switch
+		var channelIn = Channels switch
 		{
 			ChannelType.Stereo => ChannelIn.Stereo,
 			_ => ChannelIn.Mono
 		};
 
-		var encoding = Options.BitDepth switch
+		var encoding = BitDepth switch
 		{
 			BitDepth.Pcm8bit => Android.Media.Encoding.Pcm8bit,
 			_ => Android.Media.Encoding.Pcm16bit
@@ -36,7 +29,7 @@ class AudioStream : IDisposable
 
 		try
 		{
-			var bufferSize = AudioRecord.GetMinBufferSize(Options.SampleRate, channelIn, encoding);
+			var bufferSize = AudioRecord.GetMinBufferSize(SampleRate, channelIn, encoding);
 
 			// If the bufferSize is less than or equal to 0, then this device does not support the provided options
 			if (bufferSize <= 0)
@@ -44,7 +37,7 @@ class AudioStream : IDisposable
 				throw new FailedToStartRecordingException("Unable to get bufferSize with provided options.");
 			}
 
-			audioRecord = new AudioRecord(AudioSource.Mic, Options.SampleRate, channelIn, encoding, bufferSize);
+			audioRecord = new AudioRecord(AudioSource.Mic, SampleRate, channelIn, encoding, bufferSize);
 			audioRecord.StartRecording();
 
 			Task.Run(() => WriteAudioDataToEvent(bufferSize));

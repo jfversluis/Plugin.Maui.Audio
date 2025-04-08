@@ -23,7 +23,9 @@ public partial class AudioStreamer : IAudioStreamer
 		}
 
 		if (audioStream is not null
-		    && !Options.Equals(audioStream.Options))
+		    && (audioStream.BitDepth != Options.BitDepth
+		        || audioStream.Channels != Options.Channels
+		        || audioStream.SampleRate != Options.SampleRate))
 		{
 			audioStream.OnBroadcast -= OnAudioStreamBroadcast;
 			audioStream.Dispose();

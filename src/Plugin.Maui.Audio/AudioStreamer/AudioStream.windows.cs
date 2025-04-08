@@ -9,7 +9,7 @@ using WinRT;
 
 namespace Plugin.Maui.Audio;
 
-class AudioStream : IDisposable
+partial class AudioStream : IDisposable
 {
 	//
 	// inspired by source https://github.com/NateRickard/Plugin.AudioRecorder/blob/master/Plugin.AudioRecorder.UWP/AudioStream.cs
@@ -21,14 +21,6 @@ class AudioStream : IDisposable
 	const int broadcastSize = 10; // we'll accumulate 10 'quantums' before broadcasting them
 	int bufferPosition;
 	byte[]? audioBytes;
-
-
-	public AudioStream(AudioStreamOptions options)
-	{
-		Options = options;
-	}
-
-	public AudioStreamOptions Options { get; }
 
 	public event EventHandler<byte[]> OnBroadcast;
 	public event EventHandler<bool> OnActiveChanged;
@@ -42,7 +34,7 @@ class AudioStream : IDisposable
 		{
 			await Stop();
 
-			var pcmEncoding = AudioEncodingProperties.CreatePcm((uint)Options.SampleRate, (uint)Options.Channels, (uint)Options.BitDepth);
+			var pcmEncoding = AudioEncodingProperties.CreatePcm((uint)SampleRate, (uint)Channels, (uint)BitDepth);
 			// apparently this is not _really_ used/supported here, as the audio data seems to come thru as floats (so basically MediaEncodingSubtypes.Float?)
 			pcmEncoding.Subtype = MediaEncodingSubtypes.Pcm;
 
