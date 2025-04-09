@@ -38,6 +38,13 @@
 			<Button Text="Play"
 					Command="{Binding PlayCommand}" />
 
+			<HorizontalStackLayout>
+				<Button Text="Left"
+				        Command="{Binding PlayLeftCommand}" />
+				<Button Text="Right"
+				        Command="{Binding PlayRightCommand}" />
+			</HorizontalStackLayout>
+
 			<Button Text="StopPlay"
 					Command="{Binding StopPlayCommand}" />
 
