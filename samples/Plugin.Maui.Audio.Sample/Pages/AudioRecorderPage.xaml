@@ -12,40 +12,47 @@
 	</ContentPage.Resources>
 
 	<ScrollView>
-		<VerticalStackLayout HorizontalOptions="Center"
-							 Spacing="10"
-							 VerticalOptions="Center">
+		<Grid Margin="20" RowSpacing="10"
+			VerticalOptions="Center" RowDefinitions="*,*,*,*,*,*,*,*,*">
 
-			<Picker Title="Select Sample Rate"
+			<Picker Grid.Row="0"
+					Title="Select Sample Rate"
 					ItemsSource="{Binding SampleRates}"
 					SelectedItem="{Binding SelectedSampleRate, Mode=TwoWay}" />
 
-			<Picker Title="Select Channels"
+			<Picker Grid.Row="1"
+					Title="Select Channels"
 					ItemsSource="{Binding ChannelTypes}"
 					SelectedItem="{Binding SelectedChannelType, Mode=TwoWay}" />
 
-			<Picker Title="Select Bit Depth"
+			<Picker Grid.Row="2"
+					Title="Select Bit Depth"
 					ItemsSource="{Binding BitDepths}"
 					SelectedItem="{Binding SelectedBitDepth, Mode=TwoWay}" />
 
-			<Picker Title="Select Encoding"
+			<Picker Grid.Row="3"
+					Title="Select Encoding"
 					ItemsSource="{Binding EncodingOptions}"
 					SelectedItem="{Binding SelectedEncoding, Mode=TwoWay}" />
 
-			<Button Text="Start"
+			<Button Grid.Row="4"
+					Text="Start Recording"
 					Command="{Binding StartCommand}" />
 
-			<Button Text="Stop"
+			<Button Grid.Row="5"
+					Text="Stop Recording"
 					Command="{Binding StopCommand}" />
 
-			<Button Text="Play"
+			<Button Grid.Row="6"
+					Text="Play Recording"
 					Command="{Binding PlayCommand}" />
 
-			<Button Text="StopPlay"
+			<Button Grid.Row="7"
+					Text="Stop Play Recording"
 					Command="{Binding StopPlayCommand}" />
 
-			<Label Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
-		</VerticalStackLayout>
+			<Label Grid.Row="8" Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
+		</Grid>
 
 	</ScrollView>
 
