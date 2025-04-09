@@ -13,46 +13,54 @@
 	</ContentPage.Resources>
 
 	<ScrollView>
-		<VerticalStackLayout HorizontalOptions="Fill"
-							 Margin="20"
-							 Spacing="10"
-							 VerticalOptions="Center">
+		<Grid HorizontalOptions="Fill" Margin="20"
+			RowSpacing="10" VerticalOptions="Center"
+			RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*">
 
-			<Picker Title="Select Sample Rate"
+			<Picker Grid.Row="0"
+					Title="Select Sample Rate"
 					ItemsSource="{Binding SampleRates}"
 					SelectedItem="{Binding SelectedSampleRate, Mode=TwoWay}" />
 
-			<Picker Title="Select Channels"
+			<Picker Grid.Row="1"
+					Title="Select Channels"
 					ItemsSource="{Binding ChannelTypes}"
 					SelectedItem="{Binding SelectedChannelType, Mode=TwoWay}" />
 
-			<Picker Title="Select Bit Depth"
+			<Picker Grid.Row="2"
+					Title="Select Bit Depth"
 					ItemsSource="{Binding BitDepths}"
 					SelectedItem="{Binding SelectedBitDepth, Mode=TwoWay}" />
 
-			<Button Text="Start"
+			<Button Grid.Row="3"
+					Text="Start Recording"
 					Command="{Binding StartCommand}" />
 
-			<Button Text="Stop"
+			<Button Grid.Row="4"
+					Text="Stop Recording"
 					Command="{Binding StopCommand}" />
 
-			<Button Text="Play"
+			<Button Grid.Row="5"
+					Text="Play Recording"
 					Command="{Binding PlayCommand}" />
 
-			<HorizontalStackLayout>
-				<Button Text="Left"
+			<Grid Grid.Row="6" ColumnDefinitions="*, *" ColumnSpacing="5">
+				<Button Grid.Column="0"
+						Text="Left"
 				        Command="{Binding PlayLeftCommand}" />
-				<Button Text="Right"
+				<Button Grid.Column="1"
+						Text="Right"
 				        Command="{Binding PlayRightCommand}" />
-			</HorizontalStackLayout>
+			</Grid>
 
-			<Button Text="StopPlay"
+			<Button Grid.Row="7"
+					Text="Stop Play Recording"
 					Command="{Binding StopPlayCommand}" />
 
-			<Label Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
-			<Label Text="{Binding MeasuredDecibel, Converter={StaticResource DecibelToStringConverter}}" />
+			<Label Grid.Row="8" Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
+			<Label Grid.Row="9" Text="{Binding MeasuredDecibel, Converter={StaticResource DecibelToStringConverter}}" />
 
-			<Label>
+			<Label Grid.Row="10">
 				<Label.FormattedText>
 					<FormattedString>
 						<Span Text="Rms: " />
@@ -61,7 +69,7 @@
 				</Label.FormattedText>
 			</Label>
 
-			<Label>
+			<Label Grid.Row="11">
 				<Label.FormattedText>
 					<FormattedString>
 						<Span Text="IsSilent: " />
@@ -69,9 +77,6 @@
 					</FormattedString>
 				</Label.FormattedText>
 			</Label>
-
-		</VerticalStackLayout>
-
+		</Grid>
 	</ScrollView>
-
 </ContentPage>
