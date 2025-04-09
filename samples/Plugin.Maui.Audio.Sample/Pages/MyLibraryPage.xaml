@@ -4,7 +4,7 @@
 			 xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
 			 x:Class="Plugin.Maui.Audio.Sample.Pages.MyLibraryPage"
 			 Title="My Library"
-			 x:Name="Page"
+			 x:Name="myLibraryPage"
 			 x:DataType="viewmodels:MyLibraryPageViewModel">
 
 	<ContentPage.Resources>
@@ -46,7 +46,7 @@
 				<DataTemplate x:DataType="viewmodels:MusicItemViewModel">
 					<Border Style="{StaticResource border_gallery_card}">
 						<Border.GestureRecognizers>
-							<TapGestureRecognizer Command="{Binding Path=BindingContext.OpenMusicCommand, Source={x:Reference Page}}"
+							<TapGestureRecognizer Command="{Binding Path=BindingContext.OpenMusicCommand, Source={x:Reference myLibraryPage}, x:DataType={x:Type viewmodels:MyLibraryPageViewModel}}"
 												  CommandParameter="{Binding .}" />
 						</Border.GestureRecognizers>
 						<Grid ColumnDefinitions="75,*"
