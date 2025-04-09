@@ -68,6 +68,44 @@ Now that you know how to use the `AudioManager` class, please refer to the follo
 * [Record audio](docs/audio-recorder.md)
 * [Stream audio](docs/audio-streamer.md)
 
+## Supported Audio Formats
+
+### Audio Playback
+
+The audio formats supported for playback depend on the underlying platform:
+
+| Platform | Supported Formats |
+|----------|------------------|
+| Android | MP3, WAV, AAC, FLAC, OGG and other formats supported by Android's [MediaPlayer](https://developer.android.com/reference/android/media/MediaPlayer#setdatasource) |
+| iOS/MacCatalyst | MP3, WAV, AAC, ALAC, AIFF, and other formats supported by [AVAudioPlayer](https://developer.apple.com/documentation/avfaudio/avaudioplayer) |
+| Windows | MP3, WAV, AAC, FLAC, WMA, and other formats supported by [Windows MediaPlayer](https://learn.microsoft.com/windows/win32/wmp/file-format-support-in-windows-media-player) |
+
+The audio file format is determined automatically based on the file extension or stream content.
+
+### Audio Recording
+
+Recording capabilities vary by platform with the following supported encoding formats:
+
+| Platform | Supported Recording Formats |
+|----------|----------------------------|
+| Android | WAV (PCM), AAC (Android 12+) - [MediaRecorder docs](https://developer.android.com/reference/android/media/MediaRecorder#supported-formats) |
+| iOS/MacCatalyst | WAV (PCM), ULaw, ALAC (Apple Lossless), FLAC, AAC - [AVAudioRecorder docs](https://developer.apple.com/documentation/avfoundation/avaudiorecorder) |
+| Windows | WAV (PCM), ALAC (Apple Lossless), FLAC, AAC - [Windows.Media.Capture docs](https://learn.microsoft.com/uwp/api/windows.media.capture.mediacapture) |
+
+#### PCM Audio Details
+
+When recording or streaming PCM audio (WAV format):
+- **Sample Rates**: 
+  - Android: 44100Hz is recommended and most widely supported
+  - iOS/macOS: 48000Hz is recommended
+  - Customizable in all platforms (8000Hz, 16000Hz, etc.)
+- **Channels**:
+  - Mono (1 channel) and Stereo (2 channels) supported on all platforms
+  - Mono is recommended for maximum compatibility
+- **Bit Depth**:
+  - 8-bit and 16-bit PCM supported (16-bit recommended)
+  - Windows streaming supports only 16-bit PCM
+
 ## Acknowledgements
 
 This project could not have came to be without these projects and people, thank you! <3
