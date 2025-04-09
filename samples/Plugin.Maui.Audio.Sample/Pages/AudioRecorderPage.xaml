@@ -12,7 +12,8 @@
 	</ContentPage.Resources>
 
 	<ScrollView>
-		<VerticalStackLayout HorizontalOptions="Center"
+		<VerticalStackLayout HorizontalOptions="Fill"
+							 Margin="20"
 							 Spacing="10"
 							 VerticalOptions="Center">
 
