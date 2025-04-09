@@ -65,7 +65,7 @@ public class SilenceListener : IPcmAudioListener
 	}
 
 	/// <summary>
-	/// minimal time it has to be silent to be considered as silence
+	/// Minimal time it has to be silent to be considered as silence.
 	/// </summary>
 	public uint MinimalSilenceTimespanInMilliseconds { get; set; }
 

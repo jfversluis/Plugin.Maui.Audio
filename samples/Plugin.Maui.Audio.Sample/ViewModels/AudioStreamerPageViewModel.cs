@@ -173,7 +173,7 @@ public class AudioStreamerPageViewModel : BaseViewModel
 			capturedAudioStream = new MemoryStream();
 			capturedAudioWavFile = string.Empty;
 
-			if (pcmAudioHandler == null)
+			if (pcmAudioHandler is null)
 			{
 				pcmAudioHandler = new PcmAudioHandler(SelectedSampleRate, SelectedChannelType, SelectedBitDepth);
 				silenceListener = new SilenceListener()

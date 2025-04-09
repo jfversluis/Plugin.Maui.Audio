@@ -5,8 +5,8 @@ public static class PcmAudioHelpers
 	/// <summary>
 	/// RMS to decibel value (negative decibel value, also named dBFS)
 	/// </summary>
-	/// <param name="rms"></param>
-	/// <returns></returns>
+	/// <param name="rms">The RMS value to convert to decibel.</param>
+	/// <returns>The given RMS value converted to the equivalent decibel value.</returns>
 	public static double RmsToDecibel(double rms)
 	{
 		double decibel = 20 * Math.Log10(Math.Abs(rms));
@@ -14,9 +14,9 @@ public static class PcmAudioHelpers
 	}
 
 	/// <summary>
-	/// Decibel to (positive) RMS value
+	/// Decibel to (positive) RMS value.
 	/// </summary>
-	/// <param name="decibel">negative decibel value (also named dBFS)</param>
+	/// <param name="decibel">Negative decibel value (also named dBFS).</param>
 	/// <returns></returns>
 	public static double DecibelToAbsoluteRms(double decibel)
 	{

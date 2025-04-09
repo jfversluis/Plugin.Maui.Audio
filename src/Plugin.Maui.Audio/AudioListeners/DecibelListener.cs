@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio.AudioListeners;
 
+/// <summary>
+/// A listener that uses the audio stream to determine the number of decibels currently coming through.
+/// </summary>
 public class DecibelListener : IPcmAudioListener
 {
 	readonly List<int> orderedAudioCache = [];
@@ -21,6 +24,9 @@ public class DecibelListener : IPcmAudioListener
 
 	double decibel;
 
+	/// <summary>
+	/// Gets the decibel value of the current audio stream.
+	/// </summary>
 	public double Decibel
 	{
 		get => decibel;
