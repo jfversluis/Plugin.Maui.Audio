@@ -3,19 +3,20 @@
 This library comes with a set of tools that can be used to analyze and manipulate audio data. These tools can be used individually or collectively where they support each other, depending on your needs. 
 
 It mainly consists of:
-* PcmAudioHandler
-* AudioListeners
-* Audio helpers
+* `PcmAudioHandler`
+* `AudioListeners`
+* `PcmAudioHelpers`
 
 Available listeners:
 * SilenceListener > provides silence detection
 * DecibelListener > provides dBFS output (dBFS = decibels relative to full scale)
 * RmsListener > provides RMS output
+
 ## How it works collectively
 
-The collective hierarchy: `AudioStreamer` > `PcmAudioHandler` > `AudioListeners` > `Audio helpers`
+The collective hierarchy: `AudioStreamer` > `PcmAudioHandler` > `AudioListeners` > `PcmAudioHelpers`
 
-Where the `AudioStreamer` provides raw PCM audio that the `PcmAudioHandler` converts into ordered audio samples that the `AudioListeners` listen to and can manipulate and analyse with support of the `Audio helpers`.
+Where the `AudioStreamer` provides raw PCM audio that the `PcmAudioHandler` converts into ordered audio samples that the `AudioListeners` listen to and can manipulate and analyse with support of the `PcmAudioHelpers`.
 
 Basic example:
 ```csharp
@@ -47,7 +48,7 @@ audioStreamer.OnAudioCaptured += (sender, args) =>
 ```
 
 ### PcmAudioHandler usage
-The purpose of the PcmAudioHandler is to convert raw audio into meaningfull samples. For uptimization this conversion is done once and can be used by multiple subscribed listeners.
+The purpose of the `PcmAudioHandler` is to convert raw audio into meaningful samples. For optimization this conversion is done once and can be used by multiple subscribed listeners.
 
 Connecting to the AudioStreamer:
 ```csharp
@@ -57,12 +58,12 @@ void OnAudioStreamerDataCaptured(object sender, AudioStreamEventArgs args)
 }
 ```
 
-> When subscribing listeners to the PcmAudioHandler the settings SampleRate, ChannelType and BitDepth ​​are automatically passed on to its listeners.
+> When subscribing listeners to the `PcmAudioHandler` the settings `SampleRate`, `ChannelType` and `BitDepth` ​​are automatically passed on to its listeners.
 
 ### AudioListeners usage
-An AudioListener needs to be subscribed to the PcmAudioHandler, the listener will receive audio samples as soon as the PcmAudioHandler has converted the audio. 
+An `AudioListener` needs to be subscribed to the `PcmAudioHandler`, the listener will receive audio samples as soon as the `PcmAudioHandler` has converted the audio. 
 
-AudioListeners can be selfmade by using IPcmAudioListener.
+Custom `AudioListeners` can be created by implementing the `IPcmAudioListener` interface.
 
 ## How they work individually
 Components can be used individually, but its easier to work with them collectively otherwise you probably need to do some things yourself. 
@@ -77,11 +78,11 @@ The `PcmAudioHandler` converts RAW audio once for multiple listeners and also br
 Provides a stream of ordered audio samples.
 
 ##### HandlerOutputMode
-When the PcmAudioHandler broadcasts converted audio.
+When the `PcmAudioHandler` broadcasts converted audio.
 
-* Sample > when a sample has been converted
-* ChannelPair > when a single sample for all channels have been converted
-* Block > when all samples have been converted (all as a single AudioStreamer block)
+* `Sample` > when a sample has been converted
+* `ChannelPair` > when a single sample for all channels have been converted
+* `Block` > when all samples have been converted (all as a single `AudioStreamer` block)
 
 `Block` is the default value.
 
@@ -99,7 +100,7 @@ The size of a single sample (​is automatically passed on to its listeners)
 
 The `AudioListeners` are designed to handle audio samples for analysis and manipulation. Listeners can work individually as well, when providing audio samples manually.
 
-> Audio data tipically consists of large amount of samples, take into account that analysing or manipulating audio data can be performance prone.
+> Audio data typically consists of large amount of samples, take into account that analyzing or manipulating audio data can be performance prone.
 
 #### Properties & Methods
 
