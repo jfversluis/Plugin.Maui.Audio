@@ -185,6 +185,12 @@ public class AudioMixer : IDisposable
 		player.SetSource(audioClip.GetAudioStream());
 	}
 
+	/// <summary>
+	/// Gets the audio player for the specified channel.
+	/// </summary>
+	/// <param name="channelIndex">The index of the channel to retrieve.</param>
+	/// <returns>The audio player associated with the specified channel.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
 	public IAudioPlayer GetChannel(int channelIndex)
 	{
 		ValidateChannelIndex(channelIndex);
@@ -289,8 +295,15 @@ public class AudioMixer : IDisposable
 		}
 	}
 
+	/// <summary>
+	/// Gets a value indicating whether this instance has been disposed.
+	/// </summary>
 	public bool IsDisposed { get; protected set; }
 
+	/// <summary>
+	/// Releases the unmanaged resources used by the <see cref="AudioMixer"/> and optionally releases the managed resources.
+	/// </summary>
+	/// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
 	protected virtual void Dispose(bool disposing)
 	{
 		if (IsDisposed)

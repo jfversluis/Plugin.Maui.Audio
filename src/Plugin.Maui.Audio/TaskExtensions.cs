@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio;
 
+/// <summary>
+/// Provides extension methods for Task-related operations.
+/// </summary>
 public static class TaskExtensions
 {
 	/// <summary>

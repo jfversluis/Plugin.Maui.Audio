@@ -9,6 +9,9 @@ public class DecibelListener : IPcmAudioListener
 	readonly object orderedAudioCacheLock = new();
 	int requiredSamplesForGivenTimespan;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="DecibelListener"/> class with default settings.
+	/// </summary>
 	public DecibelListener()
 	{
 		Channels = ChannelType.Mono;
@@ -20,6 +23,9 @@ public class DecibelListener : IPcmAudioListener
 		Clear();
 	}
 
+	/// <summary>
+	/// Event raised when the measured decibel level changes beyond a threshold.
+	/// </summary>
 	public event EventHandler<DecibelChangedEventArgs>? DecibelChanged;
 
 	double decibel;
@@ -57,9 +63,15 @@ public class DecibelListener : IPcmAudioListener
 		}
 	}
 
+	/// <summary>
+	/// Gets or sets the bit depth used for audio processing.
+	/// </summary>
 	public BitDepth BitDepth { get; set; }
 
 	int sampleRate;
+	/// <summary>
+	/// Gets or sets the sample rate in Hz used for audio processing.
+	/// </summary>
 	public int SampleRate
 	{
 		get => sampleRate;
@@ -71,6 +83,9 @@ public class DecibelListener : IPcmAudioListener
 	}
 
 	ChannelType channels;
+	/// <summary>
+	/// Gets or sets the channel type (mono or stereo) used for audio processing.
+	/// </summary>
 	public ChannelType Channels
 	{
 		get => channels;
@@ -81,6 +96,10 @@ public class DecibelListener : IPcmAudioListener
 		}
 	}
 
+	/// <summary>
+	/// Processes ordered PCM audio data to calculate decibel levels.
+	/// </summary>
+	/// <param name="audioEventArgs">The ordered audio data to process.</param>
 	public void HandleOrderedPcmAudio(OrderedAudioEventArgs audioEventArgs)
 	{
 		double? currentDecibel = null;
@@ -113,6 +132,7 @@ public class DecibelListener : IPcmAudioListener
 		}
 	}
 
+	/// <inheritdoc/>
 	public void Clear()
 	{
 		Decibel = 0.0;

@@ -1,6 +1,6 @@
 # Stream audio
 
-The `AudioStreamer` class provides you with the ability to stream audio from a microphone in your .NET MAUI application through an event handler. The `AudioStreamer` works pretty much the same as the recorder `AudioRecorder`, except that it provides raw audio data instead of a file. In order to create an `AudioStreamer` instance you can make use of the `CreateStreamer` method on the [`AudioManager`](../readme.md#audiomanager) class.
+The `AudioStreamer` class gives you the ability to stream audio from a microphone in your .NET MAUI application through an event handler. The `AudioStreamer` works pretty much the same as the recorder `AudioRecorder`, except that it provides raw audio data instead of a file. In order to create an `AudioStreamer` instance you can make use of the `CreateStreamer` method on the [`AudioManager`](../readme.md#audiomanager) class.
 
 > [!NOTE]
 > If you want to stream in the background on iOS, you will need to add a key to the `Info.plist` file like shown below.
@@ -163,6 +163,12 @@ The *Package.appxmanifest* file will need to be modified to include the followin
 ```
 
 For a full example of this change check out our [*Package.appxmanifest*](https://github.com/jfversluis/Plugin.Maui.Audio/blob/main/samples/Plugin.Maui.Audio.Sample/Platforms/Windows/Package.appxmanifest) file.
+
+## Listening and Manipulating audio
+
+Raw PCM audio (Pulse-Code Modulation) that `AudioStreamer` provides has a sample-by-sample structure that can be used for low-level audio manipulation and analysis. The `Plugin.Maui.Audio` library provides some basic `IPcmAudioListener` that can be used to analyse this audio. More information on the [Audio Listeners](docs/audio-listeners.md) page.
+
+The `Plugin.Maui.Audio` library also provides PCM audio utilities via the `PcmAudioHelpers` class. It includes features for storing PCM audio as WAV files, converting raw PCM data into usable sample arrays, and various other audio conversions.
 
 ## Sample
 

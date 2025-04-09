@@ -8,7 +8,14 @@ namespace Plugin.Maui.Audio;
 /// </summary>
 public enum BitsPerSample
 {
+	/// <summary>
+	/// 8-bit sample depth.
+	/// </summary>
 	Bit8 = 8,
+	
+	/// <summary>
+	/// 16-bit sample depth.
+	/// </summary>
 	Bit16 = 16
 }
 
@@ -32,6 +39,7 @@ public class RawAudioSource : IAudioSource
 	/// <param name="soundData">Raw PCM sound data as a span of bytes.</param>
 	/// <param name="sampleRate">Sample rate in Hz (e.g., 44100).</param>
 	/// <param name="nbOfChannels">Number of audio channels (e.g., 1 for mono, 2 for stereo).</param>
+	/// <param name="bitsPerSample">Bits per sample (e.g., 8 or 16).</param>
 	public RawAudioSource(ReadOnlySpan<byte> soundData, int sampleRate, int nbOfChannels = 1, BitsPerSample bitsPerSample = BitsPerSample.Bit8)
 		: this(soundData.ToArray(), sampleRate, nbOfChannels, bitsPerSample)
 	{
@@ -69,6 +77,10 @@ public class RawAudioSource : IAudioSource
 		_bitsPerSample = bitsPerSample;
 	}
 
+	/// <summary>
+	/// Gets a stream providing access to the audio data with WAV header.
+	/// </summary>
+	/// <returns>A memory stream containing the complete WAV file data.</returns>
 	public Stream GetAudioStream()
 	{
 		return new MemoryStream(Bytes, false);

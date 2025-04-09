@@ -19,8 +19,10 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	bool isPlaying;
 	bool? isSilent;
 	MemoryStream capturedAudioStream;
-	string capturedAudioWavFile;
-	double measuredDecibels = 0.0;
+
+	string capturedAudioWavFileOriginal;
+	string capturedAudioWavFileLeft;
+	string capturedAudioWavFileRight;
 
 	public AudioStreamerPageViewModel(
 		IAudioManager audioManager,
@@ -28,7 +30,9 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	{
 		StartCommand = new Command(Start, () => !IsStreaming);
 		StopCommand = new Command(Stop, () => IsStreaming);
-		PlayCommand = new Command(PlayAudio, () => !IsPlaying);
+		PlayCommand = new Command(() => PlayAudio(capturedAudioWavFileOriginal), () => !IsPlaying && !string.IsNullOrWhiteSpace(capturedAudioWavFileOriginal));
+		PlayLeftCommand = new Command(() => PlayAudio(capturedAudioWavFileLeft), () => !IsPlaying && !string.IsNullOrWhiteSpace(capturedAudioWavFileLeft));
+		PlayRightCommand = new Command(() => PlayAudio(capturedAudioWavFileRight), () => !IsPlaying && !string.IsNullOrWhiteSpace(capturedAudioWavFileRight));
 		StopPlayCommand = new Command(StopPlay, () => IsPlaying);
 
 		this.audioManager = audioManager;
@@ -78,6 +82,8 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		{
 			isPlaying = value;
 			PlayCommand.ChangeCanExecute();
+			PlayLeftCommand.ChangeCanExecute();
+			PlayRightCommand.ChangeCanExecute();
 			StopPlayCommand.ChangeCanExecute();
 		}
 	}
@@ -85,6 +91,8 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	public bool IsStreaming => audioStreamer?.IsStreaming ?? false;
 
 	public Command PlayCommand { get; }
+	public Command PlayLeftCommand { get; }
+	public Command PlayRightCommand { get; }
 	public Command StartCommand { get; }
 	public Command StopCommand { get; }
 	public Command StopPlayCommand { get; }
@@ -142,11 +150,11 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		SelectedChannelType = ChannelType.Mono;
 	}
 
-	async void PlayAudio()
+	async void PlayAudio(string audioFile)
 	{
-		if (!string.IsNullOrWhiteSpace(capturedAudioWavFile))
+		if (!string.IsNullOrWhiteSpace(audioFile))
 		{
-			var stream = new FileStream(capturedAudioWavFile, FileMode.Open, FileAccess.Read);
+			var stream = new FileStream(audioFile, FileMode.Open, FileAccess.Read);
 			audioPlayer = audioManager.CreateAsyncPlayer(stream);
 
 			IsPlaying = true;
@@ -171,7 +179,13 @@ public class AudioStreamerPageViewModel : BaseViewModel
 				capturedAudioStream.Dispose();
 			}
 			capturedAudioStream = new MemoryStream();
-			capturedAudioWavFile = string.Empty;
+			capturedAudioWavFileOriginal = string.Empty;
+			capturedAudioWavFileLeft = string.Empty;
+			capturedAudioWavFileRight = string.Empty;
+
+			PlayCommand.ChangeCanExecute();
+			PlayLeftCommand.ChangeCanExecute();
+			PlayRightCommand.ChangeCanExecute();
 
 			if (pcmAudioHandler is null)
 			{
@@ -273,18 +287,31 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		StartCommand.ChangeCanExecute();
 		StopCommand.ChangeCanExecute();
 
-		capturedAudioWavFile = Path.Combine(FileSystem.CacheDirectory, Path.GetTempFileName());
-		var audioFileStream = File.OpenWrite(capturedAudioWavFile);
-		var totalAudioLength = capturedAudioStream.Length;
+		capturedAudioWavFileOriginal = Path.Combine(FileSystem.CacheDirectory, Path.GetTempFileName());
+		var capturedAudio = capturedAudioStream.ToArray();
 
-		var header = PcmAudioHelpers.CreateWavFileHeader(totalAudioLength,
-			audioStreamer.Options.SampleRate,
-			(int)audioStreamer.Options.Channels,
-			(int)audioStreamer.Options.BitDepth);
+		WriteAudioAsWavFile(capturedAudio, capturedAudioWavFileOriginal, 
+			audioStreamer.Options.SampleRate, audioStreamer.Options.Channels, audioStreamer.Options.BitDepth);
 
-		audioFileStream.Write(header);
-		audioFileStream.Write(capturedAudioStream.ToArray());
-		audioFileStream.Close();
+		if (audioStreamer.Options.Channels == ChannelType.Stereo)
+		{
+			var audioSamples = PcmAudioHelpers.ConvertRawPcmAudioBytesToOrderedAudioSamples(capturedAudio, audioStreamer.Options.BitDepth);
+			var audioSamplesPerChannel = PcmAudioHelpers.ConvertToSamplesPerChannel(audioSamples, audioStreamer.Options.Channels);
+
+			var rawAudioChannelLeft = PcmAudioHelpers.ConvertOrderedAudioSamplesToRawPcmAudioBytes(audioSamplesPerChannel[0], audioStreamer.Options.BitDepth);
+			capturedAudioWavFileLeft = Path.Combine(FileSystem.CacheDirectory, Path.GetTempFileName());
+			WriteAudioAsWavFile(rawAudioChannelLeft, capturedAudioWavFileLeft,
+				audioStreamer.Options.SampleRate, ChannelType.Mono, audioStreamer.Options.BitDepth);
+
+			var rawAudioChannelRight = PcmAudioHelpers.ConvertOrderedAudioSamplesToRawPcmAudioBytes(audioSamplesPerChannel[1], audioStreamer.Options.BitDepth);
+			capturedAudioWavFileRight = Path.Combine(FileSystem.CacheDirectory, Path.GetTempFileName());
+			WriteAudioAsWavFile(rawAudioChannelRight, capturedAudioWavFileRight,
+				audioStreamer.Options.SampleRate, ChannelType.Mono, audioStreamer.Options.BitDepth);
+		}
+
+		PlayCommand.ChangeCanExecute();
+		PlayLeftCommand.ChangeCanExecute();
+		PlayRightCommand.ChangeCanExecute();
 
 		dispatcher.DispatchDelayed(
 			TimeSpan.FromMilliseconds(100),
@@ -292,6 +319,16 @@ public class AudioStreamerPageViewModel : BaseViewModel
 			{
 				pcmAudioHandler.Clear();
 			});
+	}
+
+	void WriteAudioAsWavFile(byte[] audio, string file, int sampleRate, ChannelType channels, BitDepth bitDepth)
+	{
+		var header = PcmAudioHelpers.CreateWavFileHeader(audio.Length, sampleRate, (int)channels, (int)bitDepth);
+
+		var audioFileStream = File.OpenWrite(file);
+		audioFileStream.Write(header);
+		audioFileStream.Write(audio);
+		audioFileStream.Close();
 	}
 
 	void UpdateRecordingTime()

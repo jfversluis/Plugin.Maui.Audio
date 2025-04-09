@@ -1,5 +1,10 @@
-﻿namespace Plugin.Maui.Audio.AudioListeners;
+﻿using System.Buffers.Binary;
 
+namespace Plugin.Maui.Audio.AudioListeners;
+
+/// <summary>
+/// Provides utility methods for working with PCM audio data.
+/// </summary>
 public static class PcmAudioHelpers
 {
 	/// <summary>
@@ -17,7 +22,7 @@ public static class PcmAudioHelpers
 	/// Decibel to (positive) RMS value.
 	/// </summary>
 	/// <param name="decibel">Negative decibel value (also named dBFS).</param>
-	/// <returns></returns>
+	/// <returns>RMS (always positive; sign information not preserved)</returns>
 	public static double DecibelToAbsoluteRms(double decibel)
 	{
 		var rms = Math.Pow(10.0, decibel / 20.0);
@@ -25,14 +30,14 @@ public static class PcmAudioHelpers
 	}
 
 	/// <summary>
-	/// RMS = Root Mean Square
+	/// Calculate RMS (Root Mean Square) for each audio sample
 	/// </summary>
-	/// <param name="values"></param>
+	/// <param name="audioSamples"></param>
 	/// <param name="bitDepth"></param>
-	/// <returns></returns>
-	public static double CalculateRms(int[] values, BitDepth bitDepth)
+	/// <returns>Calculated RMS values</returns>
+	public static double CalculateRms(int[] audioSamples, BitDepth bitDepth)
 	{
-		var valueCount = values.Length;
+		var valueCount = audioSamples.Length;
 		var sampleDevider = bitDepth switch
 		{
 			BitDepth.Pcm16bit => short.MaxValue,
@@ -43,17 +48,130 @@ public static class PcmAudioHelpers
 		double square = 0;
 		for (var i = 0; i < valueCount; i++)
 		{
-			double value = (double)values[i] / sampleDevider;
+			double value = (double)audioSamples[i] / sampleDevider;
 			square += value * value;
 		}
 
 		double mean = square / (float)valueCount;
-
 		var root = (float)Math.Sqrt(mean);
-
 		return root;
 	}
-	   
+
+	/// <summary>
+	/// Convert Samples to Samples per channel
+	/// </summary>
+	/// <param name="samples"></param>
+	/// <param name="channels"></param>
+	/// <returns>Array with the amount of channels, each containing its samples</returns>
+	public static int[][] ConvertToSamplesPerChannel(int[] samples, ChannelType channels)
+	{
+		if (channels is ChannelType.Mono)
+		{
+			return new int[1][] { samples };
+		}
+
+		var samplesByChannel = new int[2][];
+		samplesByChannel[0] = new int[samples.Length / 2];
+		samplesByChannel[1] = new int[samples.Length / 2];
+
+		for (var n = 0; n < samples.Length / 2; n++)
+		{
+			samplesByChannel[0][n] = samples[n * 2];
+			samplesByChannel[1][n] = samples[n * 2 + 1];
+		}
+
+		return samplesByChannel;
+	}
+
+	/// <summary>
+	/// Convert raw PCM audio bytes to ordered audio samples.
+	/// </summary>
+	/// <param name="pcmAudio"></param>
+	/// <param name="bitDepth"></param>
+	/// <returns></returns>
+	public static int[] ConvertRawPcmAudioBytesToOrderedAudioSamples(byte[] pcmAudio, BitDepth bitDepth)
+	{
+		var samples = new List<int>();
+		var bytesPerSample = (uint)bitDepth / 8;
+
+		for (var n = 0; n < pcmAudio.Length / bytesPerSample; n++)
+		{
+			int sample = 0;
+
+			if (bytesPerSample == 1)
+			{
+				var sampleBytes = new[] { pcmAudio[n] };
+				sample = sampleBytes[0] - 128;
+			}
+			else if (bytesPerSample == 2)
+			{
+				var sampleBytes = new byte[2] { pcmAudio[n * bytesPerSample], pcmAudio[n * bytesPerSample + 1] };
+				sample = BinaryPrimitives.ReadInt16LittleEndian(sampleBytes);
+			}
+			else if (bytesPerSample == 4)
+			{
+				var sampleBytes = new byte[4]
+				{
+					pcmAudio[n * bytesPerSample],
+					pcmAudio[n * bytesPerSample + 1],
+					pcmAudio[n * bytesPerSample + 2],
+					pcmAudio[n * bytesPerSample + 3]
+				};
+				sample = BinaryPrimitives.ReadInt32LittleEndian(sampleBytes);
+			}
+
+			samples.Add(sample);
+		}
+
+		return samples.ToArray();
+	}
+
+	/// <summary>
+	/// Convert ordered audio samples to raw PCM audio bytes.
+	/// </summary>
+	/// <param name="samples"></param>
+	/// <param name="bitDepth"></param>
+	/// <returns></returns>
+	/// <exception cref="Exception">when conversion fails</exception>
+	public static byte[] ConvertOrderedAudioSamplesToRawPcmAudioBytes(int[] samples, BitDepth bitDepth)
+	{
+		var bytesPerSample = (uint)bitDepth / 8;
+		var totalBytes = samples.Length * bytesPerSample;
+		var pcmAudio = new byte[totalBytes];
+		var pcmAudioSpan = new Span<byte>(pcmAudio);
+
+		for (var n = 0; n < samples.Length; n++)
+		{
+			if (bytesPerSample == 1)
+			{
+				var sample = Convert.ToByte(samples[n]);
+				var pcmValue = sample + 128;
+				if (pcmValue > byte.MaxValue)
+				{
+					throw new Exception($"Failed to write sample '{samples[n]}' as little endian");
+				}
+
+				pcmAudioSpan[n] = (byte)pcmValue;
+			}
+			else if (bytesPerSample == 2)
+			{
+				if (!BinaryPrimitives.TryWriteInt16LittleEndian(pcmAudioSpan.Slice(n * 2, 2), (short)samples[n]))
+				{
+					throw new Exception($"Failed to write sample '{samples[n]}' as little endian");
+				}
+			}
+			else if (bytesPerSample == 4)
+			{
+				if (!BinaryPrimitives.TryWriteInt32LittleEndian(pcmAudioSpan.Slice(n * 4, 4), samples[n]))
+				{
+					throw new Exception($"Failed to write sample '{samples[n]}' as little endian");
+				}
+			}
+		}
+
+		return pcmAudio;
+	}
+
 	public static byte[] CreateWavFileHeader(long audioLength, long sampleRate, int channels, int bitDepth)
 	{
 		long dataLength = audioLength + 36;
