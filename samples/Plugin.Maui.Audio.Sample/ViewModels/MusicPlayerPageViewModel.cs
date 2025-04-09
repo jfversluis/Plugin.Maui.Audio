@@ -169,7 +169,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		{
 			if ((audioPlayer?.CanSetSpeed ?? false) && UserSpeed >= MinimumSpeed && UserSpeed <= MaximumSpeed)
 			{
-				audioPlayer.SetSpeed(UserSpeed);
+				audioPlayer.Speed = UserSpeed;
 				NotifyPropertyChanged(nameof(AudioSpeed));
 			}
 		}

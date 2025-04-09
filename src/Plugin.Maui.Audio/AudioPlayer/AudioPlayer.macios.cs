@@ -50,17 +50,6 @@ partial class AudioPlayer : IAudioPlayer
 	}
 
 	/// <summary>
-	/// Sets the playback speed where 1 is normal speed.
-	/// </summary>
-	/// <param name="sp">The playback speed to set.</param>
-	/// <remarks>This method is obsolete. Use the <see cref="Speed"/> property setter instead.</remarks>
-	[Obsolete("Use Speed setter instead")]
-	public void SetSpeed(double sp)
-	{
-		SetSpeedInternal(sp);
-	}
-
-	/// <summary>
 	/// Internal implementation for setting the playback speed.
 	/// </summary>
 	/// <param name="sp">The requested speed value to set.</param>

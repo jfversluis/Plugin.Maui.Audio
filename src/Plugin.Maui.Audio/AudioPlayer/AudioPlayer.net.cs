@@ -88,12 +88,6 @@ partial class AudioPlayer : IAudioPlayer
 	public void Stop() { }
 
 	/// <summary>
-	/// Sets the playback speed where 1 is normal speed.
-	/// </summary>
-	/// <param name="speed">The desired speed value.</param>
-	public void SetSpeed(double speed) { }
-
-	/// <summary>
 	/// Set the current playback position (in seconds).
 	/// </summary>
 	/// <param name="position">The position in seconds.</param>
