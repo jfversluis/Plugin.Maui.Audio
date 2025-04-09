@@ -67,6 +67,7 @@ Now that you know how to use the `AudioManager` class, please refer to the follo
 * [Audio playback](docs/audio-player.md)
 * [Record audio](docs/audio-recorder.md)
 * [Stream audio](docs/audio-streamer.md)
+* [Audio listeners](docs/audio-listeners.md)
 
 ## Supported Audio Formats
 
