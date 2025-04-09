@@ -9,9 +9,8 @@ It mainly consists of:
 
 Available listeners:
 * SilenceListener > provides silence detection
-* DecibelListener > provides dBFS ouput (dBFS = decibels relative to full scale)
-* RmsListener > provides RMS ouput
-
+* DecibelListener > provides dBFS output (dBFS = decibels relative to full scale)
+* RmsListener > provides RMS output
 ## How it works collectively
 
 The collective hierarchy: `AudioStreamer` > `PcmAudioHandler` > `AudioListeners` > `Audio helpers`
@@ -63,8 +62,7 @@ void OnAudioStreamerDataCaptured(object sender, AudioStreamEventArgs args)
 ### AudioListeners usage
 An AudioListener needs to be subscribed to the PcmAudioHandler, the listener will receive audio samples as soon as the PcmAudioHandler has converted the audio. 
 
-AudioListeners can be selfmade bij using IPcmAudioListener.
-
+AudioListeners can be selfmade by using IPcmAudioListener.
 
 ## How they work individually
 Components can be used individually, but its easier to work with them collectively otherwise you probably need to do some things yourself. 
