@@ -23,14 +23,15 @@ public interface IAudioManager
 	/// <summary>
 	/// Creates a new <see cref="IAudioPlayer"/> with with an empty source.
 	/// </summary>
-	/// <param name="options"></param>
-	/// <returns></returns>
+	/// <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+	/// <returns>A new <see cref="IAudioPlayer"/> with an empty source.</returns>
 	IAudioPlayer CreatePlayer(AudioPlayerOptions? options = default);
 
 	/// <summary>
 	/// Creates a new <see cref="IAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play.
 	/// </summary>
 	/// <param name="audioStream">The <see cref="Stream"/> containing the audio to play.</param>
+	/// <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
 	/// <returns>A new <see cref="IAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play.</returns>
 	IAudioPlayer CreatePlayer(Stream audioStream, AudioPlayerOptions? options = default);
 
@@ -38,26 +39,26 @@ public interface IAudioManager
 	/// Creates a new <see cref="IAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play.
 	/// </summary>
 	/// <param name="fileName">The name of the file containing the audio to play.</param>
+	/// <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
 	/// <returns>A new <see cref="IAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play.</returns>
 	IAudioPlayer CreatePlayer(string fileName, AudioPlayerOptions? options = default);
 
-	/// <summary>
-	/// Creates a new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play audio using async/await.
-	/// </summary>
-	/// <param name="audioStream">The <see cref="Stream"/> containing the audio to play.</param>
-	/// <returns>A new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play.</returns>
+	/// <summary>Creates a new AsyncAudioPlayer with the supplied audioStream ready to play audio using async/await.</summary>
+	/// <param name="audioStream">The Stream containing the audio to play.</param>
+	/// <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+	/// <returns>A new AsyncAudioPlayer with the supplied audioStream ready to play.</returns>
 	AsyncAudioPlayer CreateAsyncPlayer(Stream audioStream, AudioPlayerOptions? options = default);
 
-	/// <summary>
-	/// Creates a new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play audio using async/await.
-	/// </summary>
+	/// <summary>Creates a new AsyncAudioPlayer with the supplied fileName ready to play audio using async/await.</summary>
 	/// <param name="fileName">The name of the file containing the audio to play.</param>
-	/// <returns>A new <see cref="AsyncAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play.</returns>
+	/// <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+	/// <returns>A new AsyncAudioPlayer with the supplied fileName ready to play.</returns>
 	AsyncAudioPlayer CreateAsyncPlayer(string fileName, AudioPlayerOptions? options = default);
 
 	/// <summary>
 	/// Creates a new <see cref="IAudioRecorder"/> ready to begin recording audio from the current device.
 	/// </summary>
+	/// <param name="options">Options to configure the audio recorder behavior, or null to use the default options.</param>
 	/// <returns>A new <see cref="IAudioRecorder"/> ready to begin recording.</returns>
 	IAudioRecorder CreateRecorder(AudioRecorderOptions? options = default);
 

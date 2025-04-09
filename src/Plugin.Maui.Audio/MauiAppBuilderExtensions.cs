@@ -1,5 +1,8 @@
 namespace Plugin.Maui.Audio;
 
+/// <summary>
+/// Provides extension methods for registering Plugin.Maui.Audio services with the MAUI dependency injection container.
+/// </summary>
 public static class MauiAppBuilderExtensions
 {
 	/// <summary>

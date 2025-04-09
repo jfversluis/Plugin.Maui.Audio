@@ -14,6 +14,12 @@ public class PcmAudioHandler
 	BitDepth bitDepth;
 	uint bytesPerSample;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="PcmAudioHandler"/> class.
+	/// </summary>
+	/// <param name="sampleRate">The sample rate in Hz used for audio processing.</param>
+	/// <param name="channels">The channel type (mono or stereo) used for audio processing.</param>
+	/// <param name="bitDepth">The bit depth used for audio processing.</param>
 	public PcmAudioHandler(int sampleRate, ChannelType channels, BitDepth bitDepth)
 	{
 		this.sampleRate = sampleRate;
@@ -23,13 +29,22 @@ public class PcmAudioHandler
 		bytesPerSample = (uint)BitDepth / 8;
 	}
 
+	/// <summary>
+	/// Gets or sets the mode that determines how audio data is processed and broadcast to listeners.
+	/// </summary>
 	public AudioHandlerOutputMode HandlerOutputMode { get; set; } = AudioHandlerOutputMode.Block;
 
 	/// <summary>
-	/// Optional audio output when not using listeners
+	/// Optional audio output event raised when audio data is converted, even when not using listeners.
 	/// </summary>
 	public event EventHandler<OrderedAudioEventArgs>? ConvertedAudio;
 
+	/// <summary>
+	/// Gets or sets the sample rate in Hz used for audio processing.
+	/// </summary>
+	/// <remarks>
+	/// When changed, the new value is propagated to all registered listeners.
+	/// </remarks>
 	public int SampleRate
 	{
 		get => sampleRate;
@@ -40,6 +55,12 @@ public class PcmAudioHandler
 		}
 	}
 
+	/// <summary>
+	/// Gets or sets the channel type (mono or stereo) used for audio processing.
+	/// </summary>
+	/// <remarks>
+	/// When changed, the new value is propagated to all registered listeners.
+	/// </remarks>
 	public ChannelType Channels
 	{
 		get => channels;
@@ -50,6 +71,12 @@ public class PcmAudioHandler
 		}
 	}
 
+	/// <summary>
+	/// Gets or sets the bit depth used for audio processing.
+	/// </summary>
+	/// <remarks>
+	/// When changed, the new value is propagated to all registered listeners.
+	/// </remarks>
 	public BitDepth BitDepth
 	{
 		get => bitDepth;
@@ -61,6 +88,13 @@ public class PcmAudioHandler
 		}
 	}
 
+	/// <summary>
+	/// Registers a listener to receive audio data events.
+	/// </summary>
+	/// <param name="listener">The audio listener to register.</param>
+	/// <remarks>
+	/// The listener's settings will be aligned with the handler's current settings.
+	/// </remarks>
 	public void Subscribe(IPcmAudioListener listener)
 	{
 		if (listeners.Contains(listener))
@@ -72,6 +106,10 @@ public class PcmAudioHandler
 		AlignListenerSettings(listener);
 	}
 
+	/// <summary>
+	/// Unregisters a listener from receiving audio data events.
+	/// </summary>
+	/// <param name="listener">The audio listener to unregister.</param>
 	public void Unsubscribe(IPcmAudioListener listener)
 	{
 		if (listeners.Contains(listener))
@@ -80,6 +118,9 @@ public class PcmAudioHandler
 		}
 	}
 
+	/// <summary>
+	/// Clears all data and resets values in all registered listeners.
+	/// </summary>
 	public void Clear()
 	{
 		foreach (var listener in listeners)
@@ -88,6 +129,10 @@ public class PcmAudioHandler
 		}
 	}
 
+	/// <summary>
+	/// Processes incoming PCM audio data and converts it for listeners.
+	/// </summary>
+	/// <param name="audio">The raw PCM audio data to process.</param>
 	public void HandlePcmAudio(byte[] audio)
 	{
 		var samples = new List<int>();
@@ -147,6 +192,11 @@ public class PcmAudioHandler
 		}
 	}
 
+	/// <summary>
+	/// Broadcasts audio data to all registered listeners and raises the ConvertedAudio event.
+	/// </summary>
+	/// <param name="littleEndian">The audio data converted to little-endian formatted integers.</param>
+	/// <param name="original">The original raw audio data bytes.</param>
 	public void BroadcastAudio(int[] littleEndian, byte[] original)
 	{
 		ConvertedAudio?.Invoke(this, new OrderedAudioEventArgs(littleEndian, original));

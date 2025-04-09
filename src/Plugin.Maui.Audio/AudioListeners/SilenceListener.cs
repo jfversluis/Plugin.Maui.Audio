@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio.AudioListeners;
 
+/// <summary>
+/// A listener that detects silence in an audio stream based on configurable thresholds.
+/// </summary>
 public class SilenceListener : IPcmAudioListener
 {
 	uint channelCount;
@@ -8,6 +11,9 @@ public class SilenceListener : IPcmAudioListener
 	float amplitudeSampleThreshold;
 	double ellapsedMillisecondsSinceDetectedSound;
 	
+	/// <summary>
+	/// Initializes a new instance of the <see cref="SilenceListener"/> class with default settings.
+	/// </summary>
 	public SilenceListener()
 	{
 		Channels = ChannelType.Mono;
@@ -19,9 +25,15 @@ public class SilenceListener : IPcmAudioListener
 		Clear();
 	}
 
+	/// <summary>
+	/// Gets or sets the sample rate in Hz used for audio processing.
+	/// </summary>
 	public int SampleRate { get; set; }
 
 	ChannelType channels;
+	/// <summary>
+	/// Gets or sets the channel type (mono or stereo) used for audio processing.
+	/// </summary>
 	public ChannelType Channels
 	{
 		get => channels;
@@ -33,6 +45,9 @@ public class SilenceListener : IPcmAudioListener
 	}
 	
 	BitDepth bitDepth;
+	/// <summary>
+	/// Gets or sets the bit depth used for audio processing.
+	/// </summary>
 	public BitDepth BitDepth
 	{
 		get => bitDepth;
@@ -43,9 +58,18 @@ public class SilenceListener : IPcmAudioListener
 		}
 	}
 
+	/// <summary>
+	/// Event raised when the silence state changes.
+	/// </summary>
 	public event EventHandler<IsSilentChangedEventArgs>? IsSilentChanged;
 
 	bool? isSilent;
+	/// <summary>
+	/// Gets a value indicating whether the audio stream is currently silent.
+	/// </summary>
+	/// <remarks>
+	/// Returns null when the silence state is undetermined.
+	/// </remarks>
 	public bool? IsSilent
 	{
 		get => isSilent;
@@ -89,12 +113,19 @@ public class SilenceListener : IPcmAudioListener
 		}
 	}
 
+	/// <summary>
+	/// Clears all data and resets values to their initial state.
+	/// </summary>
 	public void Clear()
 	{
 		IsSilent = null;
 		ellapsedMillisecondsSinceDetectedSound = MinimalSilenceTimespanInMilliseconds;
 	}
 
+	/// <summary>
+	/// Processes ordered PCM audio data to detect silence.
+	/// </summary>
+	/// <param name="audioEventArgs">The ordered audio data to process.</param>
 	public void HandleOrderedPcmAudio(OrderedAudioEventArgs audioEventArgs)
 	{
 		var orderedAudioSamples = audioEventArgs.OrderedAudio;

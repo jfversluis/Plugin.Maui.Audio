@@ -1,11 +1,17 @@
 ﻿namespace Plugin.Maui.Audio.AudioListeners;
 
+/// <summary>
+/// A listener that calculates the Root Mean Square (RMS) value from the incoming audio stream.
+/// </summary>
 public class RmsListener : IPcmAudioListener
 {
 	readonly List<int> orderedAudioCache = [];
 	readonly object orderedAudioCacheLock = new();
 	int requiredSamplesForGivenTimespan;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="RmsListener"/> class with default settings.
+	/// </summary>
 	public RmsListener()
 	{
 		Channels = ChannelType.Mono;
@@ -17,9 +23,15 @@ public class RmsListener : IPcmAudioListener
 		Clear();
 	}
 
+	/// <summary>
+	/// Event raised when the measured RMS value changes.
+	/// </summary>
 	public event EventHandler<RmsChangedEventArgs>? RmsChanged;
 
 	double rms;
+	/// <summary>
+	/// Gets the current RMS (Root Mean Square) value of the audio stream.
+	/// </summary>
 	public double Rms
 	{
 		get => rms;
@@ -50,9 +62,15 @@ public class RmsListener : IPcmAudioListener
 		}
 	}
 
+	/// <summary>
+	/// Gets or sets the bit depth used for audio processing.
+	/// </summary>
 	public BitDepth BitDepth { get; set; }
 
 	int sampleRate;
+	/// <summary>
+	/// Gets or sets the sample rate in Hz used for audio processing.
+	/// </summary>
 	public int SampleRate
 	{
 		get => sampleRate;
@@ -64,6 +82,9 @@ public class RmsListener : IPcmAudioListener
 	}
 
 	ChannelType channels;
+	/// <summary>
+	/// Gets or sets the channel type (mono or stereo) used for audio processing.
+	/// </summary>
 	public ChannelType Channels
 	{
 		get => channels;
@@ -74,6 +95,10 @@ public class RmsListener : IPcmAudioListener
 		}
 	}
 
+	/// <summary>
+	/// Processes ordered PCM audio data to calculate RMS values.
+	/// </summary>
+	/// <param name="audioEventArgs">The ordered audio data to process.</param>
 	public void HandleOrderedPcmAudio(OrderedAudioEventArgs audioEventArgs)
 	{
 		double? currentRms = null;
@@ -104,6 +129,9 @@ public class RmsListener : IPcmAudioListener
 		}
 	}
 
+	/// <summary>
+	/// Clears all data and resets values to their initial state.
+	/// </summary>
 	public void Clear()
 	{
 		Rms = 0.0;
