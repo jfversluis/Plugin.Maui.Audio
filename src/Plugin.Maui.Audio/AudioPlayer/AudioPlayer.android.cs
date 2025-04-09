@@ -40,13 +40,6 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	bool isPlaying = false;
 
-	[Obsolete("Use Speed setter instead")]
-	[SupportedOSPlatform("Android23.9")]
-	public void SetSpeed(double sp)
-	{
-		SetSpeedInternal(sp);
-	}
-
 	protected void SetSpeedInternal(double sp)
 	{
 		if (!OperatingSystem.IsAndroidVersionAtLeast(23))

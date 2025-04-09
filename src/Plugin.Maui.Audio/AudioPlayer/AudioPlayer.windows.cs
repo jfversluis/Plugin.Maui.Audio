@@ -31,12 +31,6 @@ partial class AudioPlayer : IAudioPlayer
 		set => SetSpeedInternal(value);
 	}
 
-	[Obsolete("Use Speed setter instead")]
-	public void SetSpeed(double speed)
-	{
-		SetSpeedInternal(speed);
-	}
-
 	protected void SetSpeedInternal(double speed)
 	{
 		player.PlaybackSession.PlaybackRate = Math.Clamp(speed, MinimumSpeed, MaximumSpeed);
@@ -83,7 +77,7 @@ partial class AudioPlayer : IAudioPlayer
 
 		player.MediaFailed += OnError;
 		player.MediaEnded += OnPlaybackEnded;
-		SetSpeed(1.0);
+		Speed = 1.0;
 	}
 
 	void OnError(MediaPlayer sender, MediaPlayerFailedEventArgs e)
@@ -125,7 +119,7 @@ partial class AudioPlayer : IAudioPlayer
 
 
 		player.MediaEnded += OnPlaybackEnded;
-		SetSpeed(1.0);
+		Speed = 1.0;
 	}
 
 	public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
@@ -139,7 +133,7 @@ partial class AudioPlayer : IAudioPlayer
 
 		player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
 		player.MediaEnded += OnPlaybackEnded;
-		SetSpeed(1.0);
+		Speed = 1.0;
 	}
 
 	void OnPlaybackEnded(MediaPlayer sender, object args)
