@@ -31,12 +31,6 @@ partial class AudioPlayer : IAudioPlayer
 		set => SetSpeedInternal(value);
 	}
 
-	[Obsolete("Use Speed setter instead")]
-	public void SetSpeed(double speed)
-	{
-		SetSpeedInternal(speed);
-	}
-
 	protected void SetSpeedInternal(double speed)
 	{
 		player.PlaybackSession.PlaybackRate = Math.Clamp(speed, MinimumSpeed, MaximumSpeed);

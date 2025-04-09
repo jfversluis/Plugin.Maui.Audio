@@ -56,14 +56,6 @@ public class AsyncAudioPlayer : IAudio
 		set => audioPlayer.Speed = value;
 	}
 
-	/// <summary>
-	/// Sets the playback speed where 1 is normal speed.
-	/// </summary>
-	/// <param name="speed">The playback speed to set.</param>
-	/// <remarks>This method is obsolete. Use the <see cref="Speed"/> property setter instead.</remarks>
-	[Obsolete("Use Speed setter instead")]
-	public void SetSpeed(double speed) => audioPlayer.SetSpeed(speed);
-
 	/// <inheritdoc cref="IAudio.MinimumSpeed" />
 	public double MinimumSpeed => audioPlayer.MinimumSpeed;
 
