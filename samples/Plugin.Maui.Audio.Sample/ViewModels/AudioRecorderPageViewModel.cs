@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Plugin.Maui.Audio;
 using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
@@ -53,6 +52,63 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		this.dispatcher = dispatcher;
 	}
 
+	ChannelType selectedChannelType;
+	public ChannelType SelectedChannelType
+	{
+		get => selectedChannelType;
+		set
+		{
+			selectedChannelType = value;
+			NotifyPropertyChanged();
+		}
+	}
+	public List<ChannelType> ChannelTypes { get; set; } = Enum.GetValues(typeof(ChannelType)).Cast<ChannelType>().ToList();
+
+	BitDepth selectedBitDepth;
+	public BitDepth SelectedBitDepth
+	{
+		get => selectedBitDepth;
+		set
+		{
+			selectedBitDepth = value;
+			NotifyPropertyChanged();
+		}
+	}
+	public List<BitDepth> BitDepths { get; set; } = Enum.GetValues(typeof(BitDepth)).Cast<BitDepth>().ToList();
+
+	Encoding selectedEncoding;
+	public Encoding SelectedEncoding
+	{
+		get => selectedEncoding;
+		set
+		{
+			selectedEncoding = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	public List<Encoding> EncodingOptions { get; set; } = Enum.GetValues(typeof(Encoding)).Cast<Encoding>().ToList();
+
+	int selectedSampleRate = -1;
+	public int SelectedSampleRate
+	{
+		get => selectedSampleRate;
+		set
+		{
+			selectedSampleRate = value;
+			NotifyPropertyChanged();
+		}
+	}
+	
+	public List<int> SampleRates { get; set; } =
+	[
+		8000,
+		16000,
+		44100,
+		48000
+	];
+
+
 	async void PlayAudio()
 	{
 		if (audioSource != null)
@@ -77,8 +133,33 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		if (await CheckPermissionIsGrantedAsync<Microphone>())
 		{
 			audioRecorder = audioManager.CreateRecorder();
-					
-			await audioRecorder.StartAsync();
+
+			var options = new AudioRecorderOptions
+			{
+				Channels = SelectedChannelType,
+				BitDepth = SelectedBitDepth,
+				Encoding = SelectedEncoding,
+				ThrowIfNotSupported = true
+			};
+
+			if (SelectedSampleRate != -1)
+			{
+				options.SampleRate = SelectedSampleRate;
+			}
+
+			try
+			{
+				await audioRecorder.StartAsync(options);
+			}
+			catch
+			{
+				var res = await AppShell.Current.DisplayActionSheet("Options not supported. Use Default?", "Yes", "No");
+				if (res != "Yes")
+				{
+					return;
+				}
+				await audioRecorder.StartAsync();
+			}
 		}
 
 		recordingStopwatch.Restart();
@@ -113,5 +194,10 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
 				UpdateRecordingTime();
 			});
+	}
+
+	internal void OnNavigatedFrom()
+	{
+		audioPlayer?.Dispose();
 	}
 }

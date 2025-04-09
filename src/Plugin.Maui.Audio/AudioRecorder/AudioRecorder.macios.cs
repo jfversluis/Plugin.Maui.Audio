@@ -1,4 +1,5 @@
-﻿using AVFoundation;
+﻿using AudioToolbox;
+using AVFoundation;
 using Foundation;
 
 namespace Plugin.Maui.Audio;
@@ -9,51 +10,56 @@ partial class AudioRecorder : IAudioRecorder
 	public bool IsRecording => recorder?.Recording ?? false;
 
 	string? destinationFilePath;
-	AVAudioRecorder? recorder;
+	AVAudioRecorder? recorder; //can handle wav pcm or aac compressed
 	TaskCompletionSource<bool>? finishedRecordingCompletionSource;
 
-	public AudioRecorder()
+	AudioRecorderOptions audioRecorderOptions;
+
+	public AudioRecorder(AudioRecorderOptions audioRecorderOptions)
 	{
-		InitAudioSession();
+		this.audioRecorderOptions = audioRecorderOptions;
+
+		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 	}
 
-	static void InitAudioSession()
-	{
-		var audioSession = AVAudioSession.SharedInstance();
-
-		var error = audioSession.SetCategory(AVAudioSessionCategory.Record);
-		if (error is not null)
-		{
-			throw new Exception(error.ToString());
-		}
-
-		error = audioSession.SetActive(true);
-		if (error is not null)
-		{
-			throw new Exception(error.ToString());
-		}
-	}
 
 	static string GetTempFilePath()
 	{
 		return Path.GetTempFileName();
 	}
 
-	public Task StartAsync() => StartAsync(AudioRecorder.GetTempFilePath());
+	public Task StartAsync(AudioRecorderOptions? options = null) => StartAsync(GetTempFilePath(), options);
 
-	public Task StartAsync(string filePath)
+	public Task StartAsync(string filePath, AudioRecorderOptions? options = null)
 	{
 		if (IsRecording)
 		{
 			throw new InvalidOperationException("The recorder is already recording.");
 		}
 
+		if (options is not null)
+		{
+			audioRecorderOptions = options;
+		}
+
+		ActiveSessionHelper.InitializeSession(audioRecorderOptions);
+
 		var url = NSUrl.FromFilename(filePath);
 		destinationFilePath = filePath;
 
+		NSObject[] objects = new NSObject[]
+		{
+				NSNumber.FromInt32 (audioRecorderOptions.SampleRate), //Sample Rate
+				NSNumber.FromInt32 ((int)SharedEncodingToiOSEncoding(audioRecorderOptions.Encoding, audioRecorderOptions.ThrowIfNotSupported)),
+				NSNumber.FromInt32 ((int)audioRecorderOptions.Channels), //Channels
+				NSNumber.FromInt32 ((int)audioRecorderOptions.BitDepth), //PCMBitDepth
+				NSNumber.FromBoolean (false), //IsBigEndianKey
+				NSNumber.FromBoolean (false) //IsFloatKey
+		};
+
 		var settings = NSDictionary.FromObjectsAndKeys(objects, keys);
 
-		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new Exception();
+		recorder = AVAudioRecorder.Create(url, new AudioSettings(settings), out NSError? error) ?? throw new FailedToStartRecordingException("could not create native AVAudioRecorder");
 
 		recorder.FinishedRecording += Recorder_FinishedRecording;
 		finishedRecordingCompletionSource = new TaskCompletionSource<bool>();
@@ -78,6 +84,8 @@ partial class AudioRecorder : IAudioRecorder
 
 		recorder.FinishedRecording -= Recorder_FinishedRecording;
 
+		ActiveSessionHelper.FinishSession(audioRecorderOptions);
+
 		return new FileAudioSource(destinationFilePath);
 	}
 
@@ -91,18 +99,22 @@ partial class AudioRecorder : IAudioRecorder
 		AVAudioSettings.AVLinearPCMIsFloatKey
 	};
 
-	static readonly NSObject[] objects = new NSObject[]
-	{
-		NSNumber.FromFloat (16000), //Sample Rate
-        NSNumber.FromInt32 ((int)AudioToolbox.AudioFormatType.LinearPCM), //AVFormat
-        NSNumber.FromInt32 (1), //Channels
-        NSNumber.FromInt32 (16), //PCMBitDepth
-        NSNumber.FromBoolean (false), //IsBigEndianKey
-        NSNumber.FromBoolean (false) //IsFloatKey
-	};
 
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
 		finishedRecordingCompletionSource?.SetResult(true);
+	}
+
+	AudioFormatType SharedEncodingToiOSEncoding(Encoding type, bool throwIfNotSupported)
+	{
+		return type switch
+		{
+			Encoding.Wav => AudioFormatType.LinearPCM,
+			Encoding.ULaw => AudioFormatType.ULaw,
+			Encoding.Flac => AudioFormatType.Flac,
+			Encoding.Alac => AudioFormatType.AppleLossless,
+			Encoding.Aac => AudioFormatType.MPEG4AAC,
+			_ => throwIfNotSupported ? throw new NotSupportedException("Encoding type not supported") : SharedEncodingToiOSEncoding(audioRecorderOptions.Encoding, true)
+		};
 	}
 }

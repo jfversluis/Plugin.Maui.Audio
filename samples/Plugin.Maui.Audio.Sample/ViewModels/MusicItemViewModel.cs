@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Plugin.Maui.Audio.Sample.ViewModels;
+﻿namespace Plugin.Maui.Audio.Sample.ViewModels;
 
 public class MusicItemViewModel : BaseViewModel
 {

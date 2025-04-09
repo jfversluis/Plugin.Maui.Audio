@@ -2,7 +2,7 @@
 
 partial class AudioRecorder : IAudioRecorder
 {
-	public AudioRecorder()
+	public AudioRecorder(AudioRecorderOptions options)
 	{
 	}
 
@@ -10,9 +10,9 @@ partial class AudioRecorder : IAudioRecorder
 
 	public bool IsRecording => false;
 
-	public Task StartAsync() => Task.CompletedTask;
+	public Task StartAsync(AudioRecorderOptions? options = null) => Task.CompletedTask;
 
-	public Task StartAsync(string filePath) => Task.CompletedTask;
+	public Task StartAsync(string filePath, AudioRecorderOptions? options = null) => Task.CompletedTask;
 
 	public Task<IAudioSource> StopAsync() => Task.FromResult<IAudioSource>(new EmptyAudioSource());
 }

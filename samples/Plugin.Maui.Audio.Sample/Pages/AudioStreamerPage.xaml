@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
+			 xmlns:converters="clr-namespace:Plugin.Maui.Audio.Sample.Converters"
+			 x:Class="Plugin.Maui.Audio.Sample.Pages.AudioStreamerPage"
+			 Title="Audio Streamer"
+			 x:DataType="viewmodels:AudioStreamerPageViewModel">
+
+	<ContentPage.Resources>
+		<converters:SecondsToStringConverter x:Key="SecondsToStringConverter" />
+		<converters:DecibelToStringConverter x:Key="DecibelToStringConverter" />
+	</ContentPage.Resources>
+
+	<ScrollView>
+		<VerticalStackLayout HorizontalOptions="Center"
+							 Spacing="10"
+							 VerticalOptions="Center">
+
+			<Picker Title="Select Sample Rate"
+					ItemsSource="{Binding SampleRates}"
+					SelectedItem="{Binding SelectedSampleRate, Mode=TwoWay}" />
+
+			<Picker Title="Select Channels"
+					ItemsSource="{Binding ChannelTypes}"
+					SelectedItem="{Binding SelectedChannelType, Mode=TwoWay}" />
+
+			<Picker Title="Select Bit Depth"
+					ItemsSource="{Binding BitDepths}"
+					SelectedItem="{Binding SelectedBitDepth, Mode=TwoWay}" />
+
+			<Button Text="Start"
+					Command="{Binding StartCommand}" />
+
+			<Button Text="Stop"
+					Command="{Binding StopCommand}" />
+
+			<Button Text="Play"
+					Command="{Binding PlayCommand}" />
+
+			<Button Text="StopPlay"
+					Command="{Binding StopPlayCommand}" />
+
+			<Label Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
+			<Label Text="{Binding MeasuredDecibel, Converter={StaticResource DecibelToStringConverter}}" />
+
+			<Label>
+				<Label.FormattedText>
+					<FormattedString>
+						<Span Text="Rms: " />
+						<Span Text="{Binding MeasuredRms, StringFormat='{0:F8}'}" />
+					</FormattedString>
+				</Label.FormattedText>
+			</Label>
+
+			<Label>
+				<Label.FormattedText>
+					<FormattedString>
+						<Span Text="IsSilent: " />
+						<Span Text="{Binding IsSilent}" FontAttributes="Italic" />
+					</FormattedString>
+				</Label.FormattedText>
+			</Label>
+
+		</VerticalStackLayout>
+
+	</ScrollView>
+
+</ContentPage>

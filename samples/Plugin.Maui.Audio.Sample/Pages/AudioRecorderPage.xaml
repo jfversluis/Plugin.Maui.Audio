@@ -1,41 +1,52 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
-             xmlns:converters="clr-namespace:Plugin.Maui.Audio.Sample.Converters"
-             x:Class="Plugin.Maui.Audio.Sample.Pages.AudioRecorderPage"
-             Title="Audio Recorder"
-             x:DataType="viewmodels:AudioRecorderPageViewModel">
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:viewmodels="clr-namespace:Plugin.Maui.Audio.Sample.ViewModels"
+			 xmlns:converters="clr-namespace:Plugin.Maui.Audio.Sample.Converters"
+			 x:Class="Plugin.Maui.Audio.Sample.Pages.AudioRecorderPage"
+			 Title="Audio Recorder"
+			 x:DataType="viewmodels:AudioRecorderPageViewModel">
 
-    <ContentPage.Resources>
-        <converters:SecondsToStringConverter x:Key="SecondsToStringConverter" />
-    </ContentPage.Resources>
+	<ContentPage.Resources>
+		<converters:SecondsToStringConverter x:Key="SecondsToStringConverter" />
+	</ContentPage.Resources>
 
-    <Grid>
-        <VerticalStackLayout
-            HorizontalOptions="Center"
-            VerticalOptions="Center">
+	<ScrollView>
+		<VerticalStackLayout HorizontalOptions="Center"
+							 Spacing="10"
+							 VerticalOptions="Center">
 
-            <Button
-                Text="Start"
-                Command="{Binding StartCommand}" />
+			<Picker Title="Select Sample Rate"
+					ItemsSource="{Binding SampleRates}"
+					SelectedItem="{Binding SelectedSampleRate, Mode=TwoWay}" />
 
-            <Button
-                Text="Stop"
-                Command="{Binding StopCommand}" />
+			<Picker Title="Select Channels"
+					ItemsSource="{Binding ChannelTypes}"
+					SelectedItem="{Binding SelectedChannelType, Mode=TwoWay}" />
 
-            <Button
-                Text="Play"
-                Command="{Binding PlayCommand}" />
+			<Picker Title="Select Bit Depth"
+					ItemsSource="{Binding BitDepths}"
+					SelectedItem="{Binding SelectedBitDepth, Mode=TwoWay}" />
 
-            <Button
-                Text="StopPlay"
-                Command="{Binding StopPlayCommand}" />
+			<Picker Title="Select Encoding"
+					ItemsSource="{Binding EncodingOptions}"
+					SelectedItem="{Binding SelectedEncoding, Mode=TwoWay}" />
 
-            <Label
-                Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
-        </VerticalStackLayout>
+			<Button Text="Start"
+					Command="{Binding StartCommand}" />
 
-    </Grid>
-    
+			<Button Text="Stop"
+					Command="{Binding StopCommand}" />
+
+			<Button Text="Play"
+					Command="{Binding PlayCommand}" />
+
+			<Button Text="StopPlay"
+					Command="{Binding StopPlayCommand}" />
+
+			<Label Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
+		</VerticalStackLayout>
+
+	</ScrollView>
+
 </ContentPage>

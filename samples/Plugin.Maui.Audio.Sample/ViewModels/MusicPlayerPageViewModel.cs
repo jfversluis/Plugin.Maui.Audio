@@ -1,8 +1,4 @@
-﻿using System.ComponentModel;
-using Microsoft.Maui.Dispatching;
-using Plugin.Maui.Audio;
-
-namespace Plugin.Maui.Audio.Sample.ViewModels;
+﻿namespace Plugin.Maui.Audio.Sample.ViewModels;
 
 public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisposable
 {
@@ -11,7 +7,6 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 	IAudioPlayer audioPlayer;
 	TimeSpan animationProgress;
 	MusicItemViewModel musicItemViewModel;
-	bool isPositionChangeSystemDriven;
 	bool isDisposed;
 
 	public MusicPlayerPageViewModel(
@@ -24,6 +19,16 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		PlayCommand = new Command(Play);
 		PauseCommand = new Command(Pause);
 		StopCommand = new Command(Stop);
+		UpdateSpeedCommand = new Command(UpdateSpeed);
+		SeekStartedCommand = new Command(SeekStarted);
+		SeekCommand = new Command(Seek);
+	}
+
+	void AudioPlayer_PlaybackEnded(object sender, EventArgs e)
+	{
+		NotifyPropertyChanged(nameof(IsPlaying));
+		NotifyPropertyChanged(nameof(AnimationProgress));
+		CurrentPosition = audioPlayer.CurrentPosition;
 	}
 
 	public async void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -34,7 +39,13 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 			MusicItemViewModel = musicItem;
 
 			audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync(musicItem.Filename));
+			audioPlayer.PlaybackEnded += AudioPlayer_PlaybackEnded;
 
+#if WINDOWS
+			// On windows, without this delay, the states are not updated in time
+			// instead of this hack, we should update the windows state machine to be more reactive, or use an event based approach to update the UI
+			await Task.Delay(50);
+#endif
 			NotifyPropertyChanged(nameof(HasAudioSource));
 			NotifyPropertyChanged(nameof(Duration));
 			NotifyPropertyChanged(nameof(CanSetSpeed));
@@ -43,16 +54,39 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 	}
 
+	double currentPosition = 0;
 	public double CurrentPosition
 	{
-		get => audioPlayer?.CurrentPosition ?? 0;
+		get => currentPosition;
 		set
 		{
-			if (audioPlayer is not null &&
-				audioPlayer.CanSeek &&
-				isPositionChangeSystemDriven is false)
+			currentPosition = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	bool wasPlayingBeforeSeek = false;
+	void SeekStarted()
+	{
+		if (audioPlayer is not null &&
+			audioPlayer.CanSeek)
+		{
+			wasPlayingBeforeSeek = audioPlayer.IsPlaying;
+			audioPlayer.Pause();
+		}
+	}
+
+	void Seek()
+	{
+		if (audioPlayer is not null &&
+			audioPlayer.CanSeek)
+		{
+			audioPlayer.Seek(CurrentPosition);
+
+			if (wasPlayingBeforeSeek)
 			{
-				audioPlayer.Seek(value);
+				Play();
+				wasPlayingBeforeSeek = false;
 			}
 		}
 	}
@@ -86,6 +120,10 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 	public Command PlayCommand { get; }
 	public Command PauseCommand { get; }
 	public Command StopCommand { get; }
+	public Command UpdateSpeedCommand { get; }
+	public Command SeekStartedCommand { get; }
+	public Command SeekCommand { get; }
+	
 
 	public double Volume
 	{
@@ -113,25 +151,39 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 
 	public bool CanSetSpeed => audioPlayer?.CanSetSpeed ?? false;
 
-	public double Speed
+
+	double userSpeed = 1.0;
+	public double UserSpeed
 	{
-		get => audioPlayer?.Speed ?? 1;
+		get => userSpeed;
 		set
 		{
-			try
-			{
-				if (audioPlayer?.CanSetSpeed ?? false)
-				{
-					audioPlayer.Speed = Math.Round(value, 1, MidpointRounding.AwayFromZero);
-					NotifyPropertyChanged();
-				}
-			}
-			catch (Exception ex)
-			{
-				App.Current.MainPage.DisplayAlert("Speed", ex.Message, "OK");
-			}
+			userSpeed = value;
+			NotifyPropertyChanged();
 		}
 	}
+
+	public void UpdateSpeed()
+	{
+		try
+		{
+			if ((audioPlayer?.CanSetSpeed ?? false) && UserSpeed >= MinimumSpeed && UserSpeed <= MaximumSpeed)
+			{
+				audioPlayer.SetSpeed(UserSpeed);
+				NotifyPropertyChanged(nameof(AudioSpeed));
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+		finally
+		{
+			UserSpeed = AudioSpeed;
+			NotifyPropertyChanged(nameof(UserSpeed));
+		}
+	}
+	public double AudioSpeed => audioPlayer?.Speed ?? 1.0;
 
 	public double MinimumSpeed => audioPlayer?.MinimumSpeed ?? 1;
 	public double MaximumSpeed => audioPlayer?.MaximumSpeed ?? 1;
@@ -147,6 +199,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 
 	void Play()
 	{
+		UpdateSpeed();
 		audioPlayer.Play();
 
 		UpdatePlaybackPosition();
@@ -155,36 +208,36 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 
 	void Pause()
 	{
-		if (audioPlayer.IsPlaying)
-		{
-			audioPlayer.Pause();
-		}
-		else
-		{
-			audioPlayer.Play();
-		}
-
+		audioPlayer.Pause();
 		UpdatePlaybackPosition();
 		NotifyPropertyChanged(nameof(IsPlaying));
 	}
 
 	void Stop()
 	{
-		if (audioPlayer.IsPlaying)
-		{
-			audioPlayer.Stop();
-
-			AnimationProgress = TimeSpan.Zero;
-
-			NotifyPropertyChanged(nameof(IsPlaying));
-		}
+		audioPlayer.Stop();
+		AnimationProgress = TimeSpan.Zero;
+		NotifyPropertyChanged(nameof(IsPlaying));
+		NotifyPropertyChanged(nameof(CurrentPosition));
 	}
 
 	void UpdatePlaybackPosition()
 	{
 		if (audioPlayer?.IsPlaying is false)
 		{
-			return;
+#if WINDOWS
+			// On windows, without this delay, the playback state is not updated in time
+			// instead of this hack, we should update the windows state machine to be more reactive, or use an event based approach to update the UI
+			Thread.Sleep(50);
+#endif
+
+			if (audioPlayer?.IsPlaying is false)
+			{
+				NotifyPropertyChanged(nameof(IsPlaying));
+				NotifyPropertyChanged(nameof(AnimationProgress));
+				CurrentPosition = audioPlayer.CurrentPosition;
+				return;
+			}
 		}
 
 		dispatcher.DispatchDelayed(
@@ -192,19 +245,14 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 			() =>
 			{
 				Console.WriteLine($"{CurrentPosition} with duration of {Duration}");
-
-				isPositionChangeSystemDriven = true;
-
-				NotifyPropertyChanged(nameof(CurrentPosition));
-
-				isPositionChangeSystemDriven = false;
-
+				CurrentPosition = audioPlayer?.CurrentPosition ?? 0;
 				UpdatePlaybackPosition();
 			});
 	}
 
 	public void TidyUp()
 	{
+		audioPlayer.PlaybackEnded -= AudioPlayer_PlaybackEnded;
 		audioPlayer?.Dispose();
 		audioPlayer = null;
 	}

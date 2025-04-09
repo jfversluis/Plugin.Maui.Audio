@@ -1,48 +1,45 @@
 ﻿using Windows.Media.Core;
 using Windows.Media.Playback;
+using static Microsoft.Maui.ApplicationModel.Permissions;
 
 namespace Plugin.Maui.Audio;
 
 partial class AudioPlayer : IAudioPlayer
 {
-    bool isDisposed = false;
-    readonly MediaPlayer player;
+	bool isDisposed = false;
+	readonly MediaPlayer player;
 
-    public double CurrentPosition => player.PlaybackSession.Position.TotalSeconds;
+	public double CurrentPosition => player.PlaybackSession.Position.TotalSeconds;
 
-    public double Duration => player.PlaybackSession.NaturalDuration.TotalSeconds;
+	public double Duration => player.PlaybackSession.NaturalDuration.TotalSeconds;
 
-    public double Volume
-    {
-        get => player.Volume;
-        set => SetVolume(value, Balance);
-    }
+	public double Volume
+	{
+		get => player.Volume;
+		set => SetVolume(value, Balance);
+	}
 
-    public double Balance
-    {
-        get => player.AudioBalance;
-        set => SetVolume(Volume, value);
-    }
+	public double Balance
+	{
+		get => player.AudioBalance;
+		set => SetVolume(Volume, value);
+	}
 
 	public double Speed
 	{
 		get => player.PlaybackSession.PlaybackRate;
-		set
-		{
-			// Check if set speed is supported
-			if (CanSetSpeed)
-			{
-				// Windows supports between 0 and 8, but will clamp automatically for us
-				if (player.PlaybackSession.IsSupportedPlaybackRateRange(value, value))
-				{
-					player.PlaybackSession.PlaybackRate = value;
-				}
-			}
-			else
-			{
-				throw new NotSupportedException("Set playback speed is not supported!");
-			}
-		}
+		set => SetSpeedInternal(value);
+	}
+
+	[Obsolete("Use Speed setter instead")]
+	public void SetSpeed(double speed)
+	{
+		SetSpeedInternal(speed);
+	}
+
+	protected void SetSpeedInternal(double speed)
+	{
+		player.PlaybackSession.PlaybackRate = Math.Clamp(speed, MinimumSpeed, MaximumSpeed);
 	}
 
 	public double MinimumSpeed => 0;
@@ -53,117 +50,199 @@ partial class AudioPlayer : IAudioPlayer
 
 	public bool IsPlaying => player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing; //might need to expand
 
-    public bool Loop
-    {
-        get => player.IsLoopingEnabled;
-        set => player.IsLoopingEnabled = value;
-    }
+	public bool Loop
+	{
+		get => player.IsLoopingEnabled;
+		set => player.IsLoopingEnabled = value;
+	}
 
-    public bool CanSeek => player.PlaybackSession.CanSeek;
+	public bool CanSeek => player.PlaybackSession.CanSeek;
 
-    public AudioPlayer(Stream audioStream)
-    {
-        player = CreatePlayer();
+	public static Windows.Storage.Streams.IRandomAccessStream ConvertToRandomAccessStream(MemoryStream memoryStream)
+	{
+		var randomAccessStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+		using (var outputStream = randomAccessStream.GetOutputStreamAt(0))
+		{
+			using (var dataWriter = new Windows.Storage.Streams.DataWriter(outputStream))
+			{
+				dataWriter.WriteBytes(memoryStream.ToArray());
+				dataWriter.StoreAsync().AsTask().GetAwaiter().GetResult();
+			}
+		}
+		return randomAccessStream;
+	}
 
-        if (player is null)
-        {
-            throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
-        }
+	public AudioPlayer(AudioPlayerOptions audioPlayerOptions)
+	{
+		player = CreatePlayer();
 
-        player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
-        player.MediaEnded += OnPlaybackEnded;
-    }
+		if (player is null)
+		{
+			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
+		}
 
-    public AudioPlayer(string fileName)
-    {
-        player = CreatePlayer();
+		player.MediaFailed += OnError;
+		player.MediaEnded += OnPlaybackEnded;
+		SetSpeed(1.0);
+	}
 
-        if (player is null)
-        {
-            throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
-        }
+	void OnError(MediaPlayer sender, MediaPlayerFailedEventArgs e)
+	{
+		OnError(new MediaPlayerFailedEventArgsWrapper(e));
+	}
 
-        player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
-        player.MediaEnded += OnPlaybackEnded;
-    }
+	public void SetSource(Stream audioStream)
+	{
+		if (audioStream is System.IO.MemoryStream memoryStream)
+		{
+			var winStream = ConvertToRandomAccessStream(memoryStream);
+			player.Source = MediaSource.CreateFromStream(winStream, string.Empty);
+		}
+		else
+		{
+			player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+		}
+	}
 
-    void OnPlaybackEnded(MediaPlayer sender, object args)
-    {
-        PlaybackEnded?.Invoke(sender, EventArgs.Empty);
-    }
+	public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
+	{
+		player = CreatePlayer();
 
-    public void Play()
-    {
-        if (player.Source is null)
-        {
-            return;
-        }
+		if (player is null)
+		{
+			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
+		}
 
-        if (player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-        {
-            Pause();
-            Seek(0);
-        }
+		if (audioStream is System.IO.MemoryStream memoryStream)
+		{
+			var winStream = ConvertToRandomAccessStream(memoryStream);
+			player.Source = MediaSource.CreateFromStream(winStream, string.Empty);
+		}
+		else
+		{
+			player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
+		}
 
-        player.Play();
-    }
 
-    public void Pause()
-    {
-        player.Pause();
-    }
+		player.MediaEnded += OnPlaybackEnded;
+		SetSpeed(1.0);
+	}
 
-    public void Stop()
-    {
-        Pause();
-        Seek(0);
-        PlaybackEnded?.Invoke(this, EventArgs.Empty);
-    }
+	public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
+	{
+		player = CreatePlayer();
 
-    public void Seek(double position)
-    {
-        if (player.PlaybackSession is null)
-        {
-            return;
-        }
+		if (player is null)
+		{
+			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
+		}
 
-        if (player.PlaybackSession.CanSeek)
-        {
-            player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
-        }
-    }
+		player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
+		player.MediaEnded += OnPlaybackEnded;
+		SetSpeed(1.0);
+	}
 
-    void SetVolume(double volume, double balance)
-    {
-        if (isDisposed)
-        {
-            return;
-        }
+	void OnPlaybackEnded(MediaPlayer sender, object args)
+	{
+		PlaybackEnded?.Invoke(sender, EventArgs.Empty);
+	}
 
-        player.Volume = Math.Clamp(volume, 0, 1);
-        player.AudioBalance = Math.Clamp(balance, -1, 1);
-    }
+	public void Play()
+	{
+		if (player.Source is null)
+		{
+			return;
+		}
 
-    MediaPlayer CreatePlayer()
-    {
-        return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = false };
-    }
+		if (player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+		{
+			Pause();
+			Seek(0);
+		}
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (isDisposed)
-        {
-            return;
-        }
+		player.Play();
+	}
 
-        if (disposing)
-        {
-            Stop();
+	public void Pause()
+	{
+		player.Pause();
+	}
 
-            player.MediaEnded -= OnPlaybackEnded;
-            player.Dispose();
-        }
+	public void Stop()
+	{
+		Pause();
+		Seek(0);
+		OnPlaybackEnded(player, EventArgs.Empty); //todo check for double invoke?
+	}
 
-        isDisposed = true;
-    }
+	public void Seek(double position)
+	{
+		if (player.PlaybackSession is null)
+		{
+			return;
+		}
+
+		try
+		{
+			if (player.PlaybackSession.CanSeek)
+			{
+				player.PlaybackSession.Position = TimeSpan.FromSeconds(position);
+			}
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+		}
+	}
+
+	void SetVolume(double volume, double balance)
+	{
+		if (isDisposed)
+		{
+			return;
+		}
+
+		player.Volume = Math.Clamp(volume, 0, 1);
+		player.AudioBalance = Math.Clamp(balance, -1, 1);
+	}
+
+	MediaPlayer CreatePlayer()
+	{
+		return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = false };
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (isDisposed)
+		{
+			return;
+		}
+
+		if (disposing)
+		{
+			Stop();
+
+			player.MediaFailed -= OnError;
+			player.MediaEnded -= OnPlaybackEnded;
+			player.Dispose();
+		}
+
+		isDisposed = true;
+	}
 }
+
+public class MediaPlayerFailedEventArgsWrapper : EventArgs
+{
+	public MediaPlayerFailedEventArgs Error { get; }
+
+	public int ErrorCode { get; }
+	public string ErrorMessage { get; }
+
+	public MediaPlayerFailedEventArgsWrapper(MediaPlayerFailedEventArgs args)
+	{
+		Error = args ?? throw new ArgumentNullException(nameof(args));
+		ErrorCode = (int)args.Error;
+		ErrorMessage = args.Error.ToString();
+	}
+}
+

@@ -3,10 +3,20 @@
 /// <summary>
 /// Provides async/await support by wrapping an <see cref="IAudioPlayer"/>.
 /// </summary>
-public class AsyncAudioPlayer
+public class AsyncAudioPlayer : IAudio
 {
 	readonly IAudioPlayer audioPlayer;
 	CancellationTokenSource? stopCancellationToken;
+	bool isDisposed;
+
+#pragma warning disable CS0067
+
+	/// <summary>
+	/// Raised when an error occurred while loading media or playing.
+	/// </summary>
+	public event EventHandler? Error;
+
+#pragma warning restore CS0067
 
 	/// <summary>
 	/// Creates a new instance of <see cref="AsyncAudioPlayer"/>.
@@ -16,7 +26,65 @@ public class AsyncAudioPlayer
 	public AsyncAudioPlayer(IAudioPlayer audioPlayer)
 	{
 		this.audioPlayer = audioPlayer;
+		audioPlayer.Error += OnErrorInternal;
 	}
+
+	/// <inheritdoc cref="IAudio.Duration" />
+	public double Duration => audioPlayer.Duration;
+
+	/// <inheritdoc cref="IAudio.CurrentPosition" />
+	public double CurrentPosition => audioPlayer.CurrentPosition;
+
+	/// <inheritdoc cref="IAudio.Volume" />
+	public double Volume
+	{
+		get => audioPlayer.Volume;
+		set => audioPlayer.Volume = value;
+	}
+
+	/// <inheritdoc cref="IAudio.Balance" />
+	public double Balance
+	{
+		get => audioPlayer.Balance;
+		set => audioPlayer.Balance = value;
+	}
+
+	/// <inheritdoc cref="IAudio.Speed" />
+	public double Speed
+	{
+		get => audioPlayer.Speed;
+		set => audioPlayer.Speed = value;
+	}
+
+	/// <summary>
+	/// Sets the playback speed where 1 is normal speed.
+	/// </summary>
+	/// <param name="speed">The playback speed to set.</param>
+	/// <remarks>This method is obsolete. Use the <see cref="Speed"/> property setter instead.</remarks>
+	[Obsolete("Use Speed setter instead")]
+	public void SetSpeed(double speed) => audioPlayer.SetSpeed(speed);
+
+	/// <inheritdoc cref="IAudio.MinimumSpeed" />
+	public double MinimumSpeed => audioPlayer.MinimumSpeed;
+
+	/// <inheritdoc cref="IAudio.MaximumSpeed" />
+	public double MaximumSpeed => audioPlayer.MaximumSpeed;
+
+	/// <inheritdoc cref="IAudio.CanSetSpeed" />
+	public bool CanSetSpeed => audioPlayer.CanSetSpeed;
+
+	/// <inheritdoc cref="IAudio.IsPlaying" />
+	public bool IsPlaying { get; protected set; }
+
+	/// <inheritdoc cref="IAudio.Loop" />
+	public bool Loop
+	{
+		get => audioPlayer.Loop;
+		set => audioPlayer.Loop = value;
+	}
+
+	/// <inheritdoc cref="IAudio.CanSeek" />
+	public bool CanSeek => audioPlayer.CanSeek;
 
 	/// <summary>
 	/// Begin audio playback asynchronously.
@@ -41,11 +109,63 @@ public class AsyncAudioPlayer
 		audioPlayer.Stop();
 	}
 
+	/// <inheritdoc cref="IAudio.Seek(double)" />
+	public void Seek(double position) => audioPlayer.Seek(position);
+
 	/// <summary>
 	/// Stops the currently playing audio.
 	/// </summary>
 	public void Stop()
 	{
 		stopCancellationToken?.Cancel();
+	}
+
+	/// <summary>
+	/// Something bad happened while loading media or playing.
+	/// </summary>
+	/// <param name="error">Native platform error</param>
+	protected virtual void OnError(EventArgs error)
+	{
+		Error?.Invoke(this, error);
+	}
+
+	/// <summary>
+	/// Releases the unmanaged resources used by the <see cref="AsyncAudioPlayer"/> and optionally releases the managed resources.
+	/// </summary>
+	/// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!isDisposed)
+		{
+			if (disposing)
+			{
+				audioPlayer.Error -= OnErrorInternal;
+				audioPlayer.Dispose();
+			}
+
+			isDisposed = true;
+		}
+	}
+
+	void OnErrorInternal(object? sender, EventArgs e)
+	{
+		OnError(e);
+	}
+
+	/// <summary>
+	/// Finalizer that ensures unmanaged resources are freed.
+	/// </summary>
+	~AsyncAudioPlayer()
+	{
+		Dispose(disposing: false);
+	}
+
+	/// <summary>
+	/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+	/// </summary>
+	public void Dispose()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
 	}
 }

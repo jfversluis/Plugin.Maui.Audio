@@ -10,18 +10,13 @@ on:
 
 jobs:
   build-plugin-ci:
-
     runs-on: windows-latest
-
+      
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 6.0.x
-    - name: Install .NET MAUI
-      run: dotnet workload install maui
+    - uses: actions/checkout@v4
+
     - name: Restore dependencies
-      run: dotnet restore src\Plugin.Maui.Audio.sln
+      run: dotnet restore src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj
+
     - name: Build
-      run: dotnet build src\Plugin.Maui.Audio.sln -c Release
+      run: dotnet build src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release

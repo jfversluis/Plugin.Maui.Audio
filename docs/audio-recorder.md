@@ -2,6 +2,13 @@
 
 The `AudioRecorder` class provides you with the ability to record audio from a microphone in your .NET MAUI application to a file on disk. In order to create an `AudioRecorder` instance you can make use of the `CreateRecorder` method on the [`AudioManager`](../readme.md#audiomanager) class.
 
+> [!NOTE]
+> If you want to record in the background on iOS, you will need to add a key to the `Info.plist` file like show below.
+> `<key>UIBackgroundModes</key>`
+> `<array>`
+> `  <string>audio</string>`
+> `</array>`
+
 ```csharp
 public class AudioRecorderViewModel
 {
@@ -11,21 +18,41 @@ public class AudioRecorderViewModel
     public AudioPlayerViewModel(IAudioManager audioManager)
     {
         this.audioManager = audioManager;
-        this.audioRecorder.CreateRecorder();
+        this.audioRecorder = audioManager.CreateRecorder();
     }
 
-    public async void StartRecording()
+    public async Task StartRecording()
     {
-        this.audioRecorder.StartAsync();
+        await this.audioRecorder.StartAsync();
     }
 
-    public async void StopRecording()
+    public async Task StopRecording()
     {
         IAudioSource audioSource = await this.audioRecorder.StopAsync();
 
         // You can use the audioSource to play the file or save it somewhere in your application.
     }
 }
+```
+
+> [!NOTE]  
+> You as the developer are responsible for cleaning up the audio files. For instance, when using `StartAsync()` the random file that is generated is _not_ cleaned up automatically.
+> Retrieve the file path which is in the resulting object from `StopAsync()` and use that to remove the file when done. Make sure to cast the resulting `IAudioSource` to the concrete type of `FileAudioSource` to be able to retrieve the file path.
+
+## Configure the recording options
+
+When calling `CreateRecorder` it is possible to provide an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
+
+The following example shows how to enable both recording (input) and playback (output) of audio:
+
+```csharp
+audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+#if IOS || MACCATALYST
+        Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord
+#endif
+    });
 ```
 
 ## AudioRecorder API
