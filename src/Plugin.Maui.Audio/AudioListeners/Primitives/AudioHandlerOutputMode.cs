@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio.AudioListeners;
 
+/// <summary>
+/// Specifies how audio data should be processed and broadcast to listeners.
+/// </summary>
 public enum AudioHandlerOutputMode
 {
 	/// <summary>

@@ -12,7 +12,7 @@ public class AsyncAudioPlayer : IAudio
 #pragma warning disable CS0067
 
 	/// <summary>
-	/// Something bad happened while loading media or playing.
+	/// Raised when an error occurred while loading media or playing.
 	/// </summary>
 	public event EventHandler? Error;
 
@@ -56,6 +56,11 @@ public class AsyncAudioPlayer : IAudio
 		set => audioPlayer.Speed = value;
 	}
 
+	/// <summary>
+	/// Sets the playback speed where 1 is normal speed.
+	/// </summary>
+	/// <param name="speed">The playback speed to set.</param>
+	/// <remarks>This method is obsolete. Use the <see cref="Speed"/> property setter instead.</remarks>
 	[Obsolete("Use Speed setter instead")]
 	public void SetSpeed(double speed) => audioPlayer.SetSpeed(speed);
 
@@ -124,6 +129,10 @@ public class AsyncAudioPlayer : IAudio
 		Error?.Invoke(this, error);
 	}
 
+	/// <summary>
+	/// Releases the unmanaged resources used by the <see cref="AsyncAudioPlayer"/> and optionally releases the managed resources.
+	/// </summary>
+	/// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
 	protected virtual void Dispose(bool disposing)
 	{
 		if (!isDisposed)
@@ -143,11 +152,17 @@ public class AsyncAudioPlayer : IAudio
 		OnError(e);
 	}
 
+	/// <summary>
+	/// Finalizer that ensures unmanaged resources are freed.
+	/// </summary>
 	~AsyncAudioPlayer()
 	{
 		Dispose(disposing: false);
 	}
 
+	/// <summary>
+	/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+	/// </summary>
 	public void Dispose()
 	{
 		Dispose(disposing: true);

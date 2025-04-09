@@ -11,7 +11,7 @@ public interface IAudioPlayer : IAudio
 	event EventHandler PlaybackEnded;
 
 	/// <summary>
-	/// Something bad happened while loading media or playing.
+	/// Raised when an error occurred while loading media or playing.
 	/// </summary>
 	event EventHandler Error;
 

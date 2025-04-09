@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio;
 
+/// <summary>
+/// Options that can be configured for an audio streaming session.
+/// </summary>
 public partial class AudioStreamOptions : BaseOptions
 {
 	/// <summary>

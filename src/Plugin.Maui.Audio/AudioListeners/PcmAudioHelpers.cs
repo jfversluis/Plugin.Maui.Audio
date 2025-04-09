@@ -1,5 +1,8 @@
 ﻿namespace Plugin.Maui.Audio.AudioListeners;
 
+/// <summary>
+/// Provides utility methods for working with PCM audio data.
+/// </summary>
 public static class PcmAudioHelpers
 {
 	/// <summary>
@@ -54,6 +57,14 @@ public static class PcmAudioHelpers
 		return root;
 	}
 	   
+	/// <summary>
+	/// Creates a standard WAV file header for PCM audio data.
+	/// </summary>
+	/// <param name="audioLength">The length of the audio data in bytes.</param>
+	/// <param name="sampleRate">The sample rate of the audio in Hz.</param>
+	/// <param name="channels">The number of audio channels.</param>
+	/// <param name="bitDepth">The bit depth of the audio data.</param>
+	/// <returns>A 44-byte WAV file header.</returns>
 	public static byte[] CreateWavFileHeader(long audioLength, long sampleRate, int channels, int bitDepth)
 	{
 		long dataLength = audioLength + 36;

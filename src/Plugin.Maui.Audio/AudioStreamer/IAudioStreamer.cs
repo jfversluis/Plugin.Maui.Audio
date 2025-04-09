@@ -26,7 +26,6 @@ public interface IAudioStreamer
 	///<Summary>
 	/// Start streaming audio to <see cref="OnAudioCaptured"/>.
 	///</Summary>
-	///<param name="options">The audio streaming options</param>
 	Task StartAsync();
 
 	///<Summary>
