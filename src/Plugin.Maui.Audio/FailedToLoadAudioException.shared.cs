@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace Plugin.Maui.Audio;
+﻿namespace Plugin.Maui.Audio;
 
 /// <summary>
 /// When the audio fails to load this exception is thrown with details about the cause.
