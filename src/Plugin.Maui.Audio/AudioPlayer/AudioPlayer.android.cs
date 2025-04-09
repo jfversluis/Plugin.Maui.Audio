@@ -100,6 +100,10 @@ partial class AudioPlayer : IAudioPlayer
 				stopwatch.Start();
 				player.Start();
 			}
+			else // Explicitly pause the player if it was not playing before
+			{
+				player.Pause();
+			}
 		}
 		finally
 		{
