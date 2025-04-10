@@ -2,13 +2,6 @@
 
 The `AudioRecorder` class provides you with the ability to record audio from a microphone in your .NET MAUI application to a file on disk. In order to create an `AudioRecorder` instance you can make use of the `CreateRecorder` method on the [`AudioManager`](../readme.md#audiomanager) class.
 
-> [!NOTE]
-> If you want to record in the background on iOS, you will need to add a key to the `Info.plist` file like show below.
-> `<key>UIBackgroundModes</key>`
-> `<array>`
-> `  <string>audio</string>`
-> `</array>`
-
 ```csharp
 public class AudioRecorderViewModel
 {
@@ -21,14 +14,14 @@ public class AudioRecorderViewModel
         this.audioRecorder = audioManager.CreateRecorder();
     }
 
-    public async Task StartRecording()
+    public async Task StartRecordingAsync()
     {
-        await this.audioRecorder.StartAsync();
+        await audioRecorder.StartAsync();
     }
 
-    public async Task StopRecording()
+    public async Task StopRecordingAsync()
     {
-        IAudioSource audioSource = await this.audioRecorder.StopAsync();
+        IAudioSource audioSource = await audioRecorder.StopAsync();
 
         // You can use the audioSource to play the file or save it somewhere in your application.
     }
@@ -102,46 +95,62 @@ The *AndroidManifest.xml* file will need to be modified to include the following
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 ```
 
-For a full example of this change check out our [*AndroidManifest.xml*](https://github.com/jfversluis/Plugin.Maui.Audio/blob/main/samples/Plugin.Maui.Audio.Sample/Platforms/Android/AndroidManifest.xml) file.
+For a full example of this change check out our [**AndroidManifest.xml**](../samples/Plugin.Maui.Audio.Sample/Platforms/Android/AndroidManifest.xml) file.
 
 ### iOS
 
-The *Info.plist* file will need to be modified to include the following 2 entries inside the `dict` tag.
+The **Info.plist** file will need to be modified to include the following 2 entries inside the `dict` tag.
 
 ```xml
 <key>NSMicrophoneUsageDescription</key>
 <string>The [app name] wants to use your microphone to record audio.</string>
 ```
 
+> [!NOTE]
+> If you want to record in the background on iOS, you will need to add a key to the **Info.plist** file like show below. \
+> \
+> `<key>UIBackgroundModes</key>` \
+> `<array>` \
+> `  <string>audio</string>` \
+> `</array>`
+
 **Replacing [app name] with your application name.**
 
-For a full example of this change check out our [*Info.plist*](https://github.com/jfversluis/Plugin.Maui.Audio/blob/main/samples/Plugin.Maui.Audio.Sample/Platforms/iOS/Info.plist) file.
+For a full example of this change check out our [**Info.plist**](../samples/Plugin.Maui.Audio.Sample/Platforms/iOS/Info.plist) file.
 
 ### MacCatalyst
 
 This change is identical to the iOS section but for explicitness:
 
-The *Info.plist* file will need to be modified to include the following 2 entries inside the `dict` tag.
+The **Info.plist** file will need to be modified to include the following 2 entries inside the `dict` tag.
 
 ```xml
 <key>NSMicrophoneUsageDescription</key>
 <string>The [app name] wants to use your microphone to record audio.</string>
 ```
 
+> [!NOTE]
+> If you distribute your app to others, you will need to declare an [entitlement](https://learn.microsoft.com/dotnet/maui/ios/entitlements) in order to be able to access the microphone. Add a key to the `Entitlements.plist` file like show below. \
+> \
+> `<key>com.apple.security.device.audio-input</key>` \
+> `<true/>` \
+> \
+> For a full example of this change check out our [**Entitlements.plist**](../samples/Plugin.Maui.Audio.Sample/Platforms/MacCatalyst/Entitlements.plist) file.
+
 **Replacing [app name] with your application name.**
 
-For a full example of this change check out our [*Info.plist*](https://github.com/jfversluis/Plugin.Maui.Audio/blob/main/samples/Plugin.Maui.Audio.Sample/Platforms/MacCatalyst/Info.plist) file.
+For a full example of this change check out our [**Info.plist**](../samples/Plugin.Maui.Audio.Sample/Platforms/MacCatalyst/Info.plist) file.
 
 ### Windows
 
-The *Package.appxmanifest* file will need to be modified to include the following entry inside the `Capabilities` tag.
+The **Package.appxmanifest** file will need to be modified to include the following entry inside the `Capabilities` tag.
 
 ```xml
 <DeviceCapability Name="microphone"/>
 ```
 
-For a full example of this change check out our [*Package.appxmanifest*](https://github.com/jfversluis/Plugin.Maui.Audio/blob/main/samples/Plugin.Maui.Audio.Sample/Platforms/Windows/Package.appxmanifest) file.
+For a full example of this change check out our [**Package.appxmanifest**](../samples/Plugin.Maui.Audio.Sample/Platforms/Windows/Package.appxmanifest) file.
 
 ## Sample
 
-For a concrete example of recording audio in a .NET MAUI application check out our sample application and specifically the [`AudioRecorderPageViewModel`](https://github.com/jfversluis/Plugin.Maui.Audio/blob/main/samples/Plugin.Maui.Audio.Sample/ViewModels/AudioRecorderPageViewModel.cs) class.
+For a concrete example of recording audio in a .NET MAUI application check out our sample application and specifically the [`AudioRecorderPageViewModel`](../samples/Plugin.Maui.Audio.Sample/ViewModels/AudioRecorderPageViewModel.cs) class.
