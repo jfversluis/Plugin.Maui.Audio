@@ -45,11 +45,15 @@ public class AudioMixer : IDisposable
 	/// <param name="numberOfChannels">The number of audio channels to manage.</param>
 	public AudioMixer(IAudioManager audioManager, int numberOfChannels)
 	{
-		if (audioManager == null)
+		if (audioManager is null)
+		{
 			throw new ArgumentNullException(nameof(audioManager));
+		}
 
 		if (numberOfChannels <= 0)
+		{
 			throw new ArgumentOutOfRangeException(nameof(numberOfChannels), "Number of channels must be positive.");
+		}
 
 		this.audioManager = audioManager;
 		ChannelCount = numberOfChannels;
@@ -94,8 +98,10 @@ public class AudioMixer : IDisposable
 	public void Play(int channelIndex, IAudioSource audioClip, bool loop = false)
 	{
 		ValidateChannelIndex(channelIndex);
-		if (audioClip == null)
+		if (audioClip is null)
+		{
 			throw new ArgumentNullException(nameof(audioClip));
+		}
 
 		var player = channels[channelIndex];
 		player.Stop(); 
@@ -177,8 +183,10 @@ public class AudioMixer : IDisposable
 	public void SetSource(int channelIndex, IAudioSource audioClip)
 	{
 		ValidateChannelIndex(channelIndex);
-		if (audioClip == null)
+		if (audioClip is null)
+		{
 			throw new ArgumentNullException(nameof(audioClip));
+		}
 
 		var player = channels[channelIndex];
 		player.Stop(); 
@@ -244,7 +252,9 @@ public class AudioMixer : IDisposable
 	void ValidateChannelIndex(int channelIndex)
 	{
 		if (channelIndex < 0 || channelIndex >= ChannelCount)
+		{
 			throw new ArgumentOutOfRangeException(nameof(channelIndex), $"Channel index must be between 0 and {ChannelCount - 1}.");
+		}
 	}
 
 	/// <summary>
@@ -307,7 +317,9 @@ public class AudioMixer : IDisposable
 	protected virtual void Dispose(bool disposing)
 	{
 		if (IsDisposed)
+		{
 			return;
+		}
 
 		foreach (var player in channels)
 		{

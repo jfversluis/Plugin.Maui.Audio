@@ -46,7 +46,7 @@ partial class AudioStream : IDisposable
 
 				BufferOperation(() => audioQueue.AllocateBuffer(bufferByteSize, out bufferPtr), () =>
 				{
-					BufferOperation(() => audioQueue.EnqueueBuffer(bufferPtr, bufferByteSize, null), () => Debug.WriteLine("AudioQueue buffer enqueued :: {0} of {1}", index + 1, countAudioBuffers));
+					BufferOperation(() => audioQueue.EnqueueBuffer(bufferPtr, bufferByteSize, null!), () => Debug.WriteLine("AudioQueue buffer enqueued :: {0} of {1}", index + 1, countAudioBuffers));
 				});
 			}
 
@@ -150,11 +150,12 @@ partial class AudioStream : IDisposable
 			// check if active again, because the auto stop logic may stop the audio queue from within this handler!
 			if (Active)
 			{
-				BufferOperation(() => audioQueue.EnqueueBuffer(e.IntPtrBuffer, null), null, status =>
-				{
-					Debug.WriteLine("AudioStream.QueueInputCompleted() :: audioQueue.EnqueueBuffer returned non-Ok status :: {0}", status);
-					OnException?.Invoke(this, new Exception($"audioQueue.EnqueueBuffer returned non-Ok status :: {status}"));
-				});
+				BufferOperation(() => audioQueue?.EnqueueBuffer(e.IntPtrBuffer, null!) ?? AudioQueueStatus.InvalidBuffer,
+					null, status =>
+					{
+						Debug.WriteLine("AudioStream.QueueInputCompleted() :: audioQueue.EnqueueBuffer returned non-Ok status :: {0}", status);
+						OnException?.Invoke(this, new Exception($"audioQueue.EnqueueBuffer returned non-Ok status :: {status}"));
+					});
 			}
 		}
 		catch (Exception ex)

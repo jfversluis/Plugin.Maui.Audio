@@ -39,7 +39,7 @@ partial class AudioRecorder : IAudioRecorder
 		var packageManager = Android.App.Application.Context.PackageManager;
 
 		CanRecordAudio = packageManager?.HasSystemFeature(Android.Content.PM.PackageManager.FeatureMicrophone) ?? false;
-		this.audioRecorderOptions = options;
+		audioRecorderOptions = options;
 	}
 
 	public Task StartAsync(AudioRecorderOptions? options = null) => StartAsync(GetTempFilePath(), options);
@@ -57,7 +57,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		if (recordingOptions is not null)
 		{
-			this.audioRecorderOptions = recordingOptions;
+			audioRecorderOptions = recordingOptions;
 		}
 
 		audioFilePath = filePath;
@@ -65,9 +65,9 @@ partial class AudioRecorder : IAudioRecorder
 		// solve some parameters needed for AudioRecord/MediaRecorder
 		ChannelIn channelIn =
 			SharedChannelTypesToAndroidChannelTypes(audioRecorderOptions.Channels, audioRecorderOptions.ThrowIfNotSupported);
-		this.sampleRate = audioRecorderOptions.SampleRate;
-		this.bitDepth = (int)audioRecorderOptions.BitDepth;
-		this.channels = channelIn == ChannelIn.Mono ? 1 : 2;
+		sampleRate = audioRecorderOptions.SampleRate;
+		bitDepth = (int)audioRecorderOptions.BitDepth;
+		channels = channelIn == ChannelIn.Mono ? 1 : 2;
 		int bitRate = audioRecorderOptions.BitRate;
 		int numChannels = (int)audioRecorderOptions.Channels;
 
@@ -124,10 +124,22 @@ partial class AudioRecorder : IAudioRecorder
 			}
 
 			// Create MediaRecorder
-			mediaRecorder =
-				new MediaRecorder(Platform.CurrentActivity
-					.ApplicationContext); //needs context, obsoleted without context https://stackoverflow.com/questions/73598179/deprecated-mediarecorder-new-mediarecorder#73598440
-			
+			if (OperatingSystem.IsAndroidVersionAtLeast(31))
+			{
+				if (Platform.CurrentActivity?.ApplicationContext is null)
+				{
+					throw new FailedToStartRecordingException("Android ApplicationContext is null");
+				}
+
+				//needs context, obsoleted without context https://stackoverflow.com/questions/73598179/deprecated-mediarecorder-new-mediarecorder#73598440
+				mediaRecorder =
+					new MediaRecorder(Platform.CurrentActivity.ApplicationContext);
+			}
+			else
+			{
+				mediaRecorder = new MediaRecorder();
+			}
+
 			mediaRecorder.Reset();
 			mediaRecorder.SetAudioSource(AudioSource.Mic);
 			mediaRecorder.SetOutputFormat(outputFormat);

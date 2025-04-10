@@ -26,12 +26,12 @@ public enum BitsPerSample
 /// </summary>
 public class RawAudioSource : IAudioSource
 {
-	readonly byte[] _soundData;
-	readonly int _sampleRate;
-	readonly int _nbOfChannels;
-	readonly BitsPerSample _bitsPerSample;
+	readonly byte[] soundData;
+	readonly int sampleRate;
+	readonly int nbOfChannels;
+	readonly BitsPerSample bitsPerSample;
 
-	byte[] _withHeader;
+	byte[]? withHeader;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="RawAudioSource"/> class with 8-bit samples.
@@ -54,27 +54,34 @@ public class RawAudioSource : IAudioSource
 	/// <param name="bitsPerSample">Bits per sample (e.g., 8 or 16).</param>
 	public RawAudioSource(byte[] soundData, int sampleRate, int nbOfChannels = 1, BitsPerSample bitsPerSample = BitsPerSample.Bit8)
 	{
-		if (soundData == null)
-			throw new ArgumentNullException(nameof(soundData));
+		ArgumentNullException.ThrowIfNull(soundData);
 
 		if (sampleRate <= 0)
+		{
 			throw new ArgumentOutOfRangeException(nameof(sampleRate), "Sample rate must be positive.");
+		}
 
 		if (nbOfChannels <= 0)
+		{
 			throw new ArgumentOutOfRangeException(nameof(nbOfChannels), "Number of channels must be positive.");
+		}
 
 		if (bitsPerSample != BitsPerSample.Bit8 && bitsPerSample != BitsPerSample.Bit16)
+		{
 			throw new NotSupportedException($"Unsupported BitsPerSample: {bitsPerSample}. Only 8-bit and 16-bit are supported.");
+		}
 
 		// Validate sound data length based on bits per sample and number of channels
 		int bytesPerSample = bitsPerSample == BitsPerSample.Bit8 ? 1 : 2;
 		if (soundData.Length % (nbOfChannels * bytesPerSample) != 0)
+		{
 			throw new ArgumentException("Sound data length is not aligned with the specified number of channels and bits per sample.", nameof(soundData));
+		}
 
-		_soundData = soundData;
-		_sampleRate = sampleRate;
-		_nbOfChannels = nbOfChannels;
-		_bitsPerSample = bitsPerSample;
+		this.soundData = soundData;
+		this.sampleRate = sampleRate;
+		this.nbOfChannels = nbOfChannels;
+		this.bitsPerSample = bitsPerSample;
 	}
 
 	/// <summary>
@@ -93,12 +100,9 @@ public class RawAudioSource : IAudioSource
 	{
 		get
 		{
-			if (_withHeader == null)
-			{
-				_withHeader = BuildWavFile();
-			}
+			withHeader ??= BuildWavFile();
 
-			return _withHeader;
+			return withHeader;
 		}
 	}
 
@@ -108,12 +112,12 @@ public class RawAudioSource : IAudioSource
 	/// <returns>Byte array containing the complete WAV file.</returns>
 	byte[] BuildWavFile()
 	{
-		int dataSize = _soundData.Length;
-		int bytesPerSample = _bitsPerSample == BitsPerSample.Bit8 ? 1 : 2;
-		int byteRate = _sampleRate * _nbOfChannels * bytesPerSample;
-		short blockAlign = (short)(_nbOfChannels * bytesPerSample);
+		int dataSize = soundData.Length;
+		int bytesPerSample = this.bitsPerSample == BitsPerSample.Bit8 ? 1 : 2;
+		int byteRate = sampleRate * nbOfChannels * bytesPerSample;
+		short blockAlign = (short)(nbOfChannels * bytesPerSample);
 		short audioFormat = 1; // PCM
-		short bitsPerSample = (short)_bitsPerSample;
+		short bitsPerSample = (short)this.bitsPerSample;
 		int fileSize = dataSize + 44 - 8; // Total file size minus "RIFF" and size field itself
 		byte[] wavHeader = new byte[44];
 
@@ -125,8 +129,8 @@ public class RawAudioSource : IAudioSource
 		Buffer.BlockCopy(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, wavHeader, 12, 4);
 		Buffer.BlockCopy(BitConverter.GetBytes(16), 0, wavHeader, 16, 4);
 		Buffer.BlockCopy(BitConverter.GetBytes(audioFormat), 0, wavHeader, 20, 2);
-		Buffer.BlockCopy(BitConverter.GetBytes((short)_nbOfChannels), 0, wavHeader, 22, 2);
-		Buffer.BlockCopy(BitConverter.GetBytes(_sampleRate), 0, wavHeader, 24, 4);
+		Buffer.BlockCopy(BitConverter.GetBytes((short)nbOfChannels), 0, wavHeader, 22, 2);
+		Buffer.BlockCopy(BitConverter.GetBytes(sampleRate), 0, wavHeader, 24, 4);
 		Buffer.BlockCopy(BitConverter.GetBytes(byteRate), 0, wavHeader, 28, 4);
 		Buffer.BlockCopy(BitConverter.GetBytes(blockAlign), 0, wavHeader, 32, 2);
 		Buffer.BlockCopy(BitConverter.GetBytes(bitsPerSample), 0, wavHeader, 34, 2);
@@ -136,9 +140,8 @@ public class RawAudioSource : IAudioSource
 
 		byte[] wavSoundData = new byte[wavHeader.Length + dataSize];
 		Buffer.BlockCopy(wavHeader, 0, wavSoundData, 0, wavHeader.Length);
-		Buffer.BlockCopy(_soundData, 0, wavSoundData, wavHeader.Length, dataSize);
+		Buffer.BlockCopy(soundData, 0, wavSoundData, wavHeader.Length, dataSize);
 
 		return wavSoundData;
 	}
 }
-

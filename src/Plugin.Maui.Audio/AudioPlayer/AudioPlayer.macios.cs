@@ -104,7 +104,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	internal AudioPlayer(AudioPlayerOptions audioPlayerOptions)
 	{
-		if (emptySource == null)
+		if (emptySource is null)
 		{
 			byte[] empty = new byte[16];
 			int sampleRate = 44100;
@@ -127,7 +127,7 @@ partial class AudioPlayer : IAudioPlayer
 	/// <exception cref="FailedToLoadAudioException">Thrown when the audio stream cannot be loaded.</exception>
 	public void SetSource(Stream audioStream)
 	{
-		if (player != null)
+		if (player is not null)
 		{
 			player.FinishedPlaying -= OnPlayerFinishedPlaying;
 			player.DecoderError -= OnPlayerError;
