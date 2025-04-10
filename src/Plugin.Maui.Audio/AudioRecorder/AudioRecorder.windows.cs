@@ -11,7 +11,7 @@ partial class AudioRecorder : IAudioRecorder
 	string audioFilePath = string.Empty;
 
 	public bool CanRecordAudio { get; private set; } = true;
-	public bool IsRecording => mediaCapture != null;
+	public bool IsRecording => mediaCapture is not null;
 
 	AudioRecorderOptions audioRecorderOptions;
 	static readonly AudioRecorderOptions defaultOptions = new AudioRecorderOptions();
@@ -56,7 +56,7 @@ partial class AudioRecorder : IAudioRecorder
 			CanRecordAudio = false;
 			DeleteMediaCapture();
 
-			if (ex.InnerException != null && ex.InnerException.GetType() == typeof(UnauthorizedAccessException))
+			if (ex.InnerException is not null && ex.InnerException.GetType() == typeof(UnauthorizedAccessException))
 			{
 				throw ex.InnerException;
 			}
@@ -152,7 +152,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task<IAudioSource> StopAsync()
 	{
-		if (mediaCapture == null)
+		if (mediaCapture is null)
 		{
 			throw new InvalidOperationException("No recording in progress");
 		}

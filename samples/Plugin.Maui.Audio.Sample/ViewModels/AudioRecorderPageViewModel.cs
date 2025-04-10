@@ -111,7 +111,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
 	async void PlayAudio()
 	{
-		if (audioSource != null)
+		if (audioSource is not null)
 		{
 			audioPlayer = this.audioManager.CreateAsyncPlayer(((FileAudioSource)audioSource).GetAudioStream());
 

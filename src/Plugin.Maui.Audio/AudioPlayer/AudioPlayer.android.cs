@@ -142,12 +142,12 @@ partial class AudioPlayer : IAudioPlayer
 
 	void PrepareAudioSource()
 	{
-		if (audioBytes == null && string.IsNullOrWhiteSpace(file))
+		if (audioBytes is null && string.IsNullOrWhiteSpace(file))
 		{
 			throw new ArgumentException("audio source is not set");
 		}
 
-		if (audioBytes != null && OperatingSystem.IsAndroidVersionAtLeast(23))
+		if (audioBytes is not null && OperatingSystem.IsAndroidVersionAtLeast(23))
 		{
 			stream = new MemoryStream(audioBytes);
 			var mediaSource = new StreamMediaDataSource(stream);
@@ -172,6 +172,11 @@ partial class AudioPlayer : IAudioPlayer
 		}
 		else
 		{
+			if (file is null)
+			{
+				throw new FailedToLoadAudioException("Provided file was null");
+			}
+
 			AssetFileDescriptor afd = Android.App.Application.Context.Assets?.OpenFd(file)
 				?? throw new FailedToLoadAudioException("Unable to create AssetFileDescriptor.");
 
