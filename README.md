@@ -23,7 +23,7 @@ builder.AddAudio();
 ```
 
 > [!NOTE]  
-> You can also customize the shared settings for both audio [playback](./docs/audio-player.md#configure-the-playback-options) and [recording](./docs/audio-recorder.md#configure-the-recording-options).
+> You can also customize the shared settings for audio [playback](./docs/audio-player.md#configure-the-playback-options), [recording](./docs/audio-recorder.md#configure-the-recording-options) and [streaming](./docs/audio-streamer.md#configure-streaming-options).
 
 You can then enable your classes to depend on `IAudioManager` as per the following example.
 
@@ -37,7 +37,7 @@ public class AudioPlayerViewModel
         this.audioManager = audioManager;
     }
 
-    public async void PlayAudio()
+    public async Task PlayAudioAsync()
     {
         var audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
 
@@ -53,7 +53,7 @@ Alternatively if you want to skip using the dependency injection approach you ca
 ```csharp
 public class AudioPlayerViewModel
 {
-    public async void PlayAudio()
+    public async Task PlayAudioAsync()
     {
         var audioPlayer = AudioManager.Current.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"));
 
