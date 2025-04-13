@@ -131,7 +131,7 @@ partial class AudioPlayer : IAudioPlayer
 			throw new FailedToLoadAudioException($"Failed to create {nameof(MediaPlayer)} instance. Reason unknown.");
 		}
 
-		player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
+		player.Source = MediaSource.CreateFromUri(new Uri(fileName));
 		player.MediaEnded += OnPlaybackEnded;
 		Speed = 1.0;
 	}
