@@ -59,6 +59,36 @@ audioManager.CreatePlayer(
 
 For more information, please refer to the Android documentation: https://developer.android.com/reference/android/media/AudioAttributes
 
+## Audio Focus and Interruption Handling
+
+The `AudioPlayer` automatically handles audio focus on Android and audio interruptions on iOS/macOS. This ensures proper behavior when your app interacts with other audio sources, such as phone calls, notifications, or other media apps.
+
+### Android Audio Focus
+
+On Android, the plugin automatically:
+- **Requests audio focus** when you call `Play()`, notifying the system that your app wants to play audio
+- **Abandons audio focus** when you call `Pause()` or `Stop()`, allowing other apps to take control
+- **Responds to focus changes** from other apps:
+  - **Permanent loss**: Stops playback (e.g., user starts music in another app)
+  - **Temporary loss**: Pauses playback and resumes when focus returns (e.g., phone call)
+  - **Duck**: Lowers volume to 20% while other audio plays (e.g., navigation prompts), then restores
+
+For more information, see the [Android Audio Focus documentation](https://developer.android.com/media/optimize/audio-focus).
+
+### iOS/macOS Audio Interruptions
+
+On iOS and macOS, the plugin automatically:
+- **Registers for interruption notifications** when the player is created
+- **Responds to interruptions**:
+  - **Interruption began**: Pauses playback (e.g., incoming phone call, alarm)
+  - **Interruption ended**: Resumes playback if the system indicates it should resume
+- **Unregisters** interruption observers when the player is disposed
+
+For more information, see the [iOS Audio Interruptions documentation](https://developer.apple.com/documentation/avfaudio/handling-audio-interruptions).
+
+> [!NOTE]
+> These behaviors are automatic and require no additional configuration. Your app will properly interact with system audio and other apps out of the box.
+
 ## AudioPlayer API
 
 Once you have created an `AudioPlayer` you can interact with it in the following ways:
