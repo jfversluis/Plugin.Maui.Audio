@@ -89,8 +89,8 @@ partial class AudioRecorder : IAudioRecorder
 
 		var audioSource = new FileAudioSource(destinationFilePath);
 
-		// Clean up references after successful recording
-		CleanupRecorderResources();
+		// Clean up references after successful recording (event already unsubscribed above)
+		CleanupRecorderResources(unsubscribeEvent: false);
 
 		return audioSource;
 	}
@@ -111,11 +111,14 @@ partial class AudioRecorder : IAudioRecorder
 		finishedRecordingCompletionSource?.SetResult(true);
 	}
 
-	void CleanupRecorderResources()
+	void CleanupRecorderResources(bool unsubscribeEvent = true)
 	{
 		if (recorder is not null)
 		{
-			recorder.FinishedRecording -= Recorder_FinishedRecording;
+			if (unsubscribeEvent)
+			{
+				recorder.FinishedRecording -= Recorder_FinishedRecording;
+			}
 			recorder.Dispose();
 			recorder = null;
 		}
