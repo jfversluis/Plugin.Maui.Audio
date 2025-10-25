@@ -11,6 +11,8 @@ partial class AudioPlayer : IAudioPlayer
 	AVAudioPlayer player;
 	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
+	NSObject? interruptionObserver;
+	bool wasPlayingBeforeInterruption = false;
 
 	/// <summary>
 	/// Gets the current position of audio playback in seconds.
@@ -131,6 +133,7 @@ partial class AudioPlayer : IAudioPlayer
 		{
 			player.FinishedPlaying -= OnPlayerFinishedPlaying;
 			player.DecoderError -= OnPlayerError;
+			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
 			Stop();
 			player.Dispose();
@@ -179,6 +182,7 @@ partial class AudioPlayer : IAudioPlayer
 
 		if (disposing)
 		{
+			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
 
 			Stop();
@@ -236,10 +240,57 @@ partial class AudioPlayer : IAudioPlayer
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.DecoderError += OnPlayerError;
 
+		// Subscribe to audio session interruptions
+		RegisterForAudioInterruptions();
+
 		player.EnableRate = true;
 		player.PrepareToPlay();
 
 		return true;
+	}
+
+	void RegisterForAudioInterruptions()
+	{
+		// Register for AVAudioSession interruption notifications
+		interruptionObserver = NSNotificationCenter.DefaultCenter.AddObserver(
+			AVAudioSession.InterruptionNotification,
+			HandleAudioSessionInterruption);
+	}
+
+	void UnregisterFromAudioInterruptions()
+	{
+		if (interruptionObserver is not null)
+		{
+			NSNotificationCenter.DefaultCenter.RemoveObserver(interruptionObserver);
+			interruptionObserver = null;
+		}
+	}
+
+	void HandleAudioSessionInterruption(NSNotification notification)
+	{
+		var interruptionType = (AVAudioSessionInterruptionType)(int)(notification.UserInfo?[AVAudioSession.InterruptionTypeKey] as NSNumber ?? 0);
+
+		if (interruptionType == AVAudioSessionInterruptionType.Began)
+		{
+			// Audio session was interrupted (phone call, alarm, etc.)
+			if (player.Playing)
+			{
+				wasPlayingBeforeInterruption = true;
+				player.Pause();
+			}
+		}
+		else if (interruptionType == AVAudioSessionInterruptionType.Ended)
+		{
+			// Audio session interruption ended
+			var interruptionOptions = (AVAudioSessionInterruptionOptions)(int)(notification.UserInfo?[AVAudioSession.InterruptionOptionKey] as NSNumber ?? 0);
+
+			// Check if we should resume playback
+			if (interruptionOptions.HasFlag(AVAudioSessionInterruptionOptions.ShouldResume) && wasPlayingBeforeInterruption)
+			{
+				wasPlayingBeforeInterruption = false;
+				player.Play();
+			}
+		}
 	}
 
 	void OnPlayerError(object? sender, AVErrorEventArgs e)

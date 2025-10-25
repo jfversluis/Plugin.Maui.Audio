@@ -16,6 +16,10 @@ partial class AudioPlayer : IAudioPlayer
 	MemoryStream? stream;
 	bool isDisposed = false;
 	AudioStopwatch stopwatch = new(TimeSpan.Zero, 1.0);
+	AudioManager? audioManager;
+	AudioFocusRequestClass? audioFocusRequest;
+	AudioFocusChangeListener? audioFocusChangeListener;
+	bool wasPlayingBeforeFocusLoss = false;
 
 	public double Duration => player.Duration <= -1 ? -1 : player.Duration / 1000.0;
 
@@ -185,6 +189,10 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		player = new MediaPlayer();
 
+		// Initialize audio manager and focus listener
+		audioManager = (AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		audioFocusChangeListener = new AudioFocusChangeListener(this);
+
 		if (OperatingSystem.IsAndroidVersionAtLeast(26))
 		{
 			var audioAttributes = new AudioAttributes.Builder()?
@@ -195,6 +203,15 @@ partial class AudioPlayer : IAudioPlayer
 			if (audioAttributes is not null)
 			{
 				player.SetAudioAttributes(audioAttributes);
+
+				// Build audio focus request for Android 26+
+				if (audioManager is not null && audioFocusChangeListener is not null)
+				{
+					audioFocusRequest = new AudioFocusRequestClass.Builder(AudioFocus.Gain)?
+						.SetAudioAttributes(audioAttributes)?
+						.SetOnAudioFocusChangeListener(audioFocusChangeListener)?
+						.Build();
+				}
 			}
 		}
 		else
@@ -260,6 +277,9 @@ partial class AudioPlayer : IAudioPlayer
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
 
+		// Initialize audio manager and focus listener
+		audioManager = (AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		audioFocusChangeListener = new AudioFocusChangeListener(this);
 
 		if (OperatingSystem.IsAndroidVersionAtLeast(23))
 		{
@@ -294,6 +314,10 @@ partial class AudioPlayer : IAudioPlayer
 		player = new MediaPlayer();
 		player.Completion += OnPlaybackEnded;
 		player.Error += OnError;
+
+		// Initialize audio manager and focus listener
+		audioManager = (AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		audioFocusChangeListener = new AudioFocusChangeListener(this);
 
 		file = fileName;
 
@@ -330,6 +354,13 @@ partial class AudioPlayer : IAudioPlayer
 			stopwatch.Reset();
 		}
 
+		// Request audio focus before playing
+		if (!RequestAudioFocus())
+		{
+			System.Diagnostics.Trace.TraceWarning("Failed to request audio focus");
+			// Continue playing even if focus request fails for backward compatibility
+		}
+
 		isPlaying = true;
 		player.Start();
 		stopwatch.Start();
@@ -342,6 +373,9 @@ partial class AudioPlayer : IAudioPlayer
 			isPlaying = false;
 			player.Pause();
 		}
+
+		// Abandon audio focus when stopping
+		AbandonAudioFocus();
 
 		Seek(0);
 		
@@ -358,6 +392,9 @@ partial class AudioPlayer : IAudioPlayer
 		isPlaying = false;
 		player.Pause();
 		stopwatch.Stop();
+
+		// Abandon audio focus when pausing
+		AbandonAudioFocus();
 	}
 
 	public void Seek(double position)
@@ -405,6 +442,103 @@ partial class AudioPlayer : IAudioPlayer
 		OnError(e);
 	}
 
+	bool RequestAudioFocus()
+	{
+		if (audioManager is null)
+		{
+			return false;
+		}
+
+		AudioFocusRequest result;
+
+		if (OperatingSystem.IsAndroidVersionAtLeast(26) && audioFocusRequest is not null)
+		{
+			result = audioManager.RequestAudioFocus(audioFocusRequest);
+		}
+		else
+		{
+			// For API < 26, use deprecated method
+#pragma warning disable CS0618 // Type or member is obsolete
+			result = audioManager.RequestAudioFocus(
+				audioFocusChangeListener,
+				Android.Media.Stream.Music,
+				AudioFocus.Gain);
+#pragma warning restore CS0618 // Type or member is obsolete
+		}
+
+		return result == AudioFocusRequest.Granted;
+	}
+
+	void AbandonAudioFocus()
+	{
+		if (audioManager is null)
+		{
+			return;
+		}
+
+		if (OperatingSystem.IsAndroidVersionAtLeast(26) && audioFocusRequest is not null)
+		{
+			audioManager.AbandonAudioFocusRequest(audioFocusRequest);
+		}
+		else
+		{
+			// For API < 26, use deprecated method
+#pragma warning disable CS0618 // Type or member is obsolete
+			audioManager.AbandonAudioFocus(audioFocusChangeListener);
+#pragma warning restore CS0618 // Type or member is obsolete
+		}
+	}
+
+	void HandleAudioFocusChange(AudioFocus focusChange)
+	{
+		switch (focusChange)
+		{
+			case AudioFocus.Loss:
+				// Permanent loss of audio focus - stop playback
+				wasPlayingBeforeFocusLoss = false;
+				if (IsPlaying)
+				{
+					Stop();
+				}
+				break;
+
+			case AudioFocus.LossTransient:
+				// Temporary loss of audio focus - pause playback
+				if (IsPlaying)
+				{
+					wasPlayingBeforeFocusLoss = true;
+					player.Pause();
+					isPlaying = false;
+					stopwatch.Stop();
+				}
+				break;
+
+			case AudioFocus.LossTransientCanDuck:
+				// Temporary loss of audio focus but can duck (lower volume)
+				// Lower the volume but continue playing
+				if (IsPlaying)
+				{
+					var currentVolume = Volume;
+					Volume = currentVolume * 0.2; // Duck to 20% volume
+				}
+				break;
+
+			case AudioFocus.Gain:
+				// Regained audio focus
+				if (wasPlayingBeforeFocusLoss)
+				{
+					// Resume playback if it was paused due to transient loss
+					isPlaying = true;
+					player.Start();
+					stopwatch.Start();
+					wasPlayingBeforeFocusLoss = false;
+				}
+				// Restore volume if it was ducked
+				Volume = volume;
+				break;
+		}
+	}
+
 	protected virtual void Dispose(bool disposing)
 	{
 		if (isDisposed)
@@ -414,6 +548,7 @@ partial class AudioPlayer : IAudioPlayer
 
 		if (disposing)
 		{
+			AbandonAudioFocus();
 			player.Completion -= OnPlaybackEnded;
 			player.Error -= OnError;
 			player.Reset();
@@ -422,8 +557,25 @@ partial class AudioPlayer : IAudioPlayer
 			DeleteFile(cachePath);
 			cachePath = string.Empty;
 			stream?.Dispose();
+			audioFocusRequest?.Dispose();
 		}
 
 		isDisposed = true;
+	}
+
+	// AudioFocusChangeListener implementation for handling audio focus changes
+	class AudioFocusChangeListener : Java.Lang.Object, AudioManager.IOnAudioFocusChangeListener
+	{
+		readonly AudioPlayer audioPlayer;
+
+		public AudioFocusChangeListener(AudioPlayer player)
+		{
+			audioPlayer = player;
+		}
+
+		public void OnAudioFocusChange(AudioFocus focusChange)
+		{
+			audioPlayer.HandleAudioFocusChange(focusChange);
+		}
 	}
 }
