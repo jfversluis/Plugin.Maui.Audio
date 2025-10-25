@@ -89,7 +89,7 @@ partial class AudioRecorder : IAudioRecorder
 
 		var audioSource = new FileAudioSource(destinationFilePath);
 
-		// Clean up references after successful recording (event already unsubscribed above)
+		// Clean up resources (event unsubscribed on line 86)
 		CleanupRecorderResources(unsubscribeEvent: false);
 
 		return audioSource;
