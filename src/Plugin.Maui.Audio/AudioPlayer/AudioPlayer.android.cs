@@ -20,7 +20,10 @@ partial class AudioPlayer : IAudioPlayer
 	AudioFocusRequestClass? audioFocusRequest;
 	AudioFocusChangeListener? audioFocusChangeListener;
 	bool wasPlayingBeforeFocusLoss = false;
+	double volumeBeforeDucking = 0;
 	AudioPlayerOptions? audioPlayerOptions;
+
+	const double DuckingVolumeMultiplier = 0.2;
 
 	public double Duration => player.Duration <= -1 ? -1 : player.Duration / 1000.0;
 
@@ -511,6 +514,7 @@ partial class AudioPlayer : IAudioPlayer
 			case AudioFocus.Loss:
 				// Permanent loss of audio focus - stop playback
 				wasPlayingBeforeFocusLoss = false;
+				volumeBeforeDucking = 0;
 				if (IsPlaying)
 				{
 					Stop();
@@ -522,8 +526,9 @@ partial class AudioPlayer : IAudioPlayer
 				if (IsPlaying)
 				{
 					wasPlayingBeforeFocusLoss = true;
-					player.Pause();
+					// Don't abandon audio focus here since we want to resume later
 					isPlaying = false;
+					player.Pause();
 					stopwatch.Stop();
 				}
 				break;
@@ -533,8 +538,8 @@ partial class AudioPlayer : IAudioPlayer
 				// Lower the volume but continue playing
 				if (IsPlaying)
 				{
-					var currentVolume = Volume;
-					Volume = currentVolume * 0.2; // Duck to 20% volume
+					volumeBeforeDucking = Volume;
+					Volume = volumeBeforeDucking * DuckingVolumeMultiplier;
 				}
 				break;
 
@@ -549,7 +554,11 @@ partial class AudioPlayer : IAudioPlayer
 					wasPlayingBeforeFocusLoss = false;
 				}
 				// Restore volume if it was ducked
-				Volume = volume;
+				if (volumeBeforeDucking > 0)
+				{
+					Volume = volumeBeforeDucking;
+					volumeBeforeDucking = 0;
+				}
 				break;
 		}
 	}

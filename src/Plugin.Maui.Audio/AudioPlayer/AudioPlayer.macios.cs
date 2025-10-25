@@ -272,7 +272,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	void HandleAudioSessionInterruption(NSNotification notification)
 	{
-		var interruptionType = (AVAudioSessionInterruptionType)(int)(notification.UserInfo?["AVAudioSessionInterruptionTypeKey"] as NSNumber ?? 0);
+		var interruptionType = GetInterruptionType(notification);
 
 		if (interruptionType == AVAudioSessionInterruptionType.Began)
 		{
@@ -286,7 +286,7 @@ partial class AudioPlayer : IAudioPlayer
 		else if (interruptionType == AVAudioSessionInterruptionType.Ended)
 		{
 			// Audio session interruption ended
-			var interruptionOptions = (AVAudioSessionInterruptionOptions)(int)(notification.UserInfo?["AVAudioSessionInterruptionOptionKey"] as NSNumber ?? 0);
+			var interruptionOptions = GetInterruptionOptions(notification);
 
 			// Check if we should resume playback
 			if (interruptionOptions.HasFlag(AVAudioSessionInterruptionOptions.ShouldResume) && wasPlayingBeforeInterruption)
@@ -295,6 +295,18 @@ partial class AudioPlayer : IAudioPlayer
 				player.Play();
 			}
 		}
+	}
+
+	AVAudioSessionInterruptionType GetInterruptionType(NSNotification notification)
+	{
+		var typeValue = notification.UserInfo?["AVAudioSessionInterruptionTypeKey"] as NSNumber;
+		return typeValue != null ? (AVAudioSessionInterruptionType)(int)typeValue : AVAudioSessionInterruptionType.Began;
+	}
+
+	AVAudioSessionInterruptionOptions GetInterruptionOptions(NSNotification notification)
+	{
+		var optionsValue = notification.UserInfo?["AVAudioSessionInterruptionOptionKey"] as NSNumber;
+		return optionsValue != null ? (AVAudioSessionInterruptionOptions)(int)optionsValue : 0;
 	}
 
 	void OnPlayerError(object? sender, AVErrorEventArgs e)
