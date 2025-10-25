@@ -15,8 +15,29 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set version suffix
+      id: version
+      run: |
+        if ("${{ github.event_name }}" -eq "pull_request") {
+          $suffix = "pr${{ github.event.pull_request.number }}-${{ github.run_number }}"
+        } else {
+          $suffix = "ci${{ github.run_number }}"
+        }
+        echo "suffix=$suffix" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        echo "Version suffix: $suffix"
+
     - name: Restore dependencies
       run: dotnet restore src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj
 
     - name: Build
       run: dotnet build src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release
+
+    - name: Pack NuGet package
+      run: dotnet pack src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release --no-build --output ./artifacts --version-suffix ${{ steps.version.outputs.suffix }}
+
+    - name: Upload NuGet package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./artifacts/*.nupkg
+        retention-days: 30
