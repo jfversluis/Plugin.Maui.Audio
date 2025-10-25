@@ -18,8 +18,6 @@ partial class AudioRecorder : IAudioRecorder
 	public AudioRecorder(AudioRecorderOptions audioRecorderOptions)
 	{
 		this.audioRecorderOptions = audioRecorderOptions;
-
-		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 	}
 
 
@@ -40,6 +38,14 @@ partial class AudioRecorder : IAudioRecorder
 		if (options is not null)
 		{
 			audioRecorderOptions = options;
+		}
+
+		// Clean up any previous recorder instance
+		if (recorder is not null)
+		{
+			recorder.FinishedRecording -= Recorder_FinishedRecording;
+			recorder.Dispose();
+			recorder = null;
 		}
 
 		ActiveSessionHelper.InitializeSession(audioRecorderOptions);
@@ -86,7 +92,15 @@ partial class AudioRecorder : IAudioRecorder
 
 		ActiveSessionHelper.FinishSession(audioRecorderOptions);
 
-		return new FileAudioSource(destinationFilePath);
+		var audioSource = new FileAudioSource(destinationFilePath);
+
+		// Clean up references after successful recording
+		recorder?.Dispose();
+		recorder = null;
+		destinationFilePath = null;
+		finishedRecordingCompletionSource = null;
+
+		return audioSource;
 	}
 
 	static readonly NSObject[] keys = new NSObject[]
