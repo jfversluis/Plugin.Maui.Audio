@@ -71,7 +71,7 @@ On Android, the plugin automatically:
 - **Responds to focus changes** from other apps:
   - **Permanent loss**: Stops playback (e.g., user starts music in another app)
   - **Temporary loss**: Pauses playback and resumes when focus returns (e.g., phone call)
-  - **Duck**: Lowers volume to 20% while other audio plays (e.g., navigation prompts), then restores
+  - **Audio ducking**: Temporarily lowers volume to 20% while other audio plays (e.g., navigation prompts), then restores full volume
 
 For more information, see the [Android Audio Focus documentation](https://developer.android.com/media/optimize/audio-focus).
 
@@ -87,7 +87,7 @@ On iOS and macOS, the plugin automatically:
 For more information, see the [iOS Audio Interruptions documentation](https://developer.apple.com/documentation/avfaudio/handling-audio-interruptions).
 
 > [!NOTE]
-> These behaviors are automatic and require no additional configuration. Your app will properly interact with system audio and other apps out of the box.
+> These behaviors are automatic and require no additional configuration. Your app will properly interact with system audio and other apps out of the box. The audio focus management is handled transparently - you can still control playback manually using `Play()`, `Pause()`, and `Stop()` methods. For backward compatibility, playback will continue even if audio focus cannot be acquired, though this is rare.
 
 ## AudioPlayer API
 
