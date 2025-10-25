@@ -405,12 +405,17 @@ partial class AudioPlayer : IAudioPlayer
 			return;
 		}
 
-		isPlaying = false;
-		player.Pause();
-		stopwatch.Stop();
+		PauseInternal();
 
 		// Abandon audio focus when pausing
 		AbandonAudioFocus();
+	}
+
+	void PauseInternal()
+	{
+		isPlaying = false;
+		player.Pause();
+		stopwatch.Stop();
 	}
 
 	public void Seek(double position)
@@ -527,9 +532,7 @@ partial class AudioPlayer : IAudioPlayer
 				{
 					wasPlayingBeforeFocusLoss = true;
 					// Don't abandon audio focus here since we want to resume later
-					isPlaying = false;
-					player.Pause();
-					stopwatch.Stop();
+					PauseInternal();
 				}
 				break;
 

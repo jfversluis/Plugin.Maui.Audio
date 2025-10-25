@@ -300,6 +300,7 @@ partial class AudioPlayer : IAudioPlayer
 	AVAudioSessionInterruptionType GetInterruptionType(NSNotification notification)
 	{
 		var typeValue = notification.UserInfo?["AVAudioSessionInterruptionTypeKey"] as NSNumber;
+		// Default to Began if type cannot be determined - safer to assume interruption started
 		return typeValue != null ? (AVAudioSessionInterruptionType)(int)typeValue : AVAudioSessionInterruptionType.Began;
 	}
 
