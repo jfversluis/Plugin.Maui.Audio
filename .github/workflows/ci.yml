@@ -17,11 +17,15 @@ jobs:
 
     - name: Set version suffix
       id: version
+      env:
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        RUN_NUMBER: ${{ github.run_number }}
       run: |
-        if ("${{ github.event_name }}" -eq "pull_request") {
-          $suffix = "pr${{ github.event.pull_request.number }}-${{ github.run_number }}"
+        if ($env:GITHUB_EVENT_NAME -eq "pull_request") {
+          $suffix = "pr$env:PR_NUMBER-$env:RUN_NUMBER"
         } else {
-          $suffix = "ci${{ github.run_number }}"
+          $suffix = "ci$env:RUN_NUMBER"
         }
         echo "suffix=$suffix" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         echo "Version suffix: $suffix"
