@@ -595,7 +595,9 @@ partial class AudioPlayer : IAudioPlayer
 		isDisposed = true;
 	}
 
-	// AudioFocusChangeListener implementation for handling audio focus changes
+	/// <summary>
+	/// Listens for audio focus changes from the Android system and delegates handling to the parent AudioPlayer.
+	/// </summary>
 	class AudioFocusChangeListener : Java.Lang.Object, Android.Media.AudioManager.IOnAudioFocusChangeListener
 	{
 		readonly AudioPlayer audioPlayer;

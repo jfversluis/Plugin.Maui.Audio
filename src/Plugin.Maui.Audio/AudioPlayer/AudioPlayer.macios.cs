@@ -297,6 +297,11 @@ partial class AudioPlayer : IAudioPlayer
 		}
 	}
 
+	/// <summary>
+	/// Retrieves the interruption type from an AVAudioSession interruption notification.
+	/// </summary>
+	/// <param name="notification">The notification containing interruption information.</param>
+	/// <returns>The interruption type, or Began if it cannot be determined (safer default).</returns>
 	AVAudioSessionInterruptionType GetInterruptionType(NSNotification notification)
 	{
 		var typeValue = notification.UserInfo?["AVAudioSessionInterruptionTypeKey"] as NSNumber;
@@ -304,6 +309,11 @@ partial class AudioPlayer : IAudioPlayer
 		return typeValue != null ? (AVAudioSessionInterruptionType)(int)typeValue : AVAudioSessionInterruptionType.Began;
 	}
 
+	/// <summary>
+	/// Retrieves the interruption options from an AVAudioSession interruption notification.
+	/// </summary>
+	/// <param name="notification">The notification containing interruption information.</param>
+	/// <returns>The interruption options, or 0 if none are specified.</returns>
 	AVAudioSessionInterruptionOptions GetInterruptionOptions(NSNotification notification)
 	{
 		var optionsValue = notification.UserInfo?["AVAudioSessionInterruptionOptionKey"] as NSNumber;
