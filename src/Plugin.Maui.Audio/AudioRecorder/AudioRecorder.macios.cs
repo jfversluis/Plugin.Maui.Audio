@@ -41,12 +41,7 @@ partial class AudioRecorder : IAudioRecorder
 		}
 
 		// Clean up any previous recorder instance
-		if (recorder is not null)
-		{
-			recorder.FinishedRecording -= Recorder_FinishedRecording;
-			recorder.Dispose();
-			recorder = null;
-		}
+		CleanupRecorderResources();
 
 		ActiveSessionHelper.InitializeSession(audioRecorderOptions);
 
@@ -95,10 +90,7 @@ partial class AudioRecorder : IAudioRecorder
 		var audioSource = new FileAudioSource(destinationFilePath);
 
 		// Clean up references after successful recording
-		recorder?.Dispose();
-		recorder = null;
-		destinationFilePath = null;
-		finishedRecordingCompletionSource = null;
+		CleanupRecorderResources();
 
 		return audioSource;
 	}
@@ -117,6 +109,19 @@ partial class AudioRecorder : IAudioRecorder
 	void Recorder_FinishedRecording(object? sender, AVStatusEventArgs e)
 	{
 		finishedRecordingCompletionSource?.SetResult(true);
+	}
+
+	void CleanupRecorderResources()
+	{
+		if (recorder is not null)
+		{
+			recorder.FinishedRecording -= Recorder_FinishedRecording;
+			recorder.Dispose();
+			recorder = null;
+		}
+		
+		destinationFilePath = null;
+		finishedRecordingCompletionSource = null;
 	}
 
 	AudioFormatType SharedEncodingToiOSEncoding(Encoding type, bool throwIfNotSupported)
