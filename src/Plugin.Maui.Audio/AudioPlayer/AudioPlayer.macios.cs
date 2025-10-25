@@ -251,10 +251,14 @@ partial class AudioPlayer : IAudioPlayer
 
 	void RegisterForAudioInterruptions()
 	{
-		// Register for AVAudioSession interruption notifications
-		interruptionObserver = NSNotificationCenter.DefaultCenter.AddObserver(
-			AVAudioSession.InterruptionNotification,
-			HandleAudioSessionInterruption);
+		// Only register if interruption handling is enabled
+		if (audioPlayerOptions.HandleAudioInterruptions)
+		{
+			// Register for AVAudioSession interruption notifications
+			interruptionObserver = NSNotificationCenter.DefaultCenter.AddObserver(
+				AVAudioSession.InterruptionNotification,
+				HandleAudioSessionInterruption);
+		}
 	}
 
 	void UnregisterFromAudioInterruptions()

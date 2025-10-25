@@ -28,4 +28,15 @@ partial class AudioPlayerOptions : BaseOptions
 	/// If any other value is used, the default value of <see cref="Android.Media.Stream.System"/> is used.
 	/// </remarks>
 	public AudioUsageKind AudioUsageKind { get; set; } = AudioUsageKind.Unknown;
+
+	/// <summary>
+	/// Gets or sets whether audio focus should be automatically managed. Default value: <see langword="true"/>.
+	/// </summary>
+	/// <remarks>
+	/// When enabled (default), the player will automatically request audio focus when playing and abandon it when paused or stopped.
+	/// This ensures proper interaction with other audio sources like phone calls and other apps.
+	/// When disabled, the player will not request or abandon audio focus, giving you full control over audio focus management.
+	/// See https://developer.android.com/media/optimize/audio-focus for more information.
+	/// </remarks>
+	public bool ManageAudioFocus { get; set; } = true;
 }
