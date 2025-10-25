@@ -272,7 +272,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	void HandleAudioSessionInterruption(NSNotification notification)
 	{
-		var interruptionType = (AVAudioSessionInterruptionType)(int)(notification.UserInfo?[AVAudioSession.InterruptionTypeKey] as NSNumber ?? 0);
+		var interruptionType = (AVAudioSessionInterruptionType)(int)(notification.UserInfo?["AVAudioSessionInterruptionTypeKey"] as NSNumber ?? 0);
 
 		if (interruptionType == AVAudioSessionInterruptionType.Began)
 		{
@@ -286,7 +286,7 @@ partial class AudioPlayer : IAudioPlayer
 		else if (interruptionType == AVAudioSessionInterruptionType.Ended)
 		{
 			// Audio session interruption ended
-			var interruptionOptions = (AVAudioSessionInterruptionOptions)(int)(notification.UserInfo?[AVAudioSession.InterruptionOptionKey] as NSNumber ?? 0);
+			var interruptionOptions = (AVAudioSessionInterruptionOptions)(int)(notification.UserInfo?["AVAudioSessionInterruptionOptionKey"] as NSNumber ?? 0);
 
 			// Check if we should resume playback
 			if (interruptionOptions.HasFlag(AVAudioSessionInterruptionOptions.ShouldResume) && wasPlayingBeforeInterruption)

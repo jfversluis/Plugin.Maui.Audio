@@ -579,7 +579,7 @@ partial class AudioPlayer : IAudioPlayer
 	}
 
 	// AudioFocusChangeListener implementation for handling audio focus changes
-	class AudioFocusChangeListener : Java.Lang.Object, AudioManager.IOnAudioFocusChangeListener
+	class AudioFocusChangeListener : Java.Lang.Object, Android.Media.AudioManager.IOnAudioFocusChangeListener
 	{
 		readonly AudioPlayer audioPlayer;
 
