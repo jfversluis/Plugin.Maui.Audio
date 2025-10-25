@@ -292,7 +292,7 @@ partial class AudioPlayer : IAudioPlayer
 			if (interruptionOptions.HasFlag(AVAudioSessionInterruptionOptions.ShouldResume) && wasPlayingBeforeInterruption)
 			{
 				wasPlayingBeforeInterruption = false;
-				player.Play();
+				Play();
 			}
 		}
 	}

@@ -377,6 +377,11 @@ partial class AudioPlayer : IAudioPlayer
 			// Continue playing even if focus request fails for backward compatibility
 		}
 
+		PlayInternal();
+	}
+
+	void PlayInternal()
+	{
 		isPlaying = true;
 		player.Start();
 		stopwatch.Start();
@@ -518,6 +523,7 @@ partial class AudioPlayer : IAudioPlayer
 		{
 			case AudioFocus.Loss:
 				// Permanent loss of audio focus - stop playback
+				// Reset state before Stop() to prevent incorrect state in any callbacks
 				wasPlayingBeforeFocusLoss = false;
 				volumeBeforeDucking = 0;
 				if (IsPlaying)
@@ -551,9 +557,8 @@ partial class AudioPlayer : IAudioPlayer
 				if (wasPlayingBeforeFocusLoss)
 				{
 					// Resume playback if it was paused due to transient loss
-					isPlaying = true;
-					player.Start();
-					stopwatch.Start();
+					// Use PlayInternal() since we already have audio focus
+					PlayInternal();
 					wasPlayingBeforeFocusLoss = false;
 				}
 				// Restore volume if it was ducked
