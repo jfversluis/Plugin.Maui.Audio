@@ -16,7 +16,7 @@ partial class AudioPlayer : IAudioPlayer
 	MemoryStream? stream;
 	bool isDisposed = false;
 	AudioStopwatch stopwatch = new(TimeSpan.Zero, 1.0);
-	AudioManager? audioManager;
+	Android.Media.AudioManager? audioManager;
 	AudioFocusRequestClass? audioFocusRequest;
 	AudioFocusChangeListener? audioFocusChangeListener;
 	bool wasPlayingBeforeFocusLoss = false;
@@ -194,7 +194,7 @@ partial class AudioPlayer : IAudioPlayer
 		// Initialize audio manager and focus listener only if audio focus management is enabled
 		if (audioPlayerOptions.ManageAudioFocus)
 		{
-			audioManager = (AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+			audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
@@ -286,7 +286,7 @@ partial class AudioPlayer : IAudioPlayer
 		// Initialize audio manager and focus listener only if audio focus management is enabled
 		if (audioPlayerOptions.ManageAudioFocus)
 		{
-			audioManager = (AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+			audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
@@ -328,7 +328,7 @@ partial class AudioPlayer : IAudioPlayer
 		// Initialize audio manager and focus listener only if audio focus management is enabled
 		if (audioPlayerOptions.ManageAudioFocus)
 		{
-			audioManager = (AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+			audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
