@@ -197,13 +197,28 @@ partial class AudioPlayer : IAudioPlayer
 	/// <summary>
 	/// Pause playback if playing (does not resume).
 	/// </summary>
-	public void Pause() => player.Pause();
+	public void Pause()
+	{
+		player.Pause();
+
+		// Stop the audio session to allow other aps audio to resume while paused.
+		if (audioPlayerOptions.OnPlayAudioSession)
+		{
+			ActiveSessionHelper.FinishSession(audioPlayerOptions);
+		}
+	}
 
 	/// <summary>
 	/// Begin playback or resume if paused.
 	/// </summary>
 	public void Play()
 	{
+		// Start the audio session if this session is only started on play
+		if (audioPlayerOptions.OnPlayAudioSession)
+		{
+			ActiveSessionHelper.InitializeSession(audioPlayerOptions);
+		}
+
 		if (player.Playing)
 		{
 			player.Pause();
@@ -231,11 +246,21 @@ partial class AudioPlayer : IAudioPlayer
 		player.Stop();
 		Seek(0);
 		PlaybackEnded?.Invoke(this, EventArgs.Empty);
+
+		// Stop the audio session to allow other aps audio to resume while stopped.
+		if (audioPlayerOptions.OnPlayAudioSession)
+		{
+			ActiveSessionHelper.FinishSession(audioPlayerOptions);
+		}
 	}
 
 	bool PreparePlayer()
 	{
-		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
+		// Don't initialise the session if it will be initialised on play instead. 
+		if (audioPlayerOptions.OnPlayAudioSession == false)
+		{
+			ActiveSessionHelper.InitializeSession(audioPlayerOptions);
+		}
 
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.DecoderError += OnPlayerError;
@@ -327,6 +352,12 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
 	{
+		// Stop the audio session to allow other aps audio to resume when audio is finished.
+		if (audioPlayerOptions.OnPlayAudioSession)
+		{
+			ActiveSessionHelper.FinishSession(audioPlayerOptions);
+		}
+
 		PlaybackEnded?.Invoke(this, e);
 	}
 }

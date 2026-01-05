@@ -21,4 +21,13 @@ partial class AudioPlayerOptions
     /// See https://developer.apple.com/documentation/avfaudio/handling-audio-interruptions for more information.
     /// </remarks>
     public bool HandleAudioInterruptions { get; set; } = true;
+
+	/// <summary>
+	/// Gets or sets whether the audio session for this player should only be active while playing audio. Default value: <see langword="false"/>.
+	/// </summary>
+	/// <remarks>
+	/// When enabled, the player will automatically create an audio session when playing, and close the audio session when stopped, finished, or paused.
+	/// When disabled, the player will create an audio session on initialisation, and only close this session on disposal.
+	/// </remarks>
+	public bool OnPlayAudioSession { get; set; } = false;
 }
