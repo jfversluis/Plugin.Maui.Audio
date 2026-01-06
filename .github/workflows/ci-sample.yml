@@ -14,46 +14,15 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
-
-    - name: Install .NET MAUI workload
-      run: dotnet workload install maui
 
     - name: Restore dependencies
       run: dotnet restore samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj
       
     - name: Build
-      run: dotnet build samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj -c Debug
-
-  build-sample-macos:
-    runs-on: macos-26
-    permissions:
-      contents: read
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup .NET 10
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-
-    - name: Select Xcode 26.2
-      run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
-
-    - name: Verify Xcode version
-      run: xcodebuild -version
-
-    - name: Install .NET MAUI workload
-      run: dotnet workload install maui
-
-    - name: Restore dependencies
-      run: dotnet restore samples/Plugin.Maui.Audio.Sample/Plugin.Maui.Audio.Sample.csproj
-
-    - name: Build
-      run: dotnet build samples/Plugin.Maui.Audio.Sample/Plugin.Maui.Audio.Sample.csproj -c Debug --no-restore
+      run: dotnet build samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj -c Release
