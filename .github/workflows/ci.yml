@@ -20,6 +20,9 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
+    - name: Install .NET MAUI workload
+      run: dotnet workload install maui
+
     - name: Set version suffix
       id: version
       env:

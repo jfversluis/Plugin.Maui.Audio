@@ -21,6 +21,9 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
+    - name: Install .NET MAUI workload
+      run: dotnet workload install maui
+
     - name: Restore dependencies
       run: dotnet restore samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj
       
