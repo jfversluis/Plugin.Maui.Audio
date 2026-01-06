@@ -29,6 +29,8 @@ jobs:
 
   build-sample-macos:
     runs-on: macos-26
+    permissions:
+      contents: read
 
     steps:
     - uses: actions/checkout@v4
