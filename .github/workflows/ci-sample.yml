@@ -21,6 +21,9 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
+    - name: Install .NET MAUI workload
+      run: dotnet workload install maui
+
     - name: Restore dependencies
       run: dotnet restore samples\Plugin.Maui.Audio.Sample\Plugin.Maui.Audio.Sample.csproj
       
@@ -52,8 +55,5 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore samples/Plugin.Maui.Audio.Sample/Plugin.Maui.Audio.Sample.csproj
 
-    - name: Build iOS target
-      run: dotnet build samples/Plugin.Maui.Audio.Sample/Plugin.Maui.Audio.Sample.csproj -c Release -f net10.0-ios --no-restore
-
-    - name: Build macOS Catalyst target
-      run: dotnet build samples/Plugin.Maui.Audio.Sample/Plugin.Maui.Audio.Sample.csproj -c Release -f net10.0-maccatalyst --no-restore
+    - name: Build
+      run: dotnet build samples/Plugin.Maui.Audio.Sample/Plugin.Maui.Audio.Sample.csproj -c Release --no-restore
