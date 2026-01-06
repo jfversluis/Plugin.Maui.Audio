@@ -15,6 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
     - name: Set version suffix
       id: version
       env:
@@ -48,3 +53,32 @@ jobs:
         name: nuget-package
         path: ./artifacts/*.nupkg
         retention-days: 30
+
+  build-plugin-macos:
+    runs-on: macos-26
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Select Xcode 26.2
+      run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+    - name: Verify Xcode version
+      run: xcodebuild -version
+
+    - name: Install .NET MAUI workload
+      run: dotnet workload install maui
+
+    - name: Restore dependencies
+      run: dotnet restore src/Plugin.Maui.Audio/Plugin.Maui.Audio.csproj
+
+    - name: Build iOS target
+      run: dotnet build src/Plugin.Maui.Audio/Plugin.Maui.Audio.csproj -c Release -f net10.0-ios --no-restore
+
+    - name: Build macOS Catalyst target
+      run: dotnet build src/Plugin.Maui.Audio/Plugin.Maui.Audio.csproj -c Release -f net10.0-maccatalyst --no-restore
