@@ -24,10 +24,12 @@ partial class AudioPlayerOptions
 
 	/// <summary>
 	/// Gets or sets whether the audio session for this player should only be active while playing audio. Default value: <see langword="false"/>.
+	/// When set to true, a new audio session will be used each time audio is used. This means that interrupted audio sessions for other apps can be resumed/restored while you are not playing audio. 
+	/// This may be desirable for cases where you are playing short sounds such as notifications or text to speech, but may be undesirable for media playback.
 	/// </summary>
 	/// <remarks>
 	/// When enabled, the player will automatically create an audio session when playing, and close the audio session when stopped, finished, or paused.
 	/// When disabled, the player will create an audio session on initialization, and only close this session on disposal.
 	/// </remarks>
-	public bool OnPlayAudioSession { get; set; } = false;
+	public bool HandleAudioSessions { get; set; } = false;
 }
