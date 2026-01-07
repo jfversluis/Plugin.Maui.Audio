@@ -247,7 +247,7 @@ partial class AudioPlayer : IAudioPlayer
 		Seek(0);
 		PlaybackEnded?.Invoke(this, EventArgs.Empty);
 
-		// Stop the audio session to allow other aps audio to resume while stopped.
+		// Stop the audio session to allow other apps audio to resume while stopped.
 		if (audioPlayerOptions.OnPlayAudioSession)
 		{
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
@@ -352,7 +352,7 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
 	{
-		// Stop the audio session to allow other aps audio to resume when audio is finished.
+		// Stop the audio session to allow other apps audio to resume when audio is finished.
 		if (audioPlayerOptions.OnPlayAudioSession)
 		{
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);

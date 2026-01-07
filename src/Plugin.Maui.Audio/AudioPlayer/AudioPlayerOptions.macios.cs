@@ -27,7 +27,7 @@ partial class AudioPlayerOptions
 	/// </summary>
 	/// <remarks>
 	/// When enabled, the player will automatically create an audio session when playing, and close the audio session when stopped, finished, or paused.
-	/// When disabled, the player will create an audio session on initialisation, and only close this session on disposal.
+	/// When disabled, the player will create an audio session on initialization, and only close this session on disposal.
 	/// </remarks>
 	public bool OnPlayAudioSession { get; set; } = false;
 }
