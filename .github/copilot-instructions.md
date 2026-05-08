@@ -1,21 +1,24 @@
-# $ Copilot InstructionsREPO 
+# Plugin.Maui.Audio - Copilot Instructions
 
 ## Project Overview
 
-This is a .NET MAUI plugin that provides cross-platform audio playback and recording. It targets Android, iOS, macOS (Catalyst), Windows.
+This is a .NET MAUI plugin that provides cross-platform audio playback and recording. It targets Android, iOS, macOS (Catalyst), and Windows.
 
-### Architecture
+## Architecture
 
 Two main features: **AudioPlayer** (play from files/streams/URLs) and **AudioRecorder** (record from mic).
 
 Key interfaces: `IAudioPlayer`, `IAudio`, `IAudioRecorder`, `IAudioSource`, `AsyncAudioPlayer`.
 
-Platform implementations: MediaPlayer (Android), AVAudioPlayer (iOS), MediaPlayer (Windows).
+Platform implementations:
+- Android: `MediaPlayer`
+- iOS/macOS: `AVAudioPlayer`
+- Windows: `MediaPlayer`
 
 ### Platform Notes
 - Speed ranges differ: Android 0-2.5, iOS 0.5-2, Windows 0-8
 - Balance: -1 (left) to 1 (right)
-- Options classes are platform-specific (AudioPlayerOptions, AudioRecorderOptions)
+- Options classes are platform-specific (`AudioPlayerOptions`, `AudioRecorderOptions`)
 
 ## Code Conventions
 
@@ -23,12 +26,12 @@ Platform implementations: MediaPlayer (Android), AVAudioPlayer (iOS), MediaPlaye
 All code uses: `Plugin.Maui.Audio`
 
 ### File Naming
-- `*.shared. Cross-platform codecs` 
-- `*.android. Androidcs` 
-- `*.macios. iOS/macOScs` 
-- `*.windows. Windowscs` 
-- `*.ios. iOS-onlycs` 
-- `*.net. Generic .NET fallbackcs` 
+- `*.shared.cs` - Cross-platform code
+- `*.android.cs` - Android-specific code
+- `*.macios.cs` - iOS/macOS-specific code
+- `*.windows.cs` - Windows-specific code
+- `*.ios.cs` - iOS-only code
+- `*.net.cs` - Generic .NET fallback
 
 ### Standards
 - File-scoped namespaces
