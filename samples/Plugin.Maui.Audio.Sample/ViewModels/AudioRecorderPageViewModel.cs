@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
 using static Microsoft.Maui.ApplicationModel.Permissions;
+#if ANDROID
+using Android.Media;
+#endif
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
 
@@ -12,6 +15,10 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	IAudioSource audioSource = null;
 	readonly Stopwatch recordingStopwatch = new Stopwatch();
 	bool isPlaying;
+
+#if ANDROID
+	AudioDeviceInfo[] availableInputDevices = [];
+#endif
 
 	public double RecordingTime
 	{
@@ -50,6 +57,8 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
 		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
+
+		LoadInputDevices();
 	}
 
 	ChannelType selectedChannelType;
@@ -108,6 +117,50 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		48000
 	];
 
+	List<string> inputDevices = ["Default"];
+	public List<string> InputDevices
+	{
+		get => inputDevices;
+		set
+		{
+			inputDevices = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	string selectedInputDevice = "Default";
+	public string SelectedInputDevice
+	{
+		get => selectedInputDevice;
+		set
+		{
+			selectedInputDevice = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	void LoadInputDevices()
+	{
+#if ANDROID
+		var androidAudioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		if (androidAudioManager is null)
+		{
+			return;
+		}
+
+		availableInputDevices = androidAudioManager.GetDevices(GetDevicesTargets.Inputs) ?? [];
+
+		var devices = new List<string> { "Default" };
+		foreach (var device in availableInputDevices)
+		{
+			devices.Add($"{device.ProductName} ({device.Type})");
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
+	}
+
 
 	async void PlayAudio()
 	{
@@ -146,6 +199,17 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			{
 				options.SampleRate = SelectedSampleRate;
 			}
+
+#if ANDROID
+			if (SelectedInputDevice != "Default")
+			{
+				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
+				if (index >= 0 && index < availableInputDevices.Length)
+				{
+					options.PreferredDevice = availableInputDevices[index];
+				}
+			}
+#endif
 
 			try
 			{

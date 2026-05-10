@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
 using Plugin.Maui.Audio.AudioListeners;
+#if ANDROID
+using Android.Media;
+#endif
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
 
@@ -24,6 +27,10 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	string capturedAudioWavFileLeft;
 	string capturedAudioWavFileRight;
 
+#if ANDROID
+	AudioDeviceInfo[] availableInputDevices = [];
+#endif
+
 	public AudioStreamerPageViewModel(
 		IAudioManager audioManager,
 		IDispatcher dispatcher)
@@ -39,6 +46,7 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		this.dispatcher = dispatcher;
 
 		SetDefaults();
+		LoadInputDevices();
 	}
 
 	double measuredDecibel;
@@ -72,6 +80,50 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		44100,
 		48000
 	];
+
+	List<string> inputDevices = ["Default"];
+	public List<string> InputDevices
+	{
+		get => inputDevices;
+		set
+		{
+			inputDevices = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	string selectedInputDevice = "Default";
+	public string SelectedInputDevice
+	{
+		get => selectedInputDevice;
+		set
+		{
+			selectedInputDevice = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	void LoadInputDevices()
+	{
+#if ANDROID
+		var androidAudioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		if (androidAudioManager is null)
+		{
+			return;
+		}
+
+		availableInputDevices = androidAudioManager.GetDevices(GetDevicesTargets.Inputs) ?? [];
+
+		var devices = new List<string> { "Default" };
+		foreach (var device in availableInputDevices)
+		{
+			devices.Add($"{device.ProductName} ({device.Type})");
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
+	}
 
 	public double RecordingTime => recordingStopwatch.ElapsedMilliseconds / 1000;
 
@@ -247,6 +299,17 @@ public class AudioStreamerPageViewModel : BaseViewModel
 			audioStreamer.Options.Channels = SelectedChannelType;
 			audioStreamer.Options.BitDepth = SelectedBitDepth;
 			audioStreamer.Options.SampleRate = SelectedSampleRate;
+
+#if ANDROID
+			if (SelectedInputDevice != "Default")
+			{
+				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
+				if (index >= 0 && index < availableInputDevices.Length)
+				{
+					audioStreamer.Options.PreferredDevice = availableInputDevices[index];
+				}
+			}
+#endif
 
 			try
 			{
