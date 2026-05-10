@@ -107,6 +107,12 @@ partial class AudioRecorder : IAudioRecorder
 			}
 
 			audioRecord = new AudioRecord(AudioSource.Mic, sampleRate, channelIn, encoding, bufferSize);
+
+			if (OperatingSystem.IsAndroidVersionAtLeast(23) && audioRecorderOptions.PreferredDevice is not null)
+			{
+				audioRecord.SetPreferredDevice(audioRecorderOptions.PreferredDevice);
+			}
+
 			audioRecord.StartRecording();
 			Task.Run(WriteAudioDataToFile);
 		}
@@ -137,6 +143,12 @@ partial class AudioRecorder : IAudioRecorder
 			mediaRecorder.SetAudioEncodingBitRate(bitRate);
 			mediaRecorder.SetOutputFile(audioFilePath);
 			mediaRecorder.Prepare();
+
+			if (OperatingSystem.IsAndroidVersionAtLeast(23) && audioRecorderOptions.PreferredDevice is not null)
+			{
+				mediaRecorder.SetPreferredDevice(audioRecorderOptions.PreferredDevice);
+			}
+
 			mediaRecorder.Start();
 
 			// Set MediaRecorder "is recording" flag true
