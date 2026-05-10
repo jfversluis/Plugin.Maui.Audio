@@ -147,6 +147,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		{
 			allowBluetooth = value;
 			NotifyPropertyChanged();
+			LoadInputDevices();
 		}
 	}
 
@@ -154,6 +155,16 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	{
 #if IOS || MACCATALYST
 		var session = AVAudioSession.SharedInstance();
+
+		// On iOS, AllowBluetooth is required for BT devices to appear in AvailableInputs.
+		// On macCatalyst, devices appear regardless but setting AllowBluetooth is harmless.
+		var categoryOptions = AllowBluetooth
+			? AVAudioSessionCategoryOptions.AllowBluetooth
+			: AVAudioSessionCategoryOptions.DefaultToSpeaker;
+
+		session.SetCategory(AVAudioSessionCategory.PlayAndRecord, AVAudioSessionMode.Default, categoryOptions, out _);
+		session.SetActive(true, out _);
+
 		availableInputPorts = session.AvailableInputs ?? [];
 
 		var devices = new List<string> { "Default" };

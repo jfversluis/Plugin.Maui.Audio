@@ -111,6 +111,7 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		{
 			allowBluetooth = value;
 			NotifyPropertyChanged();
+			LoadInputDevices();
 		}
 	}
 
@@ -118,6 +119,13 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	{
 #if IOS || MACCATALYST
 		var session = AVAudioSession.SharedInstance();
+
+		var categoryOptions = AllowBluetooth
+			? AVAudioSessionCategoryOptions.AllowBluetooth
+			: AVAudioSessionCategoryOptions.DefaultToSpeaker;
+
+		session.SetCategory(AVAudioSessionCategory.PlayAndRecord, AVAudioSessionMode.Default, categoryOptions, out _);
+
 		availableInputPorts = session.AvailableInputs ?? [];
 
 		var devices = new List<string> { "Default" };

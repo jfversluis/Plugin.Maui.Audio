@@ -34,7 +34,7 @@
 
 			<HorizontalStackLayout Grid.Row="3" Spacing="10">
 				<Switch IsToggled="{Binding AllowBluetooth, Mode=TwoWay}" />
-				<Label Text="Allow Bluetooth (iOS/macOS)" VerticalOptions="Center" />
+				<Label Text="Allow Bluetooth (required on iOS only)" VerticalOptions="Center" />
 			</HorizontalStackLayout>
 
 			<Picker Grid.Row="4"
