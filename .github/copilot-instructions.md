@@ -23,7 +23,7 @@ Platform implementations:
 ## Code Conventions
 
 ### Namespace
-All code uses: `Plugin.Maui.Audio`
+Root namespace prefix is `Plugin.Maui.Audio` (with sub-namespaces like `Plugin.Maui.Audio.AudioListeners`).
 
 ### File Naming
 - `*.shared.cs` - Cross-platform code
