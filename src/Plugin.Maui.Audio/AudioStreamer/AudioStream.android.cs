@@ -6,6 +6,7 @@ namespace Plugin.Maui.Audio;
 partial class AudioStream : IDisposable
 {
 	AudioRecord? audioRecord;
+	Android.Media.AudioDeviceInfo? PreferredDevice { get; }
 
 	public event EventHandler<byte[]>? OnBroadcast;
 	public event EventHandler<bool>? OnActiveChanged;
@@ -38,6 +39,15 @@ partial class AudioStream : IDisposable
 			}
 
 			audioRecord = new AudioRecord(AudioSource.Mic, SampleRate, channelIn, encoding, bufferSize);
+
+			if (OperatingSystem.IsAndroidVersionAtLeast(23) && PreferredDevice is not null)
+			{
+				if (!audioRecord.SetPreferredDevice(PreferredDevice))
+				{
+					Trace.WriteLine("AudioStream: failed to set preferred device, using default");
+				}
+			}
+
 			audioRecord.StartRecording();
 
 			Task.Run(() => WriteAudioDataToEvent(bufferSize));

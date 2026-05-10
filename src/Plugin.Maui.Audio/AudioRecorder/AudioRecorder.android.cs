@@ -110,7 +110,10 @@ partial class AudioRecorder : IAudioRecorder
 
 			if (OperatingSystem.IsAndroidVersionAtLeast(23) && audioRecorderOptions.PreferredDevice is not null)
 			{
-				audioRecord.SetPreferredDevice(audioRecorderOptions.PreferredDevice);
+				if (!audioRecord.SetPreferredDevice(audioRecorderOptions.PreferredDevice))
+				{
+					Trace.WriteLine("AudioRecorder: failed to set preferred device on AudioRecord, using default");
+				}
 			}
 
 			audioRecord.StartRecording();
@@ -145,7 +148,10 @@ partial class AudioRecorder : IAudioRecorder
 
 			if (OperatingSystem.IsAndroidVersionAtLeast(28) && audioRecorderOptions.PreferredDevice is not null)
 			{
-				mediaRecorder.SetPreferredDevice(audioRecorderOptions.PreferredDevice);
+				if (!mediaRecorder.SetPreferredDevice(audioRecorderOptions.PreferredDevice))
+				{
+					Trace.WriteLine("AudioRecorder: failed to set preferred device on MediaRecorder, using default");
+				}
 			}
 
 			mediaRecorder.Prepare();
