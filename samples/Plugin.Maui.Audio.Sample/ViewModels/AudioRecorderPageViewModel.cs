@@ -1,5 +1,9 @@
 ﻿using System.Diagnostics;
 using static Microsoft.Maui.ApplicationModel.Permissions;
+#if WINDOWS
+using Windows.Devices.Enumeration;
+using Windows.Media.Devices;
+#endif
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
 
@@ -12,6 +16,10 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	IAudioSource audioSource = null;
 	readonly Stopwatch recordingStopwatch = new Stopwatch();
 	bool isPlaying;
+
+#if WINDOWS
+	DeviceInformation[] availableInputDevices = [];
+#endif
 
 	public double RecordingTime
 	{
@@ -50,6 +58,8 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
 		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
+
+		_ = LoadInputDevicesAsync();
 	}
 
 	ChannelType selectedChannelType;
@@ -108,6 +118,47 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		48000
 	];
 
+	List<string> inputDevices = ["Default"];
+	public List<string> InputDevices
+	{
+		get => inputDevices;
+		set
+		{
+			inputDevices = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	string selectedInputDevice = "Default";
+	public string SelectedInputDevice
+	{
+		get => selectedInputDevice;
+		set
+		{
+			selectedInputDevice = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	async Task LoadInputDevicesAsync()
+	{
+#if WINDOWS
+		var deviceInfoCollection = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector());
+		availableInputDevices = deviceInfoCollection.ToArray();
+
+		var devices = new List<string> { "Default" };
+		foreach (var device in availableInputDevices)
+		{
+			devices.Add(device.Name);
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#else
+		await Task.CompletedTask;
+#endif
+	}
+
 
 	async void PlayAudio()
 	{
@@ -146,6 +197,17 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			{
 				options.SampleRate = SelectedSampleRate;
 			}
+
+#if WINDOWS
+			if (SelectedInputDevice != "Default")
+			{
+				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
+				if (index >= 0 && index < availableInputDevices.Length)
+				{
+					options.AudioDeviceId = availableInputDevices[index].Id;
+				}
+			}
+#endif
 
 			try
 			{
