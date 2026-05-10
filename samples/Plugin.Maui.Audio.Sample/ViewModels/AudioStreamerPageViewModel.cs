@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
 using Plugin.Maui.Audio.AudioListeners;
+#if IOS || MACCATALYST
+using AVFoundation;
+#endif
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
 
@@ -24,6 +27,10 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	string capturedAudioWavFileLeft;
 	string capturedAudioWavFileRight;
 
+#if IOS || MACCATALYST
+	AVAudioSessionPortDescription[] availableInputPorts = [];
+#endif
+
 	public AudioStreamerPageViewModel(
 		IAudioManager audioManager,
 		IDispatcher dispatcher)
@@ -39,6 +46,7 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		this.dispatcher = dispatcher;
 
 		SetDefaults();
+		LoadInputDevices();
 	}
 
 	double measuredDecibel;
@@ -72,6 +80,56 @@ public class AudioStreamerPageViewModel : BaseViewModel
 		44100,
 		48000
 	];
+
+	List<string> inputDevices = ["Default"];
+	public List<string> InputDevices
+	{
+		get => inputDevices;
+		set
+		{
+			inputDevices = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	string selectedInputDevice = "Default";
+	public string SelectedInputDevice
+	{
+		get => selectedInputDevice;
+		set
+		{
+			selectedInputDevice = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	bool allowBluetooth;
+	public bool AllowBluetooth
+	{
+		get => allowBluetooth;
+		set
+		{
+			allowBluetooth = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	void LoadInputDevices()
+	{
+#if IOS || MACCATALYST
+		var session = AVAudioSession.SharedInstance();
+		availableInputPorts = session.AvailableInputs ?? [];
+
+		var devices = new List<string> { "Default" };
+		foreach (var port in availableInputPorts)
+		{
+			devices.Add(port.PortName);
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
+	}
 
 	public double RecordingTime => recordingStopwatch.ElapsedMilliseconds / 1000;
 
@@ -247,6 +305,22 @@ public class AudioStreamerPageViewModel : BaseViewModel
 			audioStreamer.Options.Channels = SelectedChannelType;
 			audioStreamer.Options.BitDepth = SelectedBitDepth;
 			audioStreamer.Options.SampleRate = SelectedSampleRate;
+
+#if IOS || MACCATALYST
+			if (AllowBluetooth)
+			{
+				audioStreamer.Options.CategoryOptions = AVAudioSessionCategoryOptions.AllowBluetooth;
+			}
+
+			if (SelectedInputDevice != "Default")
+			{
+				var selectedPort = availableInputPorts.FirstOrDefault(p => p.PortName == SelectedInputDevice);
+				if (selectedPort is not null)
+				{
+					audioStreamer.Options.PreferredInput = selectedPort;
+				}
+			}
+#endif
 
 			try
 			{
