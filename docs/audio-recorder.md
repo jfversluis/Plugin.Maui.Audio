@@ -48,6 +48,56 @@ audioManager.CreateRecorder(
     });
 ```
 
+## Recording from a Bluetooth microphone (iOS/macCatalyst)
+
+By default, the recorder uses the system's built-in microphone. To enable recording from Bluetooth devices such as AirPods or other headsets, you need to opt in by setting `CategoryOptions` to `AllowBluetooth`. This makes Bluetooth HFP (Hands-Free Profile) devices available as recording inputs.
+
+> [!IMPORTANT]
+> Bluetooth HFP recording uses voice-quality audio (8–16 kHz, mono). This is a hardware limitation of the HFP profile. If high-fidelity recording is a priority and Bluetooth input is not needed, do not enable this option.
+
+### Basic Bluetooth recording
+
+```csharp
+audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+#if IOS || MACCATALYST
+        CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.AllowBluetooth
+#endif
+    });
+```
+
+### Selecting a specific Bluetooth device
+
+To record from a specific Bluetooth device, use the `PreferredInput` property. This requires enumerating the available inputs after the audio session has been configured:
+
+```csharp
+#if IOS || MACCATALYST
+using AVFoundation;
+
+// First, configure and activate the audio session to discover Bluetooth inputs
+var audioSession = AVAudioSession.SharedInstance();
+audioSession.SetCategory(AVAudioSessionCategory.Record,
+    AVAudioSessionCategoryOptions.AllowBluetooth, out _);
+audioSession.SetActive(true, out _);
+
+// Find the Bluetooth HFP input
+var btInput = audioSession.AvailableInputs?
+    .FirstOrDefault(i => i.PortType == AVAudioSession.PortBluetoothHfp);
+
+// Create the recorder with the preferred input
+var recorder = audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+        CategoryOptions = AVAudioSessionCategoryOptions.AllowBluetooth,
+        PreferredInput = btInput
+    });
+#endif
+```
+
+> [!NOTE]
+> `PreferredInput` must be set together with `CategoryOptions = AllowBluetooth` — without this option, Bluetooth HFP devices will not appear in `AvailableInputs`. No additional Bluetooth permissions are required beyond `NSMicrophoneUsageDescription` (iOS) and `com.apple.security.device.audio-input` (Mac Catalyst).
+
 ## AudioRecorder API
 
 Once you have created an `AudioRecorder` you can interact with it in the following ways:

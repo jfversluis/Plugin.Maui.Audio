@@ -70,6 +70,22 @@ builder.UseMauiApp<App>()
 > [!NOTE]  
 > Currently only iOS and macOS have extra options that can be customized
 
+## Streaming from a Bluetooth microphone (iOS/macCatalyst)
+
+By default, the streamer uses the system's built-in microphone. To enable streaming from Bluetooth devices such as AirPods or other headsets, set `CategoryOptions` to `AllowBluetooth`. This makes Bluetooth HFP (Hands-Free Profile) devices available as streaming inputs.
+
+> [!IMPORTANT]
+> Bluetooth HFP audio is voice-quality (8–16 kHz, mono). This is a hardware limitation of the HFP profile.
+
+```csharp
+audioStreamer.Options.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.AllowBluetooth;
+```
+
+To stream from a specific Bluetooth device, use the `PreferredInput` property — see the [recorder documentation](audio-recorder.md#selecting-a-specific-bluetooth-device) for a full example of enumerating available inputs.
+
+> [!NOTE]
+> No additional Bluetooth permissions are required beyond `NSMicrophoneUsageDescription` (iOS) and `com.apple.security.device.audio-input` (Mac Catalyst).
+
 ## AudioStreamer API
 
 Once you have created an `AudioStreamer` you can interact with it in the following ways:
