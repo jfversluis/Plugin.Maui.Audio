@@ -34,7 +34,7 @@ public class AudioRecorderViewModel
 
 ## Configure the recording options
 
-When calling `CreateRecorder` it is possible to provide an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
+When calling `CreateRecorder` it is possible to provide an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level.
 
 The following example shows how to enable both recording (input) and playback (output) of audio:
 
@@ -47,6 +47,29 @@ audioManager.CreateRecorder(
 #endif
     });
 ```
+
+## Recording from a specific audio device (Windows)
+
+By default, the recorder uses the system default audio capture device. To record from a specific device such as a Bluetooth headset or USB microphone, use the `AudioDeviceId` property.
+
+```csharp
+#if WINDOWS
+using Windows.Devices.Enumeration;
+using Windows.Media.Devices;
+
+var devices = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector());
+var usbMic = devices.FirstOrDefault(d => d.Name.Contains("USB"));
+
+var recorder = audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+        AudioDeviceId = usbMic?.Id
+    });
+#endif
+```
+
+> [!NOTE]
+> No additional permissions are required beyond `<DeviceCapability Name="microphone"/>` in `Package.appxmanifest`. If an invalid or disconnected device ID is provided, `MediaCapture` initialization will throw an exception — unlike Android, Windows does not silently fall back to the default device.
 
 ## AudioRecorder API
 
