@@ -75,7 +75,8 @@ To record from a specific Bluetooth device, use the `PreferredInput` property. T
 #if IOS || MACCATALYST
 using AVFoundation;
 
-// First, configure and activate the audio session to discover Bluetooth inputs
+// Configure and activate a temporary audio session to discover Bluetooth inputs.
+// The recorder will re-initialize the session with the same options when started.
 var audioSession = AVAudioSession.SharedInstance();
 audioSession.SetCategory(AVAudioSessionCategory.Record,
     AVAudioSessionCategoryOptions.AllowBluetooth, out _);
@@ -100,23 +101,14 @@ var recorder = audioManager.CreateRecorder(
 
 ### iOS 26+: High-quality Bluetooth recording
 
-Starting with iOS 26, Apple introduced `BluetoothHighQualityRecording` which enables full-bandwidth audio recording from supported Bluetooth devices (certain AirPods models). This removes the HFP 8–16 kHz limitation.
+Starting with iOS 26, Apple introduced a `bluetoothHighQualityRecording` category option which enables full-bandwidth audio recording from supported Bluetooth devices (certain AirPods models). This removes the HFP 8–16 kHz limitation.
 
 > [!WARNING]
 > This feature is iOS 26+ only (not macCatalyst), is **not available in the European Union**, increases input latency, and is not recommended for real-time communication. It requires the `default` audio session mode.
 
-The .NET `CategoryOptions` enum does not yet include this flag. You can enable it via `AVAudioApplication`:
+The .NET `AVAudioSessionCategoryOptions` enum does not yet include this flag. For apps using `AVCaptureSession`, it can be enabled via its `ConfiguresApplicationAudioSessionForBluetoothHighQualityRecording` property. Since this plugin uses `AVAudioRecorder`/`AVAudioSession`, the category option binding is needed — check future .NET SDK updates for availability.
 
-```csharp
-#if IOS
-if (OperatingSystem.IsIOSVersionAtLeast(26))
-{
-    AVAudioApplication.SharedInstance.ConfiguresApplicationAudioSessionForBluetoothHighQualityRecording = true;
-}
-#endif
-```
-
-To check if the connected device supports it:
+To check if a connected Bluetooth device supports high-quality recording:
 
 ```csharp
 var input = AVAudioSession.SharedInstance().CurrentRoute.Inputs.FirstOrDefault();
@@ -127,7 +119,7 @@ if (micExt?.HighQualityRecording.IsSupported == true)
 }
 ```
 
-Combine with `AllowBluetooth` for HFP fallback on unsupported devices or regions.
+In the meantime, combine with `AllowBluetooth` for HFP fallback on unsupported devices or regions.
 
 ## AudioRecorder API
 
