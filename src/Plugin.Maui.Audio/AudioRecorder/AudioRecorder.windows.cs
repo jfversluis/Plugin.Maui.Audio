@@ -50,7 +50,7 @@ partial class AudioRecorder : IAudioRecorder
 				StreamingCaptureMode = StreamingCaptureMode.Audio
 			};
 
-			if (!string.IsNullOrEmpty(audioRecorderOptions.AudioDeviceId))
+			if (!string.IsNullOrWhiteSpace(audioRecorderOptions.AudioDeviceId))
 			{
 				captureSettings.AudioDeviceId = audioRecorderOptions.AudioDeviceId;
 			}

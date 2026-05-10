@@ -1,9 +1,9 @@
 namespace Plugin.Maui.Audio;
 
-partial class BaseOptions
+partial class AudioRecorderOptions
 {
     /// <summary>
-    /// Gets or sets the ID of the preferred audio input device.
+    /// Gets or sets the ID of the preferred audio capture device.
     /// <para>
     /// Set this to a device ID obtained from
     /// <c>Windows.Devices.Enumeration.DeviceInformation.FindAllAsync</c> using
