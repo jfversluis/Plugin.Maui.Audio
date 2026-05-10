@@ -142,13 +142,13 @@ partial class AudioRecorder : IAudioRecorder
 			mediaRecorder.SetAudioSamplingRate(sampleRate);
 			mediaRecorder.SetAudioEncodingBitRate(bitRate);
 			mediaRecorder.SetOutputFile(audioFilePath);
-			mediaRecorder.Prepare();
 
-			if (OperatingSystem.IsAndroidVersionAtLeast(23) && audioRecorderOptions.PreferredDevice is not null)
+			if (OperatingSystem.IsAndroidVersionAtLeast(28) && audioRecorderOptions.PreferredDevice is not null)
 			{
 				mediaRecorder.SetPreferredDevice(audioRecorderOptions.PreferredDevice);
 			}
 
+			mediaRecorder.Prepare();
 			mediaRecorder.Start();
 
 			// Set MediaRecorder "is recording" flag true
