@@ -23,7 +23,7 @@ internal class ActiveSessionHelper
 			Trace.TraceError(error.ToString());
 		}
 
-		if (options.PreferredInput is not null)
+		if (error is null && options.PreferredInput is not null)
 		{
 			audioSession.SetPreferredInput(options.PreferredInput, out var inputError);
 			if (inputError is not null)

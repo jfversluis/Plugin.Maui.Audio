@@ -37,6 +37,11 @@ partial class BaseOptions
     /// documentation, <c>SetPreferredInput</c> must be called after setting the session
     /// category and activating the session.
     /// </para>
+    /// <para>
+    /// <b>Note:</b> For Bluetooth HFP microphones to appear in
+    /// <see cref="AVAudioSession.AvailableInputs"/>, the <see cref="BaseOptions.CategoryOptions"/>
+    /// must include <see cref="AVAudioSessionCategoryOptions.AllowBluetooth"/>.
+    /// </para>
     /// </summary>
     public AVAudioSessionPortDescription? PreferredInput { get; set; }
 }
