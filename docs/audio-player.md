@@ -123,6 +123,40 @@ When `HandleAudioInterruptions` is set to `false`, the player will not automatic
 > [!NOTE]
 > By default, both `ManageAudioFocus` (Android) and `HandleAudioInterruptions` (iOS/macOS) are enabled (`true`). Your app will properly interact with system audio and other apps out of the box. The audio focus management is handled transparently - you can still control playback manually using `Play()`, `Pause()`, and `Stop()` methods. For backward compatibility, playback will continue even if audio focus cannot be acquired, though this is rare.
 
+### iOS/macOS Session Lifetime
+
+On iOS and macOS, the audio session (`AVAudioSession`) is a shared resource. By default, the plugin keeps the audio session active for the lifetime of the player. This is appropriate for media playback (music, podcasts, etc.) but may not be ideal for short sounds like notifications or text-to-speech.
+
+Use the `SessionLifetime` property to control what happens to the audio session when the player is disposed:
+
+| Value | Behavior |
+|-------|----------|
+| `KeepSessionAlive` (default) | Audio session remains active after the player is disposed. Other apps' audio stays interrupted. |
+| `EndSession` | Audio session is deactivated on disposal. |
+| `EndSessionAndNotifyOthers` | Audio session is deactivated on disposal AND other apps are notified so they can resume their audio. |
+
+#### Playing short sounds without interrupting other apps
+
+For notification sounds, text-to-speech, or other short audio clips, use `EndSessionAndNotifyOthers` and dispose the player when playback finishes:
+
+```csharp
+var player = audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("notification.mp3"),
+    new AudioPlayerOptions
+    {
+#if IOS || MACCATALYST
+        SessionLifetime = SessionLifetime.EndSessionAndNotifyOthers
+#endif
+    });
+
+player.PlaybackEnded += (s, e) => player.Dispose();
+player.Play();
+// When playback ends → player disposes → session deactivates → other apps resume
+```
+
+> [!TIP]
+> For repeated short sounds, create a new player each time rather than caching one. The overhead is minimal and this properly manages the shared audio session lifecycle without conflicting with other players or recorders.
+
 ## Controlling Audio Output Device/Port
 
 You can control which audio output device or port is used for playback on all platforms.
