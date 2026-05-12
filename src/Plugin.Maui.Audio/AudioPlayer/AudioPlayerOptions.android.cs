@@ -55,7 +55,5 @@ partial class AudioPlayerOptions : BaseOptions
 	/// For example, if the user is in a phone call, the system may route audio differently.
 	/// </para>
 	/// </remarks>
-#pragma warning disable CA1416 // This enum is only used on API 23+ contexts, initialized as default on all API levels
 	public AudioOutputDevice PreferredOutputDevice { get; set; } = AudioOutputDevice.Default;
-#pragma warning restore CA1416
 }

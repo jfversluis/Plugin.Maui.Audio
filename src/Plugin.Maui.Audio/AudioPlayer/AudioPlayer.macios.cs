@@ -314,6 +314,22 @@ partial class AudioPlayer : IAudioPlayer
 		try
 		{
 			var audioSession = AVAudioSession.SharedInstance();
+
+			// Speaker override requires PlayAndRecord category to take effect.
+			// If the session is currently using Playback, upgrade it.
+			if (audioSession.Category == AVAudioSession.CategoryPlayback)
+			{
+				var catError = audioSession.SetCategory(
+					AVAudioSessionCategory.PlayAndRecord,
+					audioPlayerOptions.Mode,
+					audioPlayerOptions.CategoryOptions | AVAudioSessionCategoryOptions.DefaultToSpeaker);
+
+				if (catError is not null)
+				{
+					System.Diagnostics.Trace.TraceWarning($"Failed to set PlayAndRecord category for speaker override: {catError.LocalizedDescription}");
+				}
+			}
+
 			var portOverride = (AVAudioSessionPortOverride)preferredPort;
 
 			// Increment before the call so concurrent Dispose sees a non-zero count

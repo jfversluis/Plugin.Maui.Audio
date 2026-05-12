@@ -188,6 +188,69 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 	public double MinimumSpeed => audioPlayer?.MinimumSpeed ?? 1;
 	public double MaximumSpeed => audioPlayer?.MaximumSpeed ?? 1;
 
+	bool forceSpeakerOutput;
+	public bool ForceSpeakerOutput
+	{
+		get => forceSpeakerOutput;
+		set
+		{
+			if (forceSpeakerOutput == value)
+			{
+				return;
+			}
+
+			forceSpeakerOutput = value;
+			NotifyPropertyChanged();
+			ReloadWithOutputDevice();
+		}
+	}
+
+	async void ReloadWithOutputDevice()
+	{
+		if (musicItemViewModel is null)
+		{
+			return;
+		}
+
+		var wasPlaying = audioPlayer?.IsPlaying ?? false;
+		var position = audioPlayer?.CurrentPosition ?? 0;
+
+		audioPlayer?.Dispose();
+
+		var options = new AudioPlayerOptions();
+
+#if ANDROID
+		options.PreferredOutputDevice = forceSpeakerOutput
+			? AudioOutputDevice.Speaker
+			: AudioOutputDevice.Default;
+#elif IOS || MACCATALYST
+		if (forceSpeakerOutput)
+		{
+			options.Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord;
+			options.PreferredOutputPort = AudioOutputPort.Speaker;
+		}
+#endif
+
+		audioPlayer = audioManager.CreatePlayer(
+			await FileSystem.OpenAppPackageFileAsync(musicItemViewModel.Filename),
+			options);
+		audioPlayer.PlaybackEnded += AudioPlayer_PlaybackEnded;
+
+		if (position > 0 && audioPlayer.CanSeek)
+		{
+			audioPlayer.Seek(position);
+		}
+
+		if (wasPlaying)
+		{
+			audioPlayer.Play();
+		}
+
+		NotifyPropertyChanged(nameof(HasAudioSource));
+		NotifyPropertyChanged(nameof(Duration));
+		NotifyPropertyChanged(nameof(IsPlaying));
+	}
+
 	public bool Loop
 	{
 		get => audioPlayer?.Loop ?? false;

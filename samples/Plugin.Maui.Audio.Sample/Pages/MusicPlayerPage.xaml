@@ -108,6 +108,11 @@
                 Maximum="{Binding MaximumSpeed}"
                 Value="{Binding UserSpeed}"
 				DragCompletedCommand="{Binding UpdateSpeedCommand}"/>
+
+			<HorizontalStackLayout HorizontalOptions="Center" Spacing="3">
+				<Label Text="Force Speaker Output:" VerticalOptions="Center" />
+				<Switch IsToggled="{Binding ForceSpeakerOutput}" VerticalOptions="Center" />
+			</HorizontalStackLayout>
 		</VerticalStackLayout>
     </ScrollView>
 

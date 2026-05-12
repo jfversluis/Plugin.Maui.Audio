@@ -22,9 +22,7 @@ partial class AudioPlayer : IAudioPlayer
 	bool wasPlayingBeforeFocusLoss = false;
 	double volumeBeforeDucking = 0;
 	AudioPlayerOptions? audioPlayerOptions;
-#pragma warning disable CA1416 // Default value is safe on all API levels
 	AudioOutputDevice preferredOutputDevice = AudioOutputDevice.Default;
-#pragma warning restore CA1416
 
 	const double DuckingVolumeMultiplier = 0.2;
 
@@ -276,25 +274,23 @@ partial class AudioPlayer : IAudioPlayer
 			return;
 		}
 
-		// If Default is specified, don't set any preferred device
+		// If Default is specified, clear any preferred device
 		if (preferredDevice == AudioOutputDevice.Default)
 		{
+			player.SetPreferredDevice(null);
 			return;
 		}
 
 		try
 		{
-			var context = Android.App.Application.Context;
-			var am = context?.GetSystemService(Android.Content.Context.AudioService) as Android.Media.AudioManager;
-
-			if (am is null)
+			if (audioManager is null)
 			{
-				System.Diagnostics.Trace.TraceWarning("Unable to get AudioManager service.");
+				System.Diagnostics.Trace.TraceWarning("AudioManager is not available.");
 				return;
 			}
 
 			// Get all output audio devices (API 23+)
-			var devices = am.GetDevices(GetDevicesTargets.Outputs);
+			var devices = audioManager.GetDevices(GetDevicesTargets.Outputs);
 
 			if (devices is null || devices.Length == 0)
 			{

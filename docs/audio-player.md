@@ -59,17 +59,84 @@ audioManager.CreatePlayer(
 
 For more information, please refer to the Android documentation: https://developer.android.com/reference/android/media/AudioAttributes
 
-### Controlling Audio Output Device/Port
+## Audio Focus and Interruption Handling
 
-You can control which audio output device or port is used for playback on both Android and iOS/macOS platforms.
+The `AudioPlayer` automatically handles audio focus on Android and audio interruptions on iOS/macOS by default. This ensures proper behavior when your app interacts with other audio sources, such as phone calls, notifications, or other media apps.
 
-#### Android - Output Device Selection
+### Android Audio Focus
+
+On Android, the plugin automatically:
+- **Requests audio focus** when you call `Play()`, notifying the system that your app wants to play audio
+- **Abandons audio focus** when you call `Pause()` or `Stop()`, allowing other apps to take control
+- **Responds to focus changes** from other apps:
+  - **Permanent loss**: Stops playback (e.g., user starts music in another app)
+  - **Temporary loss**: Pauses playback and resumes when focus returns (e.g., phone call)
+  - **Audio ducking**: Temporarily lowers volume to 20% while other audio plays (e.g., navigation prompts), then restores full volume
+
+For more information, see the [Android Audio Focus documentation](https://developer.android.com/media/optimize/audio-focus).
+
+#### Configuring Audio Focus (Android)
+
+You can control audio focus behavior through the `AudioPlayerOptions`:
+
+```csharp
+var audioPlayer = audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if ANDROID
+        ManageAudioFocus = false  // Disable automatic audio focus management
+#endif
+    });
+```
+
+When `ManageAudioFocus` is set to `false`, the player will not request or respond to audio focus changes, giving you full manual control.
+
+### iOS/macOS Audio Interruptions
+
+On iOS and macOS, the plugin automatically:
+- **Registers for interruption notifications** when the player is created
+- **Responds to interruptions**:
+  - **Interruption began**: Pauses playback (e.g., incoming phone call, alarm)
+  - **Interruption ended**: Resumes playback if the system indicates it should resume
+- **Unregisters** interruption observers when the player is disposed
+
+For more information, see the [iOS Audio Interruptions documentation](https://developer.apple.com/documentation/avfaudio/handling-audio-interruptions).
+
+#### Configuring Interruption Handling (iOS/macOS)
+
+You can control interruption handling behavior through the `AudioPlayerOptions`:
+
+```csharp
+var audioPlayer = audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if IOS || MACCATALYST
+        HandleAudioInterruptions = false  // Disable automatic interruption handling
+#endif
+    });
+```
+
+When `HandleAudioInterruptions` is set to `false`, the player will not automatically pause or resume during interruptions, giving you full manual control.
+
+> [!NOTE]
+> By default, both `ManageAudioFocus` (Android) and `HandleAudioInterruptions` (iOS/macOS) are enabled (`true`). Your app will properly interact with system audio and other apps out of the box. The audio focus management is handled transparently - you can still control playback manually using `Play()`, `Pause()`, and `Stop()` methods. For backward compatibility, playback will continue even if audio focus cannot be acquired, though this is rare.
+
+## Controlling Audio Output Device/Port
+
+You can control which audio output device or port is used for playback on Android and iOS/macOS platforms.
+
+> [!NOTE]
+> This feature is not available on Windows. On Windows, the system default audio output routing is always used.
+
+### Android - Output Device Selection
 
 On Android, you can specify which audio output device should be used for playback. This is useful when you want to ensure audio plays through a specific output, such as the device speaker, even when other outputs like Bluetooth are connected.
 
 ```csharp
 audioManager.CreatePlayer(
-    await FileSystem.OpenAppPackageFileAsync("beep.wav"),
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
     new AudioPlayerOptions
     {
 #if ANDROID
@@ -92,18 +159,22 @@ Available output device options include:
 - `AudioOutputDevice.UsbAccessory` - USB accessory
 - `AudioOutputDevice.AuxLine` - Auxiliary line connection (e.g., 3.5mm aux cable)
 
-**Note:** The system may override this preference based on user actions or system policies. If the requested device is not available or connected, the system will fall back to its default routing behavior.
+**Note:** The system treats this as a preference, not a guarantee. If the requested device is not available or connected, the system will fall back to its default routing behavior.
 
-#### iOS/macOS - Output Port Override
+### iOS/macOS - Output Port Override
 
 On iOS and macOS, you can override the audio output port to force audio to play through the built-in speaker, even when headphones or Bluetooth devices are connected.
 
+> [!IMPORTANT]
+> The speaker override requires the audio session category to be set to `PlayAndRecord`. If your session uses the default `Playback` category, you must change it for the override to take effect. On Mac Catalyst, speaker override has no effect since Macs do not distinguish between speaker and earpiece routing.
+
 ```csharp
 audioManager.CreatePlayer(
-    await FileSystem.OpenAppPackageFileAsync("beep.wav"),
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
     new AudioPlayerOptions
     {
 #if IOS || MACCATALYST
+        Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord,
         PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker
 #endif
     });
@@ -113,9 +184,9 @@ Available output port options include:
 - `AudioOutputPort.Default` - Use system default routing
 - `AudioOutputPort.Speaker` - Force output to built-in speaker
 
-**Note:** Unlike Android's per-player device selection, iOS uses a session-wide port override that affects all audio output on the device. The override remains in effect until explicitly changed back to `AudioOutputPort.Default`.
+**Note:** Unlike Android's per-player device selection, iOS uses a session-wide port override that affects all audio output on the device. The override remains in effect until explicitly changed back to `AudioOutputPort.Default` or all players using the override are disposed.
 
-#### Cross-Platform Example
+### Cross-Platform Example
 
 ```csharp
 var options = new AudioPlayerOptions
@@ -123,13 +194,13 @@ var options = new AudioPlayerOptions
 #if ANDROID
     PreferredOutputDevice = Plugin.Maui.Audio.AudioOutputDevice.Speaker,
 #elif IOS || MACCATALYST
+    Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord,
     PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker,
 #endif
 };
-var player = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("beep.wav"), options);
+var player = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"), options);
 player.Play(); // Audio plays through device speaker on both Android and iOS/macOS
 ```
-
 
 ## AudioPlayer API
 

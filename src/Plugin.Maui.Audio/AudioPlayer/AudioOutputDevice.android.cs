@@ -1,4 +1,3 @@
-using System.Runtime.Versioning;
 using Android.Media;
 
 namespace Plugin.Maui.Audio;
@@ -11,7 +10,6 @@ namespace Plugin.Maui.Audio;
 /// Requires Android API 28 (Android 9.0 Pie) or higher for setting the preferred device.
 /// On older versions, this setting will be ignored and the system default routing will be used.
 /// </remarks>
-[SupportedOSPlatform("android23.0")]
 public enum AudioOutputDevice
 {
 	/// <summary>
