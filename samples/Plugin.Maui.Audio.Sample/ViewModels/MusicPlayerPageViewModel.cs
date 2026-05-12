@@ -205,50 +205,66 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		}
 	}
 
+	bool isReloadingOutputDevice;
+
 	async void ReloadWithOutputDevice()
 	{
-		if (musicItemViewModel is null)
+		if (musicItemViewModel is null || isReloadingOutputDevice)
 		{
 			return;
 		}
 
-		var wasPlaying = audioPlayer?.IsPlaying ?? false;
-		var position = audioPlayer?.CurrentPosition ?? 0;
+		isReloadingOutputDevice = true;
 
-		audioPlayer?.Dispose();
+		try
+		{
+			var wasPlaying = audioPlayer?.IsPlaying ?? false;
+			var position = audioPlayer?.CurrentPosition ?? 0;
 
-		var options = new AudioPlayerOptions();
+			if (audioPlayer is not null)
+			{
+				audioPlayer.PlaybackEnded -= AudioPlayer_PlaybackEnded;
+				audioPlayer.Dispose();
+				audioPlayer = null;
+			}
+
+			var options = new AudioPlayerOptions();
 
 #if ANDROID
-		options.PreferredOutputDevice = forceSpeakerOutput
-			? AudioOutputDevice.Speaker
-			: AudioOutputDevice.Default;
+			options.PreferredOutputDevice = forceSpeakerOutput
+				? AudioOutputDevice.Speaker
+				: AudioOutputDevice.Default;
 #elif IOS || MACCATALYST
-		if (forceSpeakerOutput)
-		{
-			options.Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord;
-			options.PreferredOutputPort = AudioOutputPort.Speaker;
-		}
+			if (forceSpeakerOutput)
+			{
+				options.Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord;
+				options.PreferredOutputPort = AudioOutputPort.Speaker;
+			}
 #endif
 
-		audioPlayer = audioManager.CreatePlayer(
-			await FileSystem.OpenAppPackageFileAsync(musicItemViewModel.Filename),
-			options);
-		audioPlayer.PlaybackEnded += AudioPlayer_PlaybackEnded;
+			audioPlayer = audioManager.CreatePlayer(
+				await FileSystem.OpenAppPackageFileAsync(musicItemViewModel.Filename),
+				options);
+			audioPlayer.PlaybackEnded += AudioPlayer_PlaybackEnded;
 
-		if (position > 0 && audioPlayer.CanSeek)
-		{
-			audioPlayer.Seek(position);
+			if (position > 0 && audioPlayer.CanSeek)
+			{
+				audioPlayer.Seek(position);
+			}
+
+			if (wasPlaying)
+			{
+				audioPlayer.Play();
+			}
+
+			NotifyPropertyChanged(nameof(HasAudioSource));
+			NotifyPropertyChanged(nameof(Duration));
+			NotifyPropertyChanged(nameof(IsPlaying));
 		}
-
-		if (wasPlaying)
+		finally
 		{
-			audioPlayer.Play();
+			isReloadingOutputDevice = false;
 		}
-
-		NotifyPropertyChanged(nameof(HasAudioSource));
-		NotifyPropertyChanged(nameof(Duration));
-		NotifyPropertyChanged(nameof(IsPlaying));
 	}
 
 	public bool Loop

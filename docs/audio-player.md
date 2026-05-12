@@ -163,10 +163,10 @@ Available output device options include:
 
 ### iOS/macOS - Output Port Override
 
-On iOS and macOS, you can override the audio output port to force audio to play through the built-in speaker, even when headphones or Bluetooth devices are connected.
+On iOS, you can override the audio output port to force audio to play through the built-in speaker instead of the earpiece when no external audio devices are connected. This is primarily useful for `PlayAndRecord` sessions where the default output is the earpiece.
 
 > [!IMPORTANT]
-> The speaker override requires the audio session category to be set to `PlayAndRecord`. If your session uses the default `Playback` category, you must change it for the override to take effect. On Mac Catalyst, speaker override has no effect since Macs do not distinguish between speaker and earpiece routing.
+> The speaker override requires the audio session category to be set to `PlayAndRecord`. If your session uses the default `Playback` category, the plugin will automatically upgrade to `PlayAndRecord` when a speaker override is requested. Note that speaker override does **not** override wired headphones or Bluetooth — when those are connected, audio will route to them regardless of this setting. On Mac Catalyst, speaker override has no effect since Macs do not distinguish between speaker and earpiece routing.
 
 ```csharp
 audioManager.CreatePlayer(

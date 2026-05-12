@@ -194,10 +194,11 @@ partial class AudioPlayer : IAudioPlayer
 		player = new MediaPlayer();
 		this.audioPlayerOptions = audioPlayerOptions;
 
-		// Initialize audio manager and focus listener only if audio focus management is enabled
+		// AudioManager is needed for both audio focus management and preferred output device
+		audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+
 		if (audioPlayerOptions.ManageAudioFocus)
 		{
-			audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
@@ -355,10 +356,11 @@ partial class AudioPlayer : IAudioPlayer
 		player = new MediaPlayer();
 		this.audioPlayerOptions = audioPlayerOptions;
 
-		// Initialize audio manager and focus listener only if audio focus management is enabled
+		// AudioManager is needed for both audio focus management and preferred output device
+		audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+
 		if (audioPlayerOptions.ManageAudioFocus)
 		{
-			audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
@@ -400,10 +402,11 @@ partial class AudioPlayer : IAudioPlayer
 		player = new MediaPlayer();
 		this.audioPlayerOptions = audioPlayerOptions;
 
-		// Initialize audio manager and focus listener only if audio focus management is enabled
+		// AudioManager is needed for both audio focus management and preferred output device
+		audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+
 		if (audioPlayerOptions.ManageAudioFocus)
 		{
-			audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
