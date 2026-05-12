@@ -21,4 +21,17 @@ partial class AudioPlayerOptions
     /// See https://developer.apple.com/documentation/avfaudio/handling-audio-interruptions for more information.
     /// </remarks>
     public bool HandleAudioInterruptions { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the preferred audio output port override for iOS/macOS. Default value: <see cref="AudioOutputPort.Default"/>.
+    /// </summary>
+    /// <remarks>
+    /// This property allows you to override the audio output routing on iOS/macOS.
+    /// For example, you can force audio to play through the device speaker even when Bluetooth is connected.
+    /// <para>
+    /// Note: This is a session-wide setting that affects all audio output on the device, not just this player.
+    /// The override remains in effect until explicitly changed back to <see cref="AudioOutputPort.Default"/>.
+    /// </para>
+    /// </remarks>
+    public AudioOutputPort PreferredOutputPort { get; set; } = AudioOutputPort.Default;
 }

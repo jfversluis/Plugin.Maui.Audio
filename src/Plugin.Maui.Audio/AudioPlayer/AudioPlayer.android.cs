@@ -22,6 +22,9 @@ partial class AudioPlayer : IAudioPlayer
 	bool wasPlayingBeforeFocusLoss = false;
 	double volumeBeforeDucking = 0;
 	AudioPlayerOptions? audioPlayerOptions;
+#pragma warning disable CA1416 // Default value is safe on all API levels
+	AudioOutputDevice preferredOutputDevice = AudioOutputDevice.Default;
+#pragma warning restore CA1416
 
 	const double DuckingVolumeMultiplier = 0.2;
 
@@ -83,8 +86,10 @@ partial class AudioPlayer : IAudioPlayer
 			isPlaying = false;
 			player.Reset();
 
-			// after reset, we need to prepare the audio source again
+			// reapply audio attributes and preferred device (Reset clears all configuration)
+			ConfigureAudioAttributes();
 			PrepareAudioSource();
+			SetPreferredOutputDevice(preferredOutputDevice);
 
 			// now we are going to update the speed parameter of the actual audio player
 
@@ -108,10 +113,7 @@ partial class AudioPlayer : IAudioPlayer
 				stopwatch.Start();
 				player.Start();
 			}
-			else // Explicitly pause the player if it was not playing before
-			{
-				player.Pause();
-			}
+			// If not playing, leave player in Prepared state (Pause is invalid here)
 		}
 		finally
 		{
@@ -201,6 +203,21 @@ partial class AudioPlayer : IAudioPlayer
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
+		ConfigureAudioAttributes();
+
+		player.Completion += OnPlaybackEnded;
+
+		// Set preferred output device if specified (API 28+)
+		SetPreferredOutputDevice(audioPlayerOptions.PreferredOutputDevice);
+	}
+
+	void ConfigureAudioAttributes()
+	{
+		if (audioPlayerOptions is null)
+		{
+			return;
+		}
+
 		if (OperatingSystem.IsAndroidVersionAtLeast(26))
 		{
 			var audioAttributes = new AudioAttributes.Builder()?
@@ -246,8 +263,62 @@ partial class AudioPlayer : IAudioPlayer
 
 			player.SetAudioStreamType(streamType);
 		}
-			
-		player.Completion += OnPlaybackEnded;
+	}
+
+	void SetPreferredOutputDevice(AudioOutputDevice preferredDevice)
+	{
+		// Store the preference so it can be reapplied after Reset()
+		preferredOutputDevice = preferredDevice;
+
+		// setPreferredDevice is only available on API 28 and above
+		if (!OperatingSystem.IsAndroidVersionAtLeast(28))
+		{
+			return;
+		}
+
+		// If Default is specified, don't set any preferred device
+		if (preferredDevice == AudioOutputDevice.Default)
+		{
+			return;
+		}
+
+		try
+		{
+			var context = Android.App.Application.Context;
+			var am = context?.GetSystemService(Android.Content.Context.AudioService) as Android.Media.AudioManager;
+
+			if (am is null)
+			{
+				System.Diagnostics.Trace.TraceWarning("Unable to get AudioManager service.");
+				return;
+			}
+
+			// Get all output audio devices (API 23+)
+			var devices = am.GetDevices(GetDevicesTargets.Outputs);
+
+			if (devices is null || devices.Length == 0)
+			{
+				System.Diagnostics.Trace.TraceWarning("No output audio devices found.");
+				return;
+			}
+
+			// Find the first device matching the preferred type
+			var targetDeviceType = (AudioDeviceType)preferredDevice;
+			var targetDevice = devices.FirstOrDefault(d => d.Type == targetDeviceType);
+
+			if (targetDevice is not null)
+			{
+				player.SetPreferredDevice(targetDevice);
+			}
+			else
+			{
+				System.Diagnostics.Trace.TraceWarning($"Requested audio output device type {targetDeviceType} not found.");
+			}
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Trace.TraceError($"Error setting preferred audio output device: {ex.Message}");
+		}
 	}
 
 	public void SetSource(Stream audioStream)
@@ -277,13 +348,15 @@ partial class AudioPlayer : IAudioPlayer
 
 		player.Reset();
 
+		// reapply audio attributes and preferred device (Reset clears all configuration)
+		ConfigureAudioAttributes();
 		PrepareAudioSource();
+		SetPreferredOutputDevice(preferredOutputDevice);
 	}
 
 	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
-		player.Completion += OnPlaybackEnded;
 		this.audioPlayerOptions = audioPlayerOptions;
 
 		// Initialize audio manager and focus listener only if audio focus management is enabled
@@ -292,6 +365,9 @@ partial class AudioPlayer : IAudioPlayer
 			audioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
+
+		ConfigureAudioAttributes();
+		player.Completion += OnPlaybackEnded;
 
 		if (OperatingSystem.IsAndroidVersionAtLeast(23))
 		{
@@ -316,16 +392,16 @@ partial class AudioPlayer : IAudioPlayer
 			file = cachePath;
 		}
 
-
 		PrepareAudioSource();
+
+		// Set preferred output device if specified (API 28+)
+		SetPreferredOutputDevice(audioPlayerOptions.PreferredOutputDevice);
 	}
 
 
 	internal AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = new MediaPlayer();
-		player.Completion += OnPlaybackEnded;
-		player.Error += OnError;
 		this.audioPlayerOptions = audioPlayerOptions;
 
 		// Initialize audio manager and focus listener only if audio focus management is enabled
@@ -335,9 +411,16 @@ partial class AudioPlayer : IAudioPlayer
 			audioFocusChangeListener = new AudioFocusChangeListener(this);
 		}
 
+		ConfigureAudioAttributes();
+		player.Completion += OnPlaybackEnded;
+		player.Error += OnError;
+
 		file = fileName;
 
 		PrepareAudioSource();
+
+		// Set preferred output device if specified (API 28+)
+		SetPreferredOutputDevice(audioPlayerOptions.PreferredOutputDevice);
 	}
 
 	static void DeleteFile(string path)

@@ -59,69 +59,77 @@ audioManager.CreatePlayer(
 
 For more information, please refer to the Android documentation: https://developer.android.com/reference/android/media/AudioAttributes
 
-## Audio Focus and Interruption Handling
+### Controlling Audio Output Device/Port
 
-The `AudioPlayer` automatically handles audio focus on Android and audio interruptions on iOS/macOS by default. This ensures proper behavior when your app interacts with other audio sources, such as phone calls, notifications, or other media apps.
+You can control which audio output device or port is used for playback on both Android and iOS/macOS platforms.
 
-### Android Audio Focus
+#### Android - Output Device Selection
 
-On Android, the plugin automatically:
-- **Requests audio focus** when you call `Play()`, notifying the system that your app wants to play audio
-- **Abandons audio focus** when you call `Pause()` or `Stop()`, allowing other apps to take control
-- **Responds to focus changes** from other apps:
-  - **Permanent loss**: Stops playback (e.g., user starts music in another app)
-  - **Temporary loss**: Pauses playback and resumes when focus returns (e.g., phone call)
-  - **Audio ducking**: Temporarily lowers volume to 20% while other audio plays (e.g., navigation prompts), then restores full volume
-
-For more information, see the [Android Audio Focus documentation](https://developer.android.com/media/optimize/audio-focus).
-
-#### Configuring Audio Focus (Android)
-
-You can control audio focus behavior through the `AudioPlayerOptions`:
+On Android, you can specify which audio output device should be used for playback. This is useful when you want to ensure audio plays through a specific output, such as the device speaker, even when other outputs like Bluetooth are connected.
 
 ```csharp
-var audioPlayer = audioManager.CreatePlayer(
-    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("beep.wav"),
     new AudioPlayerOptions
     {
 #if ANDROID
-        ManageAudioFocus = false  // Disable automatic audio focus management
+        PreferredOutputDevice = Plugin.Maui.Audio.AudioOutputDevice.Speaker
 #endif
     });
 ```
 
-When `ManageAudioFocus` is set to `false`, the player will not request or respond to audio focus changes, giving you full manual control.
+This feature requires Android API 28 (Android 9.0 Pie) or higher. On older versions, the setting will be ignored and the system default routing will be used.
 
-### iOS/macOS Audio Interruptions
+Available output device options include:
+- `AudioOutputDevice.Default` - Use system default routing
+- `AudioOutputDevice.Speaker` - Built-in device speaker (loudspeaker)
+- `AudioOutputDevice.Earpiece` - Built-in earpiece (typically used for phone calls)
+- `AudioOutputDevice.WiredHeadset` - Wired headset or headphones with microphone
+- `AudioOutputDevice.WiredHeadphones` - Wired headphones without microphone
+- `AudioOutputDevice.BluetoothA2dp` - Bluetooth device with A2DP profile (e.g., Bluetooth headphones, car audio)
+- `AudioOutputDevice.BluetoothSco` - Bluetooth SCO device (typically used for phone calls)
+- `AudioOutputDevice.UsbDevice` - USB audio device
+- `AudioOutputDevice.UsbAccessory` - USB accessory
+- `AudioOutputDevice.AuxLine` - Auxiliary line connection (e.g., 3.5mm aux cable)
 
-On iOS and macOS, the plugin automatically:
-- **Registers for interruption notifications** when the player is created
-- **Responds to interruptions**:
-  - **Interruption began**: Pauses playback (e.g., incoming phone call, alarm)
-  - **Interruption ended**: Resumes playback if the system indicates it should resume
-- **Unregisters** interruption observers when the player is disposed
+**Note:** The system may override this preference based on user actions or system policies. If the requested device is not available or connected, the system will fall back to its default routing behavior.
 
-For more information, see the [iOS Audio Interruptions documentation](https://developer.apple.com/documentation/avfaudio/handling-audio-interruptions).
+#### iOS/macOS - Output Port Override
 
-#### Configuring Interruption Handling (iOS/macOS)
-
-You can control interruption handling behavior through the `AudioPlayerOptions`:
+On iOS and macOS, you can override the audio output port to force audio to play through the built-in speaker, even when headphones or Bluetooth devices are connected.
 
 ```csharp
-var audioPlayer = audioManager.CreatePlayer(
-    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("beep.wav"),
     new AudioPlayerOptions
     {
 #if IOS || MACCATALYST
-        HandleAudioInterruptions = false  // Disable automatic interruption handling
+        PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker
 #endif
     });
 ```
 
-When `HandleAudioInterruptions` is set to `false`, the player will not automatically pause or resume during interruptions, giving you full manual control.
+Available output port options include:
+- `AudioOutputPort.Default` - Use system default routing
+- `AudioOutputPort.Speaker` - Force output to built-in speaker
 
-> [!NOTE]
-> By default, both `ManageAudioFocus` (Android) and `HandleAudioInterruptions` (iOS/macOS) are enabled (`true`). Your app will properly interact with system audio and other apps out of the box. The audio focus management is handled transparently - you can still control playback manually using `Play()`, `Pause()`, and `Stop()` methods. For backward compatibility, playback will continue even if audio focus cannot be acquired, though this is rare.
+**Note:** Unlike Android's per-player device selection, iOS uses a session-wide port override that affects all audio output on the device. The override remains in effect until explicitly changed back to `AudioOutputPort.Default`.
+
+#### Cross-Platform Example
+
+```csharp
+var options = new AudioPlayerOptions
+{
+#if ANDROID
+    PreferredOutputDevice = Plugin.Maui.Audio.AudioOutputDevice.Speaker,
+#elif IOS || MACCATALYST
+    PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker,
+#endif
+};
+var player = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("beep.wav"), options);
+player.Play(); // Audio plays through device speaker on both Android and iOS/macOS
+```
+
 
 ## AudioPlayer API
 
