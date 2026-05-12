@@ -18,8 +18,9 @@ public enum AudioOutputPort : ulong
 	Default = AVAudioSessionPortOverride.None,
 
 	/// <summary>
-	/// Force audio output to the built-in speaker, overriding the default routing.
-	/// Use this to ensure audio plays through the device speaker even when headphones or Bluetooth devices are connected.
+	/// Force audio output to the built-in speaker, overriding the default earpiece routing.
+	/// This is primarily useful when using the PlayAndRecord category, where the default output is the earpiece.
+	/// Note: This does not override wired headphones or Bluetooth devices — when those are connected, audio routes to them regardless.
 	/// Corresponds to <see cref="AVAudioSessionPortOverride.Speaker"/>.
 	/// </summary>
 	Speaker = AVAudioSessionPortOverride.Speaker,

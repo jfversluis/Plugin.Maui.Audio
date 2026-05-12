@@ -27,9 +27,11 @@ partial class AudioPlayerOptions
     /// </summary>
     /// <remarks>
     /// This property allows you to override the audio output routing on iOS/macOS.
-    /// For example, you can force audio to play through the device speaker even when Bluetooth is connected.
+    /// For example, you can force audio to play through the device speaker instead of the earpiece
+    /// when using the PlayAndRecord category.
     /// <para>
-    /// Note: This is a session-wide setting that affects all audio output on the device, not just this player.
+    /// Note: This does not override wired headphones or Bluetooth devices.
+    /// This is a session-wide setting that affects all audio output on the device, not just this player.
     /// The override remains in effect until explicitly changed back to <see cref="AudioOutputPort.Default"/>.
     /// </para>
     /// </remarks>
