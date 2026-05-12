@@ -22,6 +22,15 @@ internal class ActiveSessionHelper
 			Trace.TraceError("failed activate audio session");
 			Trace.TraceError(error.ToString());
 		}
+
+		if (error is null && options.PreferredInput is not null)
+		{
+			audioSession.SetPreferredInput(options.PreferredInput, out var inputError);
+			if (inputError is not null)
+			{
+				Trace.TraceError($"failed to set preferred input: {inputError}");
+			}
+		}
     }
 
     public static void FinishSession(BaseOptions options)

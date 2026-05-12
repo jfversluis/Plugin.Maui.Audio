@@ -13,7 +13,7 @@
 
 	<ScrollView>
 		<Grid Margin="20" RowSpacing="10"
-			VerticalOptions="Center" RowDefinitions="*,*,*,*,*,*,*,*,*,*">
+			VerticalOptions="Center" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*">
 
 			<Picker Grid.Row="0"
 					Title="Select Sample Rate"
@@ -35,28 +35,33 @@
 					ItemsSource="{Binding EncodingOptions}"
 					SelectedItem="{Binding SelectedEncoding, Mode=TwoWay}" />
 
-			<Picker Grid.Row="4"
-					Title="Select Input Device (Android)"
+			<HorizontalStackLayout Grid.Row="4" Spacing="10">
+				<Switch IsToggled="{Binding AllowBluetooth, Mode=TwoWay}" />
+				<Label Text="Allow Bluetooth (required on iOS only)" VerticalOptions="Center" />
+			</HorizontalStackLayout>
+
+			<Picker Grid.Row="5"
+					Title="Select Input Device"
 					ItemsSource="{Binding InputDevices}"
 					SelectedItem="{Binding SelectedInputDevice, Mode=TwoWay}" />
 
-			<Button Grid.Row="5"
+			<Button Grid.Row="6"
 					Text="Start Recording"
 					Command="{Binding StartCommand}" />
 
-			<Button Grid.Row="6"
+			<Button Grid.Row="7"
 					Text="Stop Recording"
 					Command="{Binding StopCommand}" />
 
-			<Button Grid.Row="7"
+			<Button Grid.Row="8"
 					Text="Play Recording"
 					Command="{Binding PlayCommand}" />
 
-			<Button Grid.Row="8"
+			<Button Grid.Row="9"
 					Text="Stop Play Recording"
 					Command="{Binding StopPlayCommand}" />
 
-			<Label Grid.Row="9" Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
+			<Label Grid.Row="10" Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
 		</Grid>
 
 	</ScrollView>

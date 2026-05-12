@@ -78,6 +78,79 @@ var recorder = audioMgr.CreateRecorder(
 > <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 > ```
 
+## Recording from a Bluetooth microphone (iOS/macCatalyst)
+
+By default, the recorder uses the system's built-in microphone. To enable recording from Bluetooth devices such as AirPods or other headsets, you need to opt in by setting `CategoryOptions` to `AllowBluetooth`. This makes Bluetooth HFP (Hands-Free Profile) devices available as recording inputs.
+
+> [!IMPORTANT]
+> Bluetooth HFP recording uses voice-quality audio (8–16 kHz, mono). This is a hardware limitation of the HFP profile. If high-fidelity recording is a priority and Bluetooth input is not needed, do not enable this option.
+
+### Basic Bluetooth recording
+
+```csharp
+audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+#if IOS || MACCATALYST
+        CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.AllowBluetooth
+#endif
+    });
+```
+
+### Selecting a specific Bluetooth device
+
+To record from a specific Bluetooth device, use the `PreferredInput` property. This requires enumerating the available inputs after the audio session has been configured:
+
+```csharp
+#if IOS || MACCATALYST
+using AVFoundation;
+
+// Configure and activate a temporary audio session to discover Bluetooth inputs.
+// The recorder will re-initialize the session with the same options when started.
+var audioSession = AVAudioSession.SharedInstance();
+audioSession.SetCategory(AVAudioSessionCategory.Record,
+    AVAudioSessionCategoryOptions.AllowBluetooth, out _);
+audioSession.SetActive(true, out _);
+
+// Find the Bluetooth HFP input
+var btInput = audioSession.AvailableInputs?
+    .FirstOrDefault(i => i.PortType == AVAudioSession.PortBluetoothHfp);
+
+// Create the recorder with the preferred input
+var recorder = audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+        CategoryOptions = AVAudioSessionCategoryOptions.AllowBluetooth,
+        PreferredInput = btInput
+    });
+#endif
+```
+
+> [!NOTE]
+> `PreferredInput` must be set together with `CategoryOptions = AllowBluetooth` — without this option, Bluetooth HFP devices will not appear in `AvailableInputs`. No additional Bluetooth permissions are required beyond `NSMicrophoneUsageDescription` (iOS) and `com.apple.security.device.audio-input` (Mac Catalyst).
+
+### iOS 26+: High-quality Bluetooth recording
+
+Starting with iOS 26, Apple introduced a `bluetoothHighQualityRecording` category option which enables full-bandwidth audio recording from supported Bluetooth devices (certain AirPods models). This removes the HFP 8–16 kHz limitation.
+
+> [!WARNING]
+> This feature is iOS 26+ only (not macCatalyst), is **not available in the European Union**, increases input latency, and is not recommended for real-time communication. It requires the `default` audio session mode.
+
+The .NET `AVAudioSessionCategoryOptions` enum does not yet include this flag. For apps using `AVCaptureSession`, it can be enabled via its `ConfiguresApplicationAudioSessionForBluetoothHighQualityRecording` property. Since this plugin uses `AVAudioRecorder`/`AVAudioSession`, the category option binding is needed — check future .NET SDK updates for availability.
+
+To check if a connected Bluetooth device supports high-quality recording:
+
+```csharp
+var input = AVAudioSession.SharedInstance().CurrentRoute.Inputs.FirstOrDefault();
+var micExt = input?.BluetoothMicrophoneExtension;
+if (micExt?.HighQualityRecording.IsSupported == true)
+{
+    // Device supports high-quality Bluetooth recording
+}
+```
+
+In the meantime, combine with `AllowBluetooth` for HFP fallback on unsupported devices or regions.
+
 ## AudioRecorder API
 
 Once you have created an `AudioRecorder` you can interact with it in the following ways:
