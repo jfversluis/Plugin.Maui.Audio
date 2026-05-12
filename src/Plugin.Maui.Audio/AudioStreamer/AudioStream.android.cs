@@ -6,6 +6,12 @@ namespace Plugin.Maui.Audio;
 partial class AudioStream : IDisposable
 {
 	AudioRecord? audioRecord;
+	Android.Media.AudioDeviceInfo? PreferredDevice { get; }
+
+	// Bluetooth SCO state
+	bool bluetoothScoStarted;
+	Android.Media.AudioManager? androidAudioManager;
+	Android.Media.Mode previousAudioMode;
 
 	public event EventHandler<byte[]>? OnBroadcast;
 	public event EventHandler<bool>? OnActiveChanged;
@@ -37,7 +43,25 @@ partial class AudioStream : IDisposable
 				throw new FailedToStartRecordingException("Unable to get bufferSize with provided options.");
 			}
 
-			audioRecord = new AudioRecord(AudioSource.Mic, SampleRate, channelIn, encoding, bufferSize);
+			// Determine if the preferred device is Bluetooth and requires SCO
+			bool isBluetooth = IsBluetoothDevice(PreferredDevice);
+			AudioSource audioSource = isBluetooth ? AudioSource.VoiceCommunication : AudioSource.Mic;
+
+			if (isBluetooth)
+			{
+				StartBluetoothSco();
+			}
+
+			audioRecord = new AudioRecord(audioSource, SampleRate, channelIn, encoding, bufferSize);
+
+			if (OperatingSystem.IsAndroidVersionAtLeast(23) && PreferredDevice is not null)
+			{
+				if (!audioRecord.SetPreferredDevice(PreferredDevice))
+				{
+					Trace.WriteLine("AudioStream: failed to set preferred device, using default");
+				}
+			}
+
 			audioRecord.StartRecording();
 
 			Task.Run(() => WriteAudioDataToEvent(bufferSize));
@@ -64,6 +88,8 @@ partial class AudioStream : IDisposable
 			audioRecord?.Dispose();
 			audioRecord = null;
 		}
+
+		StopBluetoothSco();
 
 		return Task.CompletedTask;
 	}
@@ -96,6 +122,52 @@ partial class AudioStream : IDisposable
 	
 	public void Dispose()
 	{
+		StopBluetoothSco();
 		audioRecord?.Dispose();
+	}
+
+	static bool IsBluetoothDevice(Android.Media.AudioDeviceInfo? device)
+	{
+		if (device is null || !OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			return false;
+		}
+
+		return device.Type == AudioDeviceType.BluetoothSco
+			|| (OperatingSystem.IsAndroidVersionAtLeast(31)
+				&& (device.Type == AudioDeviceType.BleHeadset
+					|| device.Type == AudioDeviceType.BleSpeaker));
+	}
+
+	void StartBluetoothSco()
+	{
+		androidAudioManager = Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService) as Android.Media.AudioManager;
+		if (androidAudioManager is null)
+		{
+			return;
+		}
+
+		previousAudioMode = androidAudioManager.Mode;
+		androidAudioManager.Mode = Android.Media.Mode.InCommunication;
+		androidAudioManager.StartBluetoothSco();
+		androidAudioManager.BluetoothScoOn = true;
+		bluetoothScoStarted = true;
+
+		Trace.WriteLine("AudioStream: Bluetooth SCO started for BT device recording");
+	}
+
+	void StopBluetoothSco()
+	{
+		if (!bluetoothScoStarted || androidAudioManager is null)
+		{
+			return;
+		}
+
+		androidAudioManager.StopBluetoothSco();
+		androidAudioManager.BluetoothScoOn = false;
+		androidAudioManager.Mode = previousAudioMode;
+		bluetoothScoStarted = false;
+
+		Trace.WriteLine("AudioStream: Bluetooth SCO stopped");
 	}
 }

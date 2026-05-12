@@ -8,6 +8,9 @@ partial class AudioStream
 		BitDepth = options.BitDepth;
 		Channels = options.Channels;
 		SampleRate = options.SampleRate;
+#if ANDROID
+		PreferredDevice = options.PreferredDevice;
+#endif
 	}
 
 	public int SampleRate { get; }

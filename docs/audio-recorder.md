@@ -34,7 +34,7 @@ public class AudioRecorderViewModel
 
 ## Configure the recording options
 
-When calling `CreateRecorder` it is possible to provide an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level. **Note that currently you can only customize options for iOS and macOS**.
+When calling `CreateRecorder` it is possible to provide an optional parameter of type `AudioRecorderOptions`, this parameter makes it possible to customize the recording settings at the platform level.
 
 The following example shows how to enable both recording (input) and playback (output) of audio:
 
@@ -47,6 +47,36 @@ audioManager.CreateRecorder(
 #endif
     });
 ```
+
+## Recording from a specific audio device (Android)
+
+By default, the recorder uses the system's default microphone (`AudioSource.Mic`). To record from a specific device such as a Bluetooth headset or USB microphone, use the `PreferredDevice` property.
+
+```csharp
+#if ANDROID
+using Android.Content;
+using Android.Media;
+
+var audioManager = (AudioManager)Android.App.Application.Context.GetSystemService(Context.AudioService)!;
+var btDevice = audioManager.GetDevices(GetDevicesTargets.Inputs)
+    .FirstOrDefault(d => d.Type == AudioDeviceType.BluetoothSco);
+
+var recorder = audioMgr.CreateRecorder(
+    new AudioRecorderOptions
+    {
+        PreferredDevice = btDevice
+    });
+#endif
+```
+
+> [!NOTE]
+> `SetPreferredDevice` requires Android API 23+ (Marshmallow) for WAV recording and API 28+ (Pie) for AAC recording. On older API levels, the property is ignored and the system default device is used. If the preferred device is unavailable (e.g. disconnected), recording silently falls back to the default device.
+
+> [!IMPORTANT]
+> On Android 12+ (API 31+), the `BLUETOOTH_CONNECT` runtime permission may be required to discover and select Bluetooth audio devices. Add it to your `AndroidManifest.xml`:
+> ```xml
+> <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+> ```
 
 ## Recording from a Bluetooth microphone (iOS/macCatalyst)
 

@@ -22,6 +22,11 @@ partial class AudioRecorder : IAudioRecorder
 	
 	static readonly AudioRecorderOptions defaultOptions = new AudioRecorderOptions();
 
+	// Bluetooth SCO state
+	bool bluetoothScoStarted;
+	Android.Media.AudioManager? androidAudioManager;
+	Android.Media.Mode previousAudioMode;
+
 	AudioRecorderOptions audioRecorderOptions;
 
 	// Recording options that are extracted/solved
@@ -61,6 +66,16 @@ partial class AudioRecorder : IAudioRecorder
 		}
 
 		audioFilePath = filePath;
+
+		// Determine if the preferred device is Bluetooth and requires SCO
+		bool isBluetoothDevice = IsBluetoothDevice(audioRecorderOptions.PreferredDevice);
+		AudioSource audioSource = isBluetoothDevice ? AudioSource.VoiceCommunication : AudioSource.Mic;
+
+		// Start Bluetooth SCO if needed (establishes the audio route for BT input)
+		if (isBluetoothDevice)
+		{
+			StartBluetoothSco();
+		}
 
 		// solve some parameters needed for AudioRecord/MediaRecorder
 		ChannelIn channelIn =
@@ -106,7 +121,16 @@ partial class AudioRecorder : IAudioRecorder
 				}
 			}
 
-			audioRecord = new AudioRecord(AudioSource.Mic, sampleRate, channelIn, encoding, bufferSize);
+			audioRecord = new AudioRecord(audioSource, sampleRate, channelIn, encoding, bufferSize);
+
+			if (OperatingSystem.IsAndroidVersionAtLeast(23) && audioRecorderOptions.PreferredDevice is not null)
+			{
+				if (!audioRecord.SetPreferredDevice(audioRecorderOptions.PreferredDevice))
+				{
+					Trace.WriteLine("AudioRecorder: failed to set preferred device on AudioRecord, using default");
+				}
+			}
+
 			audioRecord.StartRecording();
 			Task.Run(WriteAudioDataToFile);
 		}
@@ -129,13 +153,22 @@ partial class AudioRecorder : IAudioRecorder
 					.ApplicationContext); //needs context, obsoleted without context https://stackoverflow.com/questions/73598179/deprecated-mediarecorder-new-mediarecorder#73598440
 			
 			mediaRecorder.Reset();
-			mediaRecorder.SetAudioSource(AudioSource.Mic);
+			mediaRecorder.SetAudioSource(audioSource);
 			mediaRecorder.SetOutputFormat(outputFormat);
 			mediaRecorder.SetAudioEncoder(audioEncoder);
 			mediaRecorder.SetAudioChannels(numChannels);
 			mediaRecorder.SetAudioSamplingRate(sampleRate);
 			mediaRecorder.SetAudioEncodingBitRate(bitRate);
 			mediaRecorder.SetOutputFile(audioFilePath);
+
+			if (OperatingSystem.IsAndroidVersionAtLeast(28) && audioRecorderOptions.PreferredDevice is not null)
+			{
+				if (!mediaRecorder.SetPreferredDevice(audioRecorderOptions.PreferredDevice))
+				{
+					Trace.WriteLine("AudioRecorder: failed to set preferred device on MediaRecorder, using default");
+				}
+			}
+
 			mediaRecorder.Prepare();
 			mediaRecorder.Start();
 
@@ -165,6 +198,9 @@ partial class AudioRecorder : IAudioRecorder
 			mediaRecorderIsRecording = false;
 			mediaRecorder?.Stop();
 		}
+
+		// Clean up Bluetooth SCO if it was started
+		StopBluetoothSco();
 
 		if (audioFilePath is null)
 		{
@@ -348,5 +384,50 @@ partial class AudioRecorder : IAudioRecorder
 				? throw new NotSupportedException("channel type not supported")
 				: SharedChannelTypesToAndroidChannelTypes(defaultOptions.Channels, true)
 		};
+	}
+
+	static bool IsBluetoothDevice(AudioDeviceInfo? device)
+	{
+		if (device is null || !OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			return false;
+		}
+
+		return device.Type == AudioDeviceType.BluetoothSco
+			|| (OperatingSystem.IsAndroidVersionAtLeast(31)
+				&& (device.Type == AudioDeviceType.BleHeadset
+					|| device.Type == AudioDeviceType.BleSpeaker));
+	}
+
+	void StartBluetoothSco()
+	{
+		androidAudioManager = Android.App.Application.Context.GetSystemService(Context.AudioService) as Android.Media.AudioManager;
+		if (androidAudioManager is null)
+		{
+			return;
+		}
+
+		previousAudioMode = androidAudioManager.Mode;
+		androidAudioManager.Mode = Android.Media.Mode.InCommunication;
+		androidAudioManager.StartBluetoothSco();
+		androidAudioManager.BluetoothScoOn = true;
+		bluetoothScoStarted = true;
+
+		Trace.WriteLine("AudioRecorder: Bluetooth SCO started for BT device recording");
+	}
+
+	void StopBluetoothSco()
+	{
+		if (!bluetoothScoStarted || androidAudioManager is null)
+		{
+			return;
+		}
+
+		androidAudioManager.StopBluetoothSco();
+		androidAudioManager.BluetoothScoOn = false;
+		androidAudioManager.Mode = previousAudioMode;
+		bluetoothScoStarted = false;
+
+		Trace.WriteLine("AudioRecorder: Bluetooth SCO stopped");
 	}
 }

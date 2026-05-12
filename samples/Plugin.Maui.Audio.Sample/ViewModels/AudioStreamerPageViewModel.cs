@@ -1,5 +1,8 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Plugin.Maui.Audio.AudioListeners;
+#if ANDROID
+using Android.Media;
+#endif
 #if IOS || MACCATALYST
 using AVFoundation;
 #endif
@@ -27,6 +30,9 @@ public class AudioStreamerPageViewModel : BaseViewModel
 	string capturedAudioWavFileLeft;
 	string capturedAudioWavFileRight;
 
+#if ANDROID
+	AudioDeviceInfo[] availableInputDevices = [];
+#endif
 #if IOS || MACCATALYST
 	AVAudioSessionPortDescription[] availableInputPorts = [];
 #endif
@@ -117,6 +123,31 @@ public class AudioStreamerPageViewModel : BaseViewModel
 
 	void LoadInputDevices()
 	{
+#if ANDROID
+		if (!OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			InputDevices = ["Default"];
+			SelectedInputDevice = "Default";
+			return;
+		}
+
+		var androidAudioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		if (androidAudioManager is null)
+		{
+			return;
+		}
+
+		availableInputDevices = androidAudioManager.GetDevices(GetDevicesTargets.Inputs) ?? [];
+
+		var devices = new List<string> { "Default" };
+		foreach (var device in availableInputDevices)
+		{
+			devices.Add($"{device.ProductName} ({device.Type})");
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
 #if IOS || MACCATALYST
 		var session = AVAudioSession.SharedInstance();
 
@@ -314,6 +345,16 @@ public class AudioStreamerPageViewModel : BaseViewModel
 			audioStreamer.Options.BitDepth = SelectedBitDepth;
 			audioStreamer.Options.SampleRate = SelectedSampleRate;
 
+#if ANDROID
+			if (SelectedInputDevice != "Default")
+			{
+				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
+				if (index >= 0 && index < availableInputDevices.Length)
+				{
+					audioStreamer.Options.PreferredDevice = availableInputDevices[index];
+				}
+			}
+#endif
 #if IOS || MACCATALYST
 			if (AllowBluetooth)
 			{

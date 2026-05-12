@@ -1,5 +1,8 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using static Microsoft.Maui.ApplicationModel.Permissions;
+#if ANDROID
+using Android.Media;
+#endif
 #if IOS || MACCATALYST
 using AVFoundation;
 #endif
@@ -16,6 +19,9 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	readonly Stopwatch recordingStopwatch = new Stopwatch();
 	bool isPlaying;
 
+#if ANDROID
+	AudioDeviceInfo[] availableInputDevices = [];
+#endif
 #if IOS || MACCATALYST
 	AVAudioSessionPortDescription[] availableInputPorts = [];
 #endif
@@ -153,6 +159,31 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
 	void LoadInputDevices()
 	{
+#if ANDROID
+		if (!OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			InputDevices = ["Default"];
+			SelectedInputDevice = "Default";
+			return;
+		}
+
+		var androidAudioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		if (androidAudioManager is null)
+		{
+			return;
+		}
+
+		availableInputDevices = androidAudioManager.GetDevices(GetDevicesTargets.Inputs) ?? [];
+
+		var devices = new List<string> { "Default" };
+		foreach (var device in availableInputDevices)
+		{
+			devices.Add($"{device.ProductName} ({device.Type})");
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
 #if IOS || MACCATALYST
 		var session = AVAudioSession.SharedInstance();
 
@@ -217,6 +248,16 @@ public class AudioRecorderPageViewModel : BaseViewModel
 				options.SampleRate = SelectedSampleRate;
 			}
 
+#if ANDROID
+			if (SelectedInputDevice != "Default")
+			{
+				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
+				if (index >= 0 && index < availableInputDevices.Length)
+				{
+					options.PreferredDevice = availableInputDevices[index];
+				}
+			}
+#endif
 #if IOS || MACCATALYST
 			if (AllowBluetooth)
 			{
