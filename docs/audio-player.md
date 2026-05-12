@@ -26,7 +26,7 @@ public class AudioPlayerViewModel
 When calling `CreatePlayer` it is possible to provide an optional parameter of type `AudioPlayerOptions`, this parameter makes it possible to customize the playback settings at the platform level. 
 
 > [!NOTE]
-> Currently you can only customize options for iOS, macOS and Android.
+> Currently you can customize options for iOS, macOS, Android, and Windows.
 
 The following example shows how to configure your audio to blend in with existing audio being played on device on iOS and macOS:
 

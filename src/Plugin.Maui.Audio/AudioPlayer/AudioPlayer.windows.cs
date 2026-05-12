@@ -100,6 +100,9 @@ partial class AudioPlayer : IAudioPlayer
 		{
 			player.Source = MediaSource.CreateFromStream(audioStream?.AsRandomAccessStream(), string.Empty);
 		}
+
+		// Reapply preferred output device after source change for consistency
+		SetPreferredOutputDevice(audioPlayerOptions?.PreferredOutputDeviceName);
 	}
 
 	public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
