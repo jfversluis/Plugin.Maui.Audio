@@ -1,5 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using static Microsoft.Maui.ApplicationModel.Permissions;
+#if ANDROID
+using Android.Media;
+#endif
+#if IOS || MACCATALYST
+using AVFoundation;
+#endif
 #if WINDOWS
 using Windows.Devices.Enumeration;
 using Windows.Media.Devices;
@@ -17,8 +23,14 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	readonly Stopwatch recordingStopwatch = new Stopwatch();
 	bool isPlaying;
 
+#if ANDROID
+	AudioDeviceInfo[] availableInputDevices = [];
+#endif
+#if IOS || MACCATALYST
+	AVAudioSessionPortDescription[] availableInputPorts = [];
+#endif
 #if WINDOWS
-	DeviceInformation[] availableInputDevices = [];
+	DeviceInformation[] availableWindowsInputDevices = [];
 #endif
 
 	public double RecordingTime
@@ -59,7 +71,8 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
 
-		_ = LoadInputDevicesAsync();
+		LoadInputDevices();
+		_ = LoadWindowsInputDevicesAsync();
 	}
 
 	ChannelType selectedChannelType;
@@ -140,14 +153,78 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		}
 	}
 
-	async Task LoadInputDevicesAsync()
+	bool allowBluetooth;
+	public bool AllowBluetooth
 	{
-#if WINDOWS
-		var deviceInfoCollection = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector());
-		availableInputDevices = deviceInfoCollection.ToArray();
+		get => allowBluetooth;
+		set
+		{
+			allowBluetooth = value;
+			NotifyPropertyChanged();
+			LoadInputDevices();
+		}
+	}
+
+	void LoadInputDevices()
+	{
+#if ANDROID
+		if (!OperatingSystem.IsAndroidVersionAtLeast(23))
+		{
+			InputDevices = ["Default"];
+			SelectedInputDevice = "Default";
+			return;
+		}
+
+		var androidAudioManager = (Android.Media.AudioManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.AudioService);
+		if (androidAudioManager is null)
+		{
+			return;
+		}
+
+		availableInputDevices = androidAudioManager.GetDevices(GetDevicesTargets.Inputs) ?? [];
 
 		var devices = new List<string> { "Default" };
 		foreach (var device in availableInputDevices)
+		{
+			devices.Add($"{device.ProductName} ({device.Type})");
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
+#if IOS || MACCATALYST
+		var session = AVAudioSession.SharedInstance();
+
+		// On iOS, AllowBluetooth is required for BT devices to appear in AvailableInputs.
+		// On macCatalyst, devices appear regardless but setting AllowBluetooth is harmless.
+		var categoryOptions = AllowBluetooth
+			? AVAudioSessionCategoryOptions.AllowBluetooth
+			: AVAudioSessionCategoryOptions.DefaultToSpeaker;
+
+		session.SetCategory(AVAudioSessionCategory.PlayAndRecord, AVAudioSessionMode.Default, categoryOptions, out _);
+		session.SetActive(true, out _);
+
+		availableInputPorts = session.AvailableInputs ?? [];
+
+		var devices = new List<string> { "Default" };
+		foreach (var port in availableInputPorts)
+		{
+			devices.Add(port.PortName);
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
+	}
+
+	async Task LoadWindowsInputDevicesAsync()
+	{
+#if WINDOWS
+		var deviceInfoCollection = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector());
+		availableWindowsInputDevices = deviceInfoCollection.ToArray();
+
+		var devices = new List<string> { "Default" };
+		foreach (var device in availableWindowsInputDevices)
 		{
 			devices.Add(device.Name);
 		}
@@ -198,13 +275,38 @@ public class AudioRecorderPageViewModel : BaseViewModel
 				options.SampleRate = SelectedSampleRate;
 			}
 
-#if WINDOWS
+#if ANDROID
 			if (SelectedInputDevice != "Default")
 			{
 				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
 				if (index >= 0 && index < availableInputDevices.Length)
 				{
-					options.AudioDeviceId = availableInputDevices[index].Id;
+					options.PreferredDevice = availableInputDevices[index];
+				}
+			}
+#endif
+#if IOS || MACCATALYST
+			if (AllowBluetooth)
+			{
+				options.CategoryOptions = AVAudioSessionCategoryOptions.AllowBluetooth;
+			}
+
+			if (SelectedInputDevice != "Default")
+			{
+				var selectedPort = availableInputPorts.FirstOrDefault(p => p.PortName == SelectedInputDevice);
+				if (selectedPort is not null)
+				{
+					options.PreferredInput = selectedPort;
+				}
+			}
+#endif
+#if WINDOWS
+			if (SelectedInputDevice != "Default")
+			{
+				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
+				if (index >= 0 && index < availableWindowsInputDevices.Length)
+				{
+					options.AudioDeviceId = availableWindowsInputDevices[index].Id;
 				}
 			}
 #endif

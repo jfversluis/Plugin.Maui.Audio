@@ -15,7 +15,7 @@
 	<ScrollView>
 		<Grid HorizontalOptions="Fill" Margin="20"
 			RowSpacing="10" VerticalOptions="Center"
-			RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*">
+			RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*">
 
 			<Picker Grid.Row="0"
 					Title="Select Sample Rate"
@@ -32,19 +32,29 @@
 					ItemsSource="{Binding BitDepths}"
 					SelectedItem="{Binding SelectedBitDepth, Mode=TwoWay}" />
 
-			<Button Grid.Row="3"
+			<HorizontalStackLayout Grid.Row="3" Spacing="10">
+				<Switch IsToggled="{Binding AllowBluetooth, Mode=TwoWay}" />
+				<Label Text="Allow Bluetooth (required on iOS only)" VerticalOptions="Center" />
+			</HorizontalStackLayout>
+
+			<Picker Grid.Row="4"
+					Title="Select Input Device"
+					ItemsSource="{Binding InputDevices}"
+					SelectedItem="{Binding SelectedInputDevice, Mode=TwoWay}" />
+
+			<Button Grid.Row="5"
 					Text="Start Recording"
 					Command="{Binding StartCommand}" />
 
-			<Button Grid.Row="4"
+			<Button Grid.Row="6"
 					Text="Stop Recording"
 					Command="{Binding StopCommand}" />
 
-			<Button Grid.Row="5"
+			<Button Grid.Row="7"
 					Text="Play Recording"
 					Command="{Binding PlayCommand}" />
 
-			<Grid Grid.Row="6" ColumnDefinitions="*, *" ColumnSpacing="5">
+			<Grid Grid.Row="8" ColumnDefinitions="*, *" ColumnSpacing="5">
 				<Button Grid.Column="0"
 						Text="Left"
 				        Command="{Binding PlayLeftCommand}" />
@@ -53,14 +63,14 @@
 				        Command="{Binding PlayRightCommand}" />
 			</Grid>
 
-			<Button Grid.Row="7"
+			<Button Grid.Row="9"
 					Text="Stop Play Recording"
 					Command="{Binding StopPlayCommand}" />
 
-			<Label Grid.Row="8" Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
-			<Label Grid.Row="9" Text="{Binding MeasuredDecibel, Converter={StaticResource DecibelToStringConverter}}" />
+			<Label Grid.Row="10" Text="{Binding RecordingTime, Converter={StaticResource SecondsToStringConverter}}" />
+			<Label Grid.Row="11" Text="{Binding MeasuredDecibel, Converter={StaticResource DecibelToStringConverter}}" />
 
-			<Label Grid.Row="10">
+			<Label Grid.Row="12">
 				<Label.FormattedText>
 					<FormattedString>
 						<Span Text="Rms: " />
@@ -69,7 +79,7 @@
 				</Label.FormattedText>
 			</Label>
 
-			<Label Grid.Row="11">
+			<Label Grid.Row="13">
 				<Label.FormattedText>
 					<FormattedString>
 						<Span Text="IsSilent: " />
