@@ -59,13 +59,18 @@ builder.UseMauiApp<App>()
          streamerOptions =>
          {
 #if IOS || MACCATALYST
-             recordingOptions.SampleRate = 44800;             
-             streamerOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
+             streamerOptions.SampleRate = 48000;             
              streamerOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
-             streamerOptions.CategoryOptions = VFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
+             streamerOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
 #endif
          })....
 ```
+
+> [!NOTE]
+> The default category for `AudioStreamOptions` on iOS/macOS is `PlayAndRecord`, which allows simultaneous recording and playback. If your app only needs recording (no playback), you can explicitly set the category to `Record`:
+> ```csharp
+> streamerOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
+> ```
 
 > [!NOTE]  
 > Currently only iOS and macOS have extra options that can be customized
