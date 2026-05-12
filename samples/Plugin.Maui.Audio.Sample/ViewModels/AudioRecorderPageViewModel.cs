@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
 using static Microsoft.Maui.ApplicationModel.Permissions;
+#if IOS || MACCATALYST
+using AVFoundation;
+#endif
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
 
@@ -12,6 +15,10 @@ public class AudioRecorderPageViewModel : BaseViewModel
 	IAudioSource audioSource = null;
 	readonly Stopwatch recordingStopwatch = new Stopwatch();
 	bool isPlaying;
+
+#if IOS || MACCATALYST
+	AVAudioSessionPortDescription[] availableInputPorts = [];
+#endif
 
 	public double RecordingTime
 	{
@@ -50,6 +57,8 @@ public class AudioRecorderPageViewModel : BaseViewModel
 
 		this.audioManager = audioManager;
 		this.dispatcher = dispatcher;
+
+		LoadInputDevices();
 	}
 
 	ChannelType selectedChannelType;
@@ -108,6 +117,67 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		48000
 	];
 
+	List<string> inputDevices = ["Default"];
+	public List<string> InputDevices
+	{
+		get => inputDevices;
+		set
+		{
+			inputDevices = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	string selectedInputDevice = "Default";
+	public string SelectedInputDevice
+	{
+		get => selectedInputDevice;
+		set
+		{
+			selectedInputDevice = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	bool allowBluetooth;
+	public bool AllowBluetooth
+	{
+		get => allowBluetooth;
+		set
+		{
+			allowBluetooth = value;
+			NotifyPropertyChanged();
+			LoadInputDevices();
+		}
+	}
+
+	void LoadInputDevices()
+	{
+#if IOS || MACCATALYST
+		var session = AVAudioSession.SharedInstance();
+
+		// On iOS, AllowBluetooth is required for BT devices to appear in AvailableInputs.
+		// On macCatalyst, devices appear regardless but setting AllowBluetooth is harmless.
+		var categoryOptions = AllowBluetooth
+			? AVAudioSessionCategoryOptions.AllowBluetooth
+			: AVAudioSessionCategoryOptions.DefaultToSpeaker;
+
+		session.SetCategory(AVAudioSessionCategory.PlayAndRecord, AVAudioSessionMode.Default, categoryOptions, out _);
+		session.SetActive(true, out _);
+
+		availableInputPorts = session.AvailableInputs ?? [];
+
+		var devices = new List<string> { "Default" };
+		foreach (var port in availableInputPorts)
+		{
+			devices.Add(port.PortName);
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#endif
+	}
+
 
 	async void PlayAudio()
 	{
@@ -146,6 +216,22 @@ public class AudioRecorderPageViewModel : BaseViewModel
 			{
 				options.SampleRate = SelectedSampleRate;
 			}
+
+#if IOS || MACCATALYST
+			if (AllowBluetooth)
+			{
+				options.CategoryOptions = AVAudioSessionCategoryOptions.AllowBluetooth;
+			}
+
+			if (SelectedInputDevice != "Default")
+			{
+				var selectedPort = availableInputPorts.FirstOrDefault(p => p.PortName == SelectedInputDevice);
+				if (selectedPort is not null)
+				{
+					options.PreferredInput = selectedPort;
+				}
+			}
+#endif
 
 			try
 			{
