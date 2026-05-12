@@ -125,10 +125,7 @@ When `HandleAudioInterruptions` is set to `false`, the player will not automatic
 
 ## Controlling Audio Output Device/Port
 
-You can control which audio output device or port is used for playback on Android and iOS/macOS platforms.
-
-> [!NOTE]
-> This feature is not available on Windows. On Windows, the system default audio output routing is always used.
+You can control which audio output device or port is used for playback on all platforms.
 
 ### Android - Output Device Selection
 
@@ -186,6 +183,23 @@ Available output port options include:
 
 **Note:** Unlike Android's per-player device selection, iOS uses a session-wide port override that affects all audio output on the device. The override remains in effect until explicitly changed back to `AudioOutputPort.Default` or all players using the override are disposed.
 
+### Windows - Output Device Selection
+
+On Windows, you can specify which audio output device should be used for playback by providing the device name (or a partial name match).
+
+```csharp
+audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if WINDOWS
+        PreferredOutputDeviceName = "Speakers"
+#endif
+    });
+```
+
+The first audio render device whose name contains the specified value (case-insensitive) will be selected. If the specified device is not found, the system default audio device will be used.
+
 ### Cross-Platform Example
 
 ```csharp
@@ -196,10 +210,12 @@ var options = new AudioPlayerOptions
 #elif IOS || MACCATALYST
     Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord,
     PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker,
+#elif WINDOWS
+    PreferredOutputDeviceName = "Speakers",
 #endif
 };
 var player = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"), options);
-player.Play(); // Audio plays through device speaker on both Android and iOS/macOS
+player.Play(); // Audio plays through device speaker on all platforms
 ```
 
 ## AudioPlayer API

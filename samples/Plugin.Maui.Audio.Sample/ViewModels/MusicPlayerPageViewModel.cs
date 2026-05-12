@@ -240,6 +240,8 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 				options.Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord;
 				options.PreferredOutputPort = AudioOutputPort.Speaker;
 			}
+#elif WINDOWS
+			options.PreferredOutputDeviceName = forceSpeakerOutput ? "Speakers" : null;
 #endif
 
 			audioPlayer = audioManager.CreatePlayer(

@@ -83,6 +83,8 @@ var player = audioManager.CreatePlayer(
 #elif IOS || MACCATALYST
         Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord,
         PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker
+#elif WINDOWS
+        PreferredOutputDeviceName = "Speakers"
 #endif
     });
 ```

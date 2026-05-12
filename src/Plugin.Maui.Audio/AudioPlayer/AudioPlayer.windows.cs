@@ -8,6 +8,7 @@ partial class AudioPlayer : IAudioPlayer
 {
 	bool isDisposed = false;
 	readonly MediaPlayer player;
+	AudioPlayerOptions? audioPlayerOptions;
 
 	public double CurrentPosition => player.PlaybackSession.Position.TotalSeconds;
 
@@ -69,6 +70,7 @@ partial class AudioPlayer : IAudioPlayer
 	public AudioPlayer(AudioPlayerOptions audioPlayerOptions)
 	{
 		player = CreatePlayer();
+		this.audioPlayerOptions = audioPlayerOptions;
 
 		if (player is null)
 		{
@@ -78,6 +80,8 @@ partial class AudioPlayer : IAudioPlayer
 		player.MediaFailed += OnError;
 		player.MediaEnded += OnPlaybackEnded;
 		Speed = 1.0;
+
+		SetPreferredOutputDevice(audioPlayerOptions.PreferredOutputDeviceName);
 	}
 
 	void OnError(MediaPlayer sender, MediaPlayerFailedEventArgs e)
@@ -101,6 +105,7 @@ partial class AudioPlayer : IAudioPlayer
 	public AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = CreatePlayer();
+		this.audioPlayerOptions = audioPlayerOptions;
 
 		if (player is null)
 		{
@@ -120,11 +125,14 @@ partial class AudioPlayer : IAudioPlayer
 
 		player.MediaEnded += OnPlaybackEnded;
 		Speed = 1.0;
+
+		SetPreferredOutputDevice(audioPlayerOptions.PreferredOutputDeviceName);
 	}
 
 	public AudioPlayer(string fileName, AudioPlayerOptions audioPlayerOptions)
 	{
 		player = CreatePlayer();
+		this.audioPlayerOptions = audioPlayerOptions;
 
 		if (player is null)
 		{
@@ -134,6 +142,8 @@ partial class AudioPlayer : IAudioPlayer
 		player.Source = MediaSource.CreateFromUri(new Uri("ms-appx:///Assets/" + fileName));
 		player.MediaEnded += OnPlaybackEnded;
 		Speed = 1.0;
+
+		SetPreferredOutputDevice(audioPlayerOptions.PreferredOutputDeviceName);
 	}
 
 	void OnPlaybackEnded(MediaPlayer sender, object args)
@@ -203,6 +213,39 @@ partial class AudioPlayer : IAudioPlayer
 	MediaPlayer CreatePlayer()
 	{
 		return new MediaPlayer() { AutoPlay = false, IsLoopingEnabled = false };
+	}
+
+	void SetPreferredOutputDevice(string? preferredDeviceName)
+	{
+		if (string.IsNullOrWhiteSpace(preferredDeviceName))
+		{
+			return;
+		}
+
+		try
+		{
+			var devices = Windows.Devices.Enumeration.DeviceInformation
+				.FindAllAsync(Windows.Media.Devices.MediaDevice.GetAudioRenderSelector())
+				.AsTask()
+				.GetAwaiter()
+				.GetResult();
+
+			var targetDevice = devices.FirstOrDefault(d =>
+				d.Name.Contains(preferredDeviceName, StringComparison.OrdinalIgnoreCase));
+
+			if (targetDevice is not null)
+			{
+				player.AudioDevice = targetDevice;
+			}
+			else
+			{
+				System.Diagnostics.Trace.TraceWarning($"Requested audio output device '{preferredDeviceName}' not found.");
+			}
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Trace.TraceError($"Error setting preferred audio output device: {ex.Message}");
+		}
 	}
 
 	protected virtual void Dispose(bool disposing)
