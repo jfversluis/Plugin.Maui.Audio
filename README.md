@@ -69,6 +69,28 @@ Now that you know how to use the `AudioManager` class, please refer to the follo
 * [Stream audio](docs/audio-streamer.md)
 * [Audio listeners](docs/audio-listeners.md)
 
+### Output Device Selection
+
+You can control which audio output device is used for playback. For example, force audio through the device speaker even when Bluetooth is connected:
+
+```csharp
+var player = audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if ANDROID
+        PreferredOutputDevice = Plugin.Maui.Audio.AudioOutputDevice.Speaker
+#elif IOS || MACCATALYST
+        Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord,
+        PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker
+#elif WINDOWS
+        PreferredOutputDeviceName = "Speakers"
+#endif
+    });
+```
+
+For more details, see the [Audio playback documentation](docs/audio-player.md#controlling-audio-output-deviceport).
+
 ## Supported Audio Formats
 
 ### Audio Playback

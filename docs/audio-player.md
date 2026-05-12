@@ -26,7 +26,7 @@ public class AudioPlayerViewModel
 When calling `CreatePlayer` it is possible to provide an optional parameter of type `AudioPlayerOptions`, this parameter makes it possible to customize the playback settings at the platform level. 
 
 > [!NOTE]
-> Currently you can only customize options for iOS, macOS and Android.
+> Currently you can customize options for iOS, macOS, Android, and Windows.
 
 The following example shows how to configure your audio to blend in with existing audio being played on device on iOS and macOS:
 
@@ -122,6 +122,101 @@ When `HandleAudioInterruptions` is set to `false`, the player will not automatic
 
 > [!NOTE]
 > By default, both `ManageAudioFocus` (Android) and `HandleAudioInterruptions` (iOS/macOS) are enabled (`true`). Your app will properly interact with system audio and other apps out of the box. The audio focus management is handled transparently - you can still control playback manually using `Play()`, `Pause()`, and `Stop()` methods. For backward compatibility, playback will continue even if audio focus cannot be acquired, though this is rare.
+
+## Controlling Audio Output Device/Port
+
+You can control which audio output device or port is used for playback on all platforms.
+
+### Android - Output Device Selection
+
+On Android, you can specify which audio output device should be used for playback. This is useful when you want to ensure audio plays through a specific output, such as the device speaker, even when other outputs like Bluetooth are connected.
+
+```csharp
+audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if ANDROID
+        PreferredOutputDevice = Plugin.Maui.Audio.AudioOutputDevice.Speaker
+#endif
+    });
+```
+
+This feature requires Android API 28 (Android 9.0 Pie) or higher. On older versions, the setting will be ignored and the system default routing will be used.
+
+Available output device options include:
+- `AudioOutputDevice.Default` - Use system default routing
+- `AudioOutputDevice.Speaker` - Built-in device speaker (loudspeaker)
+- `AudioOutputDevice.Earpiece` - Built-in earpiece (typically used for phone calls)
+- `AudioOutputDevice.WiredHeadset` - Wired headset or headphones with microphone
+- `AudioOutputDevice.WiredHeadphones` - Wired headphones without microphone
+- `AudioOutputDevice.BluetoothA2dp` - Bluetooth device with A2DP profile (e.g., Bluetooth headphones, car audio)
+- `AudioOutputDevice.BluetoothSco` - Bluetooth SCO device (typically used for phone calls)
+- `AudioOutputDevice.UsbDevice` - USB audio device
+- `AudioOutputDevice.UsbAccessory` - USB accessory
+- `AudioOutputDevice.AuxLine` - Auxiliary line connection (e.g., 3.5mm aux cable)
+
+**Note:** The system treats this as a preference, not a guarantee. If the requested device is not available or connected, the system will fall back to its default routing behavior.
+
+### iOS/macOS - Output Port Override
+
+On iOS, you can override the audio output port to force audio to play through the built-in speaker instead of the earpiece when no external audio devices are connected. This is primarily useful for `PlayAndRecord` sessions where the default output is the earpiece.
+
+> [!IMPORTANT]
+> The speaker override requires the audio session category to be set to `PlayAndRecord`. If your session uses the default `Playback` category, the plugin will automatically upgrade to `PlayAndRecord` when a speaker override is requested. Note that speaker override does **not** override wired headphones or Bluetooth — when those are connected, audio will route to them regardless of this setting. On Mac Catalyst, speaker override has no effect since Macs do not distinguish between speaker and earpiece routing.
+
+```csharp
+audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if IOS || MACCATALYST
+        Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord,
+        PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker
+#endif
+    });
+```
+
+Available output port options include:
+- `AudioOutputPort.Default` - Use system default routing
+- `AudioOutputPort.Speaker` - Force output to built-in speaker
+
+**Note:** Unlike Android's per-player device selection, iOS uses a session-wide port override that affects all audio output on the device. The override remains in effect until explicitly changed back to `AudioOutputPort.Default` or all players using the override are disposed.
+
+### Windows - Output Device Selection
+
+On Windows, you can specify which audio output device should be used for playback by providing the device name (or a partial name match).
+
+```csharp
+audioManager.CreatePlayer(
+    await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"),
+    new AudioPlayerOptions
+    {
+#if WINDOWS
+        PreferredOutputDeviceName = "Speakers"
+#endif
+    });
+```
+
+The first audio render device whose name contains the specified value (case-insensitive) will be selected. If the specified device is not found, the system default audio device will be used.
+
+### Cross-Platform Example
+
+```csharp
+var options = new AudioPlayerOptions
+{
+#if ANDROID
+    PreferredOutputDevice = Plugin.Maui.Audio.AudioOutputDevice.Speaker,
+#elif IOS || MACCATALYST
+    Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord,
+    PreferredOutputPort = Plugin.Maui.Audio.AudioOutputPort.Speaker,
+#elif WINDOWS
+    PreferredOutputDeviceName = "Speakers",
+#endif
+};
+var player = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("ukelele.mp3"), options);
+player.Play(); // Audio plays through device speaker on all platforms
+```
 
 ## AudioPlayer API
 

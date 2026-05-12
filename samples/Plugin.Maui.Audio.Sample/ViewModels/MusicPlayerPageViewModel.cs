@@ -188,6 +188,87 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 	public double MinimumSpeed => audioPlayer?.MinimumSpeed ?? 1;
 	public double MaximumSpeed => audioPlayer?.MaximumSpeed ?? 1;
 
+	bool forceSpeakerOutput;
+	public bool ForceSpeakerOutput
+	{
+		get => forceSpeakerOutput;
+		set
+		{
+			if (forceSpeakerOutput == value)
+			{
+				return;
+			}
+
+			forceSpeakerOutput = value;
+			NotifyPropertyChanged();
+			ReloadWithOutputDevice();
+		}
+	}
+
+	bool isReloadingOutputDevice;
+
+	async void ReloadWithOutputDevice()
+	{
+		if (musicItemViewModel is null || isReloadingOutputDevice)
+		{
+			return;
+		}
+
+		isReloadingOutputDevice = true;
+
+		try
+		{
+			var wasPlaying = audioPlayer?.IsPlaying ?? false;
+			var position = audioPlayer?.CurrentPosition ?? 0;
+
+			if (audioPlayer is not null)
+			{
+				audioPlayer.PlaybackEnded -= AudioPlayer_PlaybackEnded;
+				audioPlayer.Dispose();
+				audioPlayer = null;
+			}
+
+			var options = new AudioPlayerOptions();
+
+#if ANDROID
+			options.PreferredOutputDevice = forceSpeakerOutput
+				? AudioOutputDevice.Speaker
+				: AudioOutputDevice.Default;
+#elif IOS || MACCATALYST
+			if (forceSpeakerOutput)
+			{
+				options.Category = AVFoundation.AVAudioSessionCategory.PlayAndRecord;
+				options.PreferredOutputPort = AudioOutputPort.Speaker;
+			}
+#elif WINDOWS
+			options.PreferredOutputDeviceName = forceSpeakerOutput ? "Speakers" : null;
+#endif
+
+			audioPlayer = audioManager.CreatePlayer(
+				await FileSystem.OpenAppPackageFileAsync(musicItemViewModel.Filename),
+				options);
+			audioPlayer.PlaybackEnded += AudioPlayer_PlaybackEnded;
+
+			if (position > 0 && audioPlayer.CanSeek)
+			{
+				audioPlayer.Seek(position);
+			}
+
+			if (wasPlaying)
+			{
+				audioPlayer.Play();
+			}
+
+			NotifyPropertyChanged(nameof(HasAudioSource));
+			NotifyPropertyChanged(nameof(Duration));
+			NotifyPropertyChanged(nameof(IsPlaying));
+		}
+		finally
+		{
+			isReloadingOutputDevice = false;
+		}
+	}
+
 	public bool Loop
 	{
 		get => audioPlayer?.Loop ?? false;

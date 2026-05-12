@@ -13,6 +13,12 @@ partial class AudioPlayer : IAudioPlayer
 	bool isDisposed;
 	NSObject? interruptionObserver;
 	bool wasPlayingBeforeInterruption = false;
+	bool hasSetPortOverride;
+
+	// Ref-count for session-wide Speaker override so disposing one player
+	// doesn't clear the override while another player still needs it.
+	static int speakerOverrideRefCount;
+	static readonly object portOverrideLock = new();
 
 	/// <summary>
 	/// Gets the current position of audio playback in seconds.
@@ -144,7 +150,29 @@ partial class AudioPlayer : IAudioPlayer
 		player = AVAudioPlayer.FromData(data)
 				 ?? throw new FailedToLoadAudioException("Unable to create AVAudioPlayer from data.");
 
+		// Release previous port override claim only after new player is ready
+		var hadOverride = hasSetPortOverride;
+		hasSetPortOverride = false;
+
 		PreparePlayer();
+
+		// Release the old claim — PreparePlayer established a new one if it succeeded
+		if (hadOverride)
+		{
+			lock (portOverrideLock)
+			{
+				speakerOverrideRefCount--;
+				if (speakerOverrideRefCount <= 0 && !hasSetPortOverride)
+				{
+					speakerOverrideRefCount = 0;
+					try
+					{
+						AVAudioSession.SharedInstance().OverrideOutputAudioPort(AVAudioSessionPortOverride.None, out _);
+					}
+					catch { }
+				}
+			}
+		}
 	}
 
 	internal AudioPlayer(Stream audioStream, AudioPlayerOptions audioPlayerOptions)
@@ -182,6 +210,28 @@ partial class AudioPlayer : IAudioPlayer
 
 		if (disposing)
 		{
+			// If this player set the port override, decrement ref count
+			// and only clear the override when no other player needs it
+			if (hasSetPortOverride)
+			{
+				lock (portOverrideLock)
+				{
+					speakerOverrideRefCount--;
+					if (speakerOverrideRefCount <= 0)
+					{
+						speakerOverrideRefCount = 0;
+						try
+						{
+							AVAudioSession.SharedInstance().OverrideOutputAudioPort(AVAudioSessionPortOverride.None, out _);
+						}
+						catch
+						{
+							// Best effort cleanup
+						}
+					}
+				}
+			}
+
 			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
 
@@ -237,6 +287,9 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		ActiveSessionHelper.InitializeSession(audioPlayerOptions);
 
+		// Set preferred output port if specified
+		SetPreferredOutputPort(audioPlayerOptions.PreferredOutputPort);
+
 		player.FinishedPlaying += OnPlayerFinishedPlaying;
 		player.DecoderError += OnPlayerError;
 
@@ -247,6 +300,69 @@ partial class AudioPlayer : IAudioPlayer
 		player.PrepareToPlay();
 
 		return true;
+	}
+
+	void SetPreferredOutputPort(AudioOutputPort preferredPort)
+	{
+		// Don't call OverrideOutputAudioPort for Default — it would undo
+		// another player's Speaker override since this is session-wide.
+		if (preferredPort == AudioOutputPort.Default)
+		{
+			return;
+		}
+
+		try
+		{
+			var audioSession = AVAudioSession.SharedInstance();
+
+			// Speaker override requires PlayAndRecord category to take effect.
+			// If the session is currently using Playback, upgrade it.
+			if (audioSession.Category == AVAudioSession.CategoryPlayback)
+			{
+				var catError = audioSession.SetCategory(
+					AVAudioSessionCategory.PlayAndRecord,
+					audioPlayerOptions.Mode,
+					audioPlayerOptions.CategoryOptions | AVAudioSessionCategoryOptions.DefaultToSpeaker);
+
+				if (catError is not null)
+				{
+					System.Diagnostics.Trace.TraceWarning($"Failed to set PlayAndRecord category for speaker override: {catError.LocalizedDescription}");
+				}
+			}
+
+			var portOverride = (AVAudioSessionPortOverride)preferredPort;
+
+			// Increment before the call so concurrent Dispose sees a non-zero count
+			lock (portOverrideLock)
+			{
+				speakerOverrideRefCount++;
+			}
+
+			var success = audioSession.OverrideOutputAudioPort(portOverride, out NSError? nsError);
+
+			if (!success)
+			{
+				// Roll back the increment on failure
+				lock (portOverrideLock)
+				{
+					speakerOverrideRefCount--;
+				}
+				System.Diagnostics.Trace.TraceWarning($"Failed to set preferred output port: {nsError?.LocalizedDescription ?? "Unknown error"}");
+			}
+			else
+			{
+				hasSetPortOverride = true;
+			}
+		}
+		catch (Exception ex)
+		{
+			// Roll back on exception
+			lock (portOverrideLock)
+			{
+				speakerOverrideRefCount--;
+			}
+			System.Diagnostics.Trace.TraceError($"Error setting preferred audio output port: {ex.Message}");
+		}
 	}
 
 	void RegisterForAudioInterruptions()
