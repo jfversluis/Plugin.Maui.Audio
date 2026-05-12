@@ -49,6 +49,12 @@ partial class AudioRecorder : IAudioRecorder
 			{
 				StreamingCaptureMode = StreamingCaptureMode.Audio
 			};
+
+			if (!string.IsNullOrWhiteSpace(audioRecorderOptions.AudioDeviceId))
+			{
+				captureSettings.AudioDeviceId = audioRecorderOptions.AudioDeviceId;
+			}
+
 			await InitMediaCapture(captureSettings);
 		}
 		catch (Exception ex)

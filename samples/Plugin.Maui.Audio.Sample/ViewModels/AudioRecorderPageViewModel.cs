@@ -6,6 +6,10 @@ using Android.Media;
 #if IOS || MACCATALYST
 using AVFoundation;
 #endif
+#if WINDOWS
+using Windows.Devices.Enumeration;
+using Windows.Media.Devices;
+#endif
 
 namespace Plugin.Maui.Audio.Sample.ViewModels;
 
@@ -24,6 +28,9 @@ public class AudioRecorderPageViewModel : BaseViewModel
 #endif
 #if IOS || MACCATALYST
 	AVAudioSessionPortDescription[] availableInputPorts = [];
+#endif
+#if WINDOWS
+	DeviceInformation[] availableWindowsInputDevices = [];
 #endif
 
 	public double RecordingTime
@@ -65,6 +72,7 @@ public class AudioRecorderPageViewModel : BaseViewModel
 		this.dispatcher = dispatcher;
 
 		LoadInputDevices();
+		_ = LoadWindowsInputDevicesAsync();
 	}
 
 	ChannelType selectedChannelType;
@@ -209,6 +217,25 @@ public class AudioRecorderPageViewModel : BaseViewModel
 #endif
 	}
 
+	async Task LoadWindowsInputDevicesAsync()
+	{
+#if WINDOWS
+		var deviceInfoCollection = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector());
+		availableWindowsInputDevices = deviceInfoCollection.ToArray();
+
+		var devices = new List<string> { "Default" };
+		foreach (var device in availableWindowsInputDevices)
+		{
+			devices.Add(device.Name);
+		}
+
+		InputDevices = devices;
+		SelectedInputDevice = "Default";
+#else
+		await Task.CompletedTask;
+#endif
+	}
+
 
 	async void PlayAudio()
 	{
@@ -270,6 +297,16 @@ public class AudioRecorderPageViewModel : BaseViewModel
 				if (selectedPort is not null)
 				{
 					options.PreferredInput = selectedPort;
+				}
+			}
+#endif
+#if WINDOWS
+			if (SelectedInputDevice != "Default")
+			{
+				var index = InputDevices.IndexOf(SelectedInputDevice) - 1;
+				if (index >= 0 && index < availableWindowsInputDevices.Length)
+				{
+					options.AudioDeviceId = availableWindowsInputDevices[index].Id;
 				}
 			}
 #endif

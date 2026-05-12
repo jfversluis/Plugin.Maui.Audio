@@ -151,6 +151,29 @@ if (micExt?.HighQualityRecording.IsSupported == true)
 
 In the meantime, combine with `AllowBluetooth` for HFP fallback on unsupported devices or regions.
 
+## Recording from a specific audio device (Windows)
+
+By default, the recorder uses the system default audio capture device. To record from a specific device such as a Bluetooth headset or USB microphone, use the `AudioDeviceId` property.
+
+```csharp
+#if WINDOWS
+using Windows.Devices.Enumeration;
+using Windows.Media.Devices;
+
+var devices = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector());
+var usbMic = devices.FirstOrDefault(d => d.Name.Contains("USB"));
+
+var recorder = audioManager.CreateRecorder(
+    new AudioRecorderOptions
+    {
+        AudioDeviceId = usbMic?.Id
+    });
+#endif
+```
+
+> [!NOTE]
+> No additional permissions are required beyond `<DeviceCapability Name="microphone"/>` in `Package.appxmanifest`. If an invalid or disconnected device ID is provided, `MediaCapture` initialization will throw an exception — unlike Android, Windows does not silently fall back to the default device.
+
 ## AudioRecorder API
 
 Once you have created an `AudioRecorder` you can interact with it in the following ways:
