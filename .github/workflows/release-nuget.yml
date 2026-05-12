@@ -1,13 +1,24 @@
-name: Create a (Pre)release on NuGet
+name: Release to NuGet
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., 1.2.3)'
+        required: true
   push:
     tags:
-    - "v[0-9]+.[0-9]+.[0-9]+"
-    - "v[0-9]+.[0-9]+.[0-9]+-preview[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-preview[0-9]+"
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
 jobs:
   release-nuget:
-  
+
     runs-on: windows-latest
 
     steps:
@@ -21,27 +32,30 @@ jobs:
       - name: Install .NET MAUI Workload
         run: dotnet workload restore src\Plugin.Maui.Audio.sln
 
-      - name: Verify commit exists in origin/main
-        run: |
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
-          git branch --remote --contains | grep origin/main
-
-      - name: Get version information from tag
-        id: get_version
-        run: |
-          $version="${{github.ref_name}}".TrimStart("v")
-          "version-without-v=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
       - name: Restore dependencies
         run: dotnet restore src\Plugin.Maui.Audio.sln
 
-      - name: Build
-        run: dotnet build src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
-
       - name: Pack
-        run: dotnet pack src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }} --no-build --output .
-        
-      - name: Push
-        run: dotnet nuget push Plugin.Maui.Audio.${{ steps.get_version.outputs.version-without-v }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $tagOrInput = "${{ inputs.version != '' && inputs.version || github.ref_name }}"
+          $version = $tagOrInput.TrimStart("v")
+          dotnet pack src\Plugin.Maui.Audio\Plugin.Maui.Audio.csproj -c Release -p:PackageVersion=$version -o artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget
+          path: artifacts\*.nupkg
+
+      - name: NuGet login (OIDC)
+        uses: nuget/login@v1
+        id: nuget-login
+        with:
+          user: jfversluis
+
+      - name: Push to NuGet
+        run: |
+          dotnet nuget push artifacts\*.nupkg `
+            --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" `
+            --source https://api.nuget.org/v3/index.json `
+            --skip-duplicate
