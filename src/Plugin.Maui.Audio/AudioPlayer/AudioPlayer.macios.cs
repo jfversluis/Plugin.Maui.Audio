@@ -12,6 +12,7 @@ partial class AudioPlayer : IAudioPlayer
 	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
 	int playerGeneration;
+	int playbackGeneration;
 	EventHandler<AVStatusEventArgs>? finishedPlayingHandler;
 	NSObject? interruptionObserver;
 	bool wasPlayingBeforeInterruption = false;
@@ -266,6 +267,8 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	public void Play()
 	{
+		Interlocked.Increment(ref playbackGeneration);
+
 		if (player.Playing)
 		{
 			player.Pause();
@@ -290,6 +293,7 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	public void Stop()
 	{
+		Interlocked.Increment(ref playbackGeneration);
 		player.Stop();
 		Seek(0);
 		PlaybackEnded?.Invoke(this, EventArgs.Empty);
@@ -458,10 +462,13 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlayerFinishedPlaying(AVAudioPlayer finishedPlayer, int generation, AVStatusEventArgs e)
 	{
+		var completedPlaybackGeneration = Volatile.Read(ref playbackGeneration);
+
 		NSRunLoop.Main.BeginInvokeOnMainThread(() =>
 		{
 			if (!isDisposed &&
 				generation == Volatile.Read(ref playerGeneration) &&
+				completedPlaybackGeneration == Volatile.Read(ref playbackGeneration) &&
 				ReferenceEquals(player, finishedPlayer))
 			{
 				PlaybackEnded?.Invoke(this, e);
