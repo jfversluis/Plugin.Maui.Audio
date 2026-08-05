@@ -18,8 +18,14 @@ The collective hierarchy: `AudioStreamer` > `PcmAudioHandler` > `AudioListeners`
 
 Where the `AudioStreamer` provides raw PCM audio that the `PcmAudioHandler` converts into ordered audio samples that the `AudioListeners` listen to and can manipulate and analyse with support of the `PcmAudioHelpers`.
 
+> [!IMPORTANT]
+> Audio listeners do not receive data from `AudioRecorder`. Keep a reference to an `AudioStreamer`, subscribe to `OnAudioCaptured`, and call `StartAsync()` to supply PCM data to the listeners. Avoid running `AudioRecorder` and `AudioStreamer` at the same time, particularly on Android, because they open separate microphone capture sessions and one may receive no samples. If you need recording and analysis together, save the PCM data provided by `AudioStreamer`.
+
 Basic example:
 ```csharp
+// Create and retain AudioStreamer
+audioStreamer = audioManager.CreateStreamer();
+
 // Create PcmAudioHandler
 pcmAudioHandler = new PcmAudioHandler(44100, ChannelType.Mono, BitDepth.Pcm16bit);
 
@@ -45,6 +51,9 @@ audioStreamer.OnAudioCaptured += (sender, args) =>
 {
    pcmAudioHandler.HandlePcmAudio(args.Audio);
 };
+
+// Start supplying PCM data to the listeners
+await audioStreamer.StartAsync();
 ```
 
 ### PcmAudioHandler usage
