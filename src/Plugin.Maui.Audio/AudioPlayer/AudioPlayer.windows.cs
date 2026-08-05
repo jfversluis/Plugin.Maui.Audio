@@ -258,16 +258,16 @@ partial class AudioPlayer : IAudioPlayer
 			return;
 		}
 
+		isDisposed = true;
+
 		if (disposing)
 		{
-			Stop();
-
 			player.MediaFailed -= OnError;
 			player.MediaEnded -= OnPlaybackEnded;
+			player.Pause();
+			Seek(0);
 			player.Dispose();
 		}
-
-		isDisposed = true;
 	}
 }
 
@@ -285,4 +285,3 @@ public class MediaPlayerFailedEventArgsWrapper : EventArgs
 		ErrorMessage = args.Error.ToString();
 	}
 }
-

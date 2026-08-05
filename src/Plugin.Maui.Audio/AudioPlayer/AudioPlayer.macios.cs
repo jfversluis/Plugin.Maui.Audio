@@ -11,6 +11,8 @@ partial class AudioPlayer : IAudioPlayer
 	AVAudioPlayer player;
 	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
+	int playerGeneration;
+	EventHandler<AVStatusEventArgs>? finishedPlayingHandler;
 	NSObject? interruptionObserver;
 	bool wasPlayingBeforeInterruption = false;
 	bool hasSetPortOverride;
@@ -137,11 +139,16 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		if (player != null)
 		{
-			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			Interlocked.Increment(ref playerGeneration);
+			if (finishedPlayingHandler is not null)
+			{
+				player.FinishedPlaying -= finishedPlayingHandler;
+			}
 			player.DecoderError -= OnPlayerError;
 			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
-			Stop();
+			player.Stop();
+			player.CurrentTime = 0;
 			player.Dispose();
 		}
 
@@ -208,6 +215,9 @@ partial class AudioPlayer : IAudioPlayer
 			return;
 		}
 
+		isDisposed = true;
+		Interlocked.Increment(ref playerGeneration);
+
 		if (disposing)
 		{
 			// If this player set the port override, decrement ref count
@@ -235,13 +245,15 @@ partial class AudioPlayer : IAudioPlayer
 			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
 
-			Stop();
-
-			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			if (finishedPlayingHandler is not null)
+			{
+				player.FinishedPlaying -= finishedPlayingHandler;
+			}
+			player.DecoderError -= OnPlayerError;
+			player.Stop();
+			player.CurrentTime = 0;
 			player.Dispose();
 		}
-
-		isDisposed = true;
 	}
 
 	/// <summary>
@@ -290,7 +302,10 @@ partial class AudioPlayer : IAudioPlayer
 		// Set preferred output port if specified
 		SetPreferredOutputPort(audioPlayerOptions.PreferredOutputPort);
 
-		player.FinishedPlaying += OnPlayerFinishedPlaying;
+		var preparedPlayer = player;
+		var generation = Interlocked.Increment(ref playerGeneration);
+		finishedPlayingHandler = (_, e) => OnPlayerFinishedPlaying(preparedPlayer, generation, e);
+		player.FinishedPlaying += finishedPlayingHandler;
 		player.DecoderError += OnPlayerError;
 
 		// Subscribe to audio session interruptions
@@ -441,8 +456,16 @@ partial class AudioPlayer : IAudioPlayer
 		OnError(e);
 	}
 
-	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
+	void OnPlayerFinishedPlaying(AVAudioPlayer finishedPlayer, int generation, AVStatusEventArgs e)
 	{
-		PlaybackEnded?.Invoke(this, e);
+		NSRunLoop.Main.BeginInvokeOnMainThread(() =>
+		{
+			if (!isDisposed &&
+				generation == Volatile.Read(ref playerGeneration) &&
+				ReferenceEquals(player, finishedPlayer))
+			{
+				PlaybackEnded?.Invoke(this, e);
+			}
+		});
 	}
 }
