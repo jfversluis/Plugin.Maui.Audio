@@ -279,6 +279,7 @@ partial class AudioPlayer : IAudioPlayer
 			player.CurrentTime = 0;
 		}
 
+		SubscribeToFinishedPlaying();
 		player.Play();
 	}
 
@@ -306,10 +307,8 @@ partial class AudioPlayer : IAudioPlayer
 		// Set preferred output port if specified
 		SetPreferredOutputPort(audioPlayerOptions.PreferredOutputPort);
 
-		var preparedPlayer = player;
-		var generation = Interlocked.Increment(ref playerGeneration);
-		finishedPlayingHandler = (_, e) => OnPlayerFinishedPlaying(preparedPlayer, generation, e);
-		player.FinishedPlaying += finishedPlayingHandler;
+		Interlocked.Increment(ref playerGeneration);
+		SubscribeToFinishedPlaying();
 		player.DecoderError += OnPlayerError;
 
 		// Subscribe to audio session interruptions
@@ -319,6 +318,21 @@ partial class AudioPlayer : IAudioPlayer
 		player.PrepareToPlay();
 
 		return true;
+	}
+
+	void SubscribeToFinishedPlaying()
+	{
+		if (finishedPlayingHandler is not null)
+		{
+			player.FinishedPlaying -= finishedPlayingHandler;
+		}
+
+		var preparedPlayer = player;
+		var generation = Volatile.Read(ref playerGeneration);
+		var preparedPlaybackGeneration = Volatile.Read(ref playbackGeneration);
+		finishedPlayingHandler = (_, e) =>
+			OnPlayerFinishedPlaying(preparedPlayer, generation, preparedPlaybackGeneration, e);
+		player.FinishedPlaying += finishedPlayingHandler;
 	}
 
 	void SetPreferredOutputPort(AudioOutputPort preferredPort)
@@ -460,9 +474,16 @@ partial class AudioPlayer : IAudioPlayer
 		OnError(e);
 	}
 
-	void OnPlayerFinishedPlaying(AVAudioPlayer finishedPlayer, int generation, AVStatusEventArgs e)
+	void OnPlayerFinishedPlaying(
+		AVAudioPlayer finishedPlayer,
+		int generation,
+		int completedPlaybackGeneration,
+		AVStatusEventArgs e)
 	{
-		var completedPlaybackGeneration = Volatile.Read(ref playbackGeneration);
+		if (finishedPlayer.Playing)
+		{
+			return;
+		}
 
 		NSRunLoop.Main.BeginInvokeOnMainThread(() =>
 		{
