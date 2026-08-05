@@ -141,7 +141,7 @@ partial class AudioPlayer : IAudioPlayer
 			player.DecoderError -= OnPlayerError;
 			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
-			Stop();
+			Stop(false);
 			player.Dispose();
 		}
 
@@ -208,6 +208,8 @@ partial class AudioPlayer : IAudioPlayer
 			return;
 		}
 
+		isDisposed = true;
+
 		if (disposing)
 		{
 			// If this player set the port override, decrement ref count
@@ -235,13 +237,11 @@ partial class AudioPlayer : IAudioPlayer
 			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
 
-			Stop();
-
 			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			player.DecoderError -= OnPlayerError;
+			Stop(false);
 			player.Dispose();
 		}
-
-		isDisposed = true;
 	}
 
 	/// <summary>
@@ -278,9 +278,18 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	public void Stop()
 	{
+		Stop(true);
+	}
+
+	void Stop(bool raisePlaybackEnded)
+	{
 		player.Stop();
 		Seek(0);
-		PlaybackEnded?.Invoke(this, EventArgs.Empty);
+
+		if (raisePlaybackEnded)
+		{
+			PlaybackEnded?.Invoke(this, EventArgs.Empty);
+		}
 	}
 
 	bool PreparePlayer()
@@ -443,6 +452,11 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
 	{
+		if (isDisposed)
+		{
+			return;
+		}
+
 		PlaybackEnded?.Invoke(this, e);
 	}
 }
