@@ -11,6 +11,7 @@ partial class AudioPlayer : IAudioPlayer
 	AVAudioPlayer player;
 	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
+	// Monotonic tokens invalidate deferred callbacks; these are versions, not reference counts.
 	int playerGeneration;
 	int playbackGeneration;
 	EventHandler<AVStatusEventArgs>? finishedPlayingHandler;
