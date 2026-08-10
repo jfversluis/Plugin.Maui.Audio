@@ -130,7 +130,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		get => audioPlayer?.Volume ?? 1;
 		set
 		{
-			if (audioPlayer != null)
+			if (audioPlayer is not null)
 			{
 				audioPlayer.Volume = value;
 			}
@@ -142,7 +142,7 @@ public class MusicPlayerPageViewModel : BaseViewModel, IQueryAttributable, IDisp
 		get => audioPlayer?.Balance ?? 0;
 		set
 		{
-			if (audioPlayer != null)
+			if (audioPlayer is not null)
 			{
 				audioPlayer.Balance = value;
 			}
