@@ -149,13 +149,19 @@ var player = audioManager.CreatePlayer(
 #endif
     });
 
-player.PlaybackEnded += (s, e) => player.Dispose();
+void OnPlaybackEnded(object? sender, EventArgs e)
+{
+    player.PlaybackEnded -= OnPlaybackEnded;
+    player.Dispose();
+}
+
+player.PlaybackEnded += OnPlaybackEnded;
 player.Play();
 // When playback ends → player disposes → session deactivates → other apps resume
 ```
 
 > [!TIP]
-> For repeated short sounds, create a new player each time rather than caching one. The overhead is minimal and this properly manages the shared audio session lifecycle without conflicting with other players or recorders.
+> Unsubscribe from `PlaybackEnded` before disposing the player to prevent disposal from raising the same handler again. For repeated short sounds, create a new player each time rather than caching one. The overhead is minimal and this properly manages the shared audio session lifecycle without conflicting with other players or recorders.
 
 ## Controlling Audio Output Device/Port
 

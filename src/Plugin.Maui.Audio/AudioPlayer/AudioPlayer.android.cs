@@ -660,6 +660,8 @@ partial class AudioPlayer : IAudioPlayer
 			return;
 		}
 
+		isDisposed = true;
+
 		if (disposing)
 		{
 			AbandonAudioFocus();
@@ -673,8 +675,6 @@ partial class AudioPlayer : IAudioPlayer
 			stream?.Dispose();
 			audioFocusRequest?.Dispose();
 		}
-
-		isDisposed = true;
 	}
 
 	/// <summary>

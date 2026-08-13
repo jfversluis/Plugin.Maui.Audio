@@ -11,6 +11,10 @@ partial class AudioPlayer : IAudioPlayer
 	AVAudioPlayer player;
 	readonly AudioPlayerOptions audioPlayerOptions;
 	bool isDisposed;
+	// Monotonic tokens invalidate deferred callbacks; these are versions, not reference counts.
+	int playerGeneration;
+	int playbackGeneration;
+	EventHandler<AVStatusEventArgs>? finishedPlayingHandler;
 	NSObject? interruptionObserver;
 	bool wasPlayingBeforeInterruption = false;
 	bool hasSetPortOverride;
@@ -137,11 +141,16 @@ partial class AudioPlayer : IAudioPlayer
 	{
 		if (player != null)
 		{
-			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			Interlocked.Increment(ref playerGeneration);
+			if (finishedPlayingHandler is not null)
+			{
+				player.FinishedPlaying -= finishedPlayingHandler;
+			}
 			player.DecoderError -= OnPlayerError;
 			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
-			Stop(false);
+			player.Stop();
+			player.CurrentTime = 0;
 			player.Dispose();
 		}
 
@@ -209,6 +218,7 @@ partial class AudioPlayer : IAudioPlayer
 		}
 
 		isDisposed = true;
+		Interlocked.Increment(ref playerGeneration);
 
 		if (disposing)
 		{
@@ -237,9 +247,13 @@ partial class AudioPlayer : IAudioPlayer
 			UnregisterFromAudioInterruptions();
 			ActiveSessionHelper.FinishSession(audioPlayerOptions);
 
-			player.FinishedPlaying -= OnPlayerFinishedPlaying;
+			if (finishedPlayingHandler is not null)
+			{
+				player.FinishedPlaying -= finishedPlayingHandler;
+			}
 			player.DecoderError -= OnPlayerError;
-			Stop(false);
+			player.Stop();
+			player.CurrentTime = 0;
 			player.Dispose();
 		}
 	}
@@ -254,6 +268,8 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	public void Play()
 	{
+		Interlocked.Increment(ref playbackGeneration);
+
 		if (player.Playing)
 		{
 			player.Pause();
@@ -264,6 +280,7 @@ partial class AudioPlayer : IAudioPlayer
 			player.CurrentTime = 0;
 		}
 
+		SubscribeToFinishedPlaying();
 		player.Play();
 	}
 
@@ -278,18 +295,10 @@ partial class AudioPlayer : IAudioPlayer
 	/// </summary>
 	public void Stop()
 	{
-		Stop(true);
-	}
-
-	void Stop(bool raisePlaybackEnded)
-	{
+		Interlocked.Increment(ref playbackGeneration);
 		player.Stop();
 		Seek(0);
-
-		if (raisePlaybackEnded)
-		{
-			PlaybackEnded?.Invoke(this, EventArgs.Empty);
-		}
+		PlaybackEnded?.Invoke(this, EventArgs.Empty);
 	}
 
 	bool PreparePlayer()
@@ -299,7 +308,8 @@ partial class AudioPlayer : IAudioPlayer
 		// Set preferred output port if specified
 		SetPreferredOutputPort(audioPlayerOptions.PreferredOutputPort);
 
-		player.FinishedPlaying += OnPlayerFinishedPlaying;
+		Interlocked.Increment(ref playerGeneration);
+		SubscribeToFinishedPlaying();
 		player.DecoderError += OnPlayerError;
 
 		// Subscribe to audio session interruptions
@@ -309,6 +319,21 @@ partial class AudioPlayer : IAudioPlayer
 		player.PrepareToPlay();
 
 		return true;
+	}
+
+	void SubscribeToFinishedPlaying()
+	{
+		if (finishedPlayingHandler is not null)
+		{
+			player.FinishedPlaying -= finishedPlayingHandler;
+		}
+
+		var preparedPlayer = player;
+		var generation = Volatile.Read(ref playerGeneration);
+		var preparedPlaybackGeneration = Volatile.Read(ref playbackGeneration);
+		finishedPlayingHandler = (_, e) =>
+			OnPlayerFinishedPlaying(preparedPlayer, generation, preparedPlaybackGeneration, e);
+		player.FinishedPlaying += finishedPlayingHandler;
 	}
 
 	void SetPreferredOutputPort(AudioOutputPort preferredPort)
@@ -450,13 +475,26 @@ partial class AudioPlayer : IAudioPlayer
 		OnError(e);
 	}
 
-	void OnPlayerFinishedPlaying(object? sender, AVStatusEventArgs e)
+	void OnPlayerFinishedPlaying(
+		AVAudioPlayer finishedPlayer,
+		int generation,
+		int completedPlaybackGeneration,
+		AVStatusEventArgs e)
 	{
-		if (isDisposed)
+		if (finishedPlayer.Playing)
 		{
 			return;
 		}
 
-		PlaybackEnded?.Invoke(this, e);
+		NSRunLoop.Main.BeginInvokeOnMainThread(() =>
+		{
+			if (!isDisposed &&
+				generation == Volatile.Read(ref playerGeneration) &&
+				completedPlaybackGeneration == Volatile.Read(ref playbackGeneration) &&
+				ReferenceEquals(player, finishedPlayer))
+			{
+				PlaybackEnded?.Invoke(this, e);
+			}
+		});
 	}
 }
