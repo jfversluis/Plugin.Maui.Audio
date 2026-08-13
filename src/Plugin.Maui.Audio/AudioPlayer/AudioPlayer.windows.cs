@@ -151,6 +151,11 @@ partial class AudioPlayer : IAudioPlayer
 
 	void OnPlaybackEnded(MediaPlayer sender, object args)
 	{
+		if (isDisposed)
+		{
+			return;
+		}
+
 		PlaybackEnded?.Invoke(sender, EventArgs.Empty);
 	}
 
@@ -177,9 +182,18 @@ partial class AudioPlayer : IAudioPlayer
 
 	public void Stop()
 	{
+		Stop(true);
+	}
+
+	void Stop(bool raisePlaybackEnded)
+	{
 		Pause();
 		Seek(0);
-		OnPlaybackEnded(player, EventArgs.Empty); //todo check for double invoke?
+
+		if (raisePlaybackEnded)
+		{
+			OnPlaybackEnded(player, EventArgs.Empty);
+		}
 	}
 
 	public void Seek(double position)
@@ -264,8 +278,7 @@ partial class AudioPlayer : IAudioPlayer
 		{
 			player.MediaFailed -= OnError;
 			player.MediaEnded -= OnPlaybackEnded;
-			player.Pause();
-			Seek(0);
+			Stop(false);
 			player.Dispose();
 		}
 	}
