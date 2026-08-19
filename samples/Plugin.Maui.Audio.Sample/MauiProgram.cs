@@ -35,7 +35,6 @@ public static class MauiProgram
 				streamerOptions =>
 				{
 #if IOS || MACCATALYST
-					streamerOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
 					streamerOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
 					streamerOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
 #endif
